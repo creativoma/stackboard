@@ -69,117 +69,107 @@ export default async function CardDetailPage({
         detail
 
     return (
-        <div className="flex flex-col gap-4 max-w-[960px] mx-auto">
-            <Link
-                href={`/boards/${boardId}`}
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--color-electric-blue)] hover:text-[var(--color-midnight-pressed)] w-fit"
-            >
-                <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    aria-hidden="true"
-                    className="shrink-0"
+        <div className="flex flex-col gap-10 max-w-[720px]">
+            <div>
+                <Link
+                    href={`/boards/${boardId}`}
+                    className="text-sm text-[var(--color-electric-blue)]"
                 >
-                    <path
-                        d="M9.5 3L4.5 8L9.5 13"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    />
-                </svg>
-                {board.name}
-            </Link>
-
-            <div
-                className="rounded-[var(--radius-sheet)] bg-[var(--color-paper)] p-6 sm:p-8"
-                style={{ boxShadow: 'var(--shadow-sheet)' }}
-            >
+                    &larr; {board.name}
+                </Link>
                 {column ? (
-                    <p className="eyebrow mb-2">In {column.name}</p>
+                    <p className="eyebrow mt-3 mb-1">In {column.name}</p>
                 ) : null}
-
                 <TitleField
                     boardId={boardId}
                     cardId={cardId}
                     title={card.title}
                 />
-
-                <div className="grid grid-cols-1 md:grid-cols-[1fr_260px] gap-8 mt-6">
-                    <div className="flex flex-col gap-7">
-                        <section>
-                            <h2 className="text-sm font-semibold mb-2">
-                                Description
-                            </h2>
-                            <DescriptionField
-                                boardId={boardId}
-                                cardId={cardId}
-                                description={card.description}
-                            />
-                        </section>
-
-                        <section className="border-t border-[var(--color-mist)] pt-6">
-                            <ChecklistSection
-                                boardId={boardId}
-                                cardId={cardId}
-                                items={checklistItems}
-                            />
-                        </section>
-
-                        <section className="border-t border-[var(--color-mist)] pt-6">
-                            <CommentsSection
-                                boardId={boardId}
-                                cardId={cardId}
-                                comments={comments}
-                            />
-                        </section>
-
-                        <section className="border-t border-[var(--color-mist)] pt-6">
-                            <h2 className="text-sm font-semibold mb-2">
-                                Activity
-                            </h2>
-                            <ActivityTimeline activity={activity} />
-                        </section>
-                    </div>
-
-                    <aside className="flex flex-col gap-4 md:bg-[var(--color-snow)] md:rounded-[var(--radius-cards)] md:p-4 h-fit">
-                        <AssigneeField
-                            boardId={boardId}
-                            cardId={cardId}
-                            assigneeId={card.assigneeId}
-                            members={members.map((m) => m.user)}
-                        />
-                        <DueDateField
-                            boardId={boardId}
-                            cardId={cardId}
-                            dueDate={
-                                card.dueDate ? card.dueDate.toISOString() : null
-                            }
-                        />
-                        <div>
-                            <h2 className="text-xs font-medium text-[var(--color-fog)] uppercase tracking-wide mb-1.5">
-                                Labels
-                            </h2>
-                            <LabelsField
-                                boardId={boardId}
-                                cardId={cardId}
-                                labelIds={labelIds}
-                                labels={labels}
-                            />
-                        </div>
-                        <div className="border-t border-[var(--color-mist)] pt-4">
-                            <ArchiveRestoreControls
-                                boardId={boardId}
-                                cardId={cardId}
-                                status={card.status}
-                                activeColumns={activeColumns}
-                            />
-                        </div>
-                    </aside>
-                </div>
             </div>
+
+            <section aria-labelledby="details-heading" className="card-surface">
+                <h2 id="details-heading" className="eyebrow mb-3">
+                    Details
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <AssigneeField
+                        boardId={boardId}
+                        cardId={cardId}
+                        assigneeId={card.assigneeId}
+                        members={members.map((m) => m.user)}
+                    />
+                    <DueDateField
+                        boardId={boardId}
+                        cardId={cardId}
+                        dueDate={
+                            card.dueDate ? card.dueDate.toISOString() : null
+                        }
+                    />
+                </div>
+                <div className="mt-4">
+                    <h3 className="text-xs font-medium text-[var(--color-fog)] uppercase tracking-wide mb-1.5">
+                        Labels
+                    </h3>
+                    <LabelsField
+                        boardId={boardId}
+                        cardId={cardId}
+                        labelIds={labelIds}
+                        labels={labels}
+                    />
+                </div>
+            </section>
+
+            <section
+                aria-labelledby="description-heading"
+                className="card-surface"
+            >
+                <h2 id="description-heading" className="eyebrow mb-3">
+                    Description
+                </h2>
+                <DescriptionField
+                    boardId={boardId}
+                    cardId={cardId}
+                    description={card.description}
+                />
+            </section>
+
+            <section className="card-surface">
+                <ChecklistSection
+                    boardId={boardId}
+                    cardId={cardId}
+                    items={checklistItems}
+                />
+            </section>
+
+            <section className="card-surface">
+                <CommentsSection
+                    boardId={boardId}
+                    cardId={cardId}
+                    comments={comments}
+                />
+            </section>
+
+            <section
+                aria-labelledby="activity-heading"
+                className="card-surface"
+            >
+                <h2 id="activity-heading" className="eyebrow mb-3">
+                    Activity
+                </h2>
+                <ActivityTimeline activity={activity} />
+            </section>
+
+            <section aria-labelledby="archive-heading" className="card-surface">
+                <h2 id="archive-heading" className="eyebrow mb-3">
+                    Archive
+                </h2>
+                <ArchiveRestoreControls
+                    boardId={boardId}
+                    cardId={cardId}
+                    status={card.status}
+                    activeColumns={activeColumns}
+                />
+            </section>
         </div>
     )
 }
