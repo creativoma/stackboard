@@ -116,7 +116,7 @@ export default async function BoardPage({
 
     return (
         <div
-            className="relative flex flex-col gap-4 h-full rounded-[var(--radius-largecards)] p-4 sm:p-6 -mx-4 sm:-mx-6 lg:-mx-10 overflow-hidden"
+            className="relative flex flex-col gap-4 h-full rounded-[var(--radius-largecards)] p-4 sm:p-6 overflow-hidden"
             style={{
                 background:
                     'radial-gradient(140% 120% at 100% 0%, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0) 40%), linear-gradient(155deg, #1090df 0%, var(--color-board-blue) 45%, #005a94 100%)',

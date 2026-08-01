@@ -19,9 +19,9 @@ export function FilterBar({
             role="search"
             aria-label="Filter cards"
         >
-            <div className="relative max-w-[220px] w-full">
+            <div className="relative max-w-55 w-full">
                 <svg
-                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-fog)]"
+                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-fog"
                     width="16"
                     height="16"
                     viewBox="0 0 16 16"
@@ -47,11 +47,11 @@ export function FilterBar({
                     name="q"
                     defaultValue={filters.q ?? ''}
                     placeholder="Search cards…"
-                    className="input h-10 box-border pl-8"
+                    className="input input--icon-left h-10 box-border"
                     aria-label="Keyword search"
                 />
             </div>
-            <div className="relative max-w-[160px] w-full">
+            <div className="relative max-w-40 w-full">
                 <select
                     name="member"
                     defaultValue={filters.member ?? ''}
@@ -66,7 +66,7 @@ export function FilterBar({
                     ))}
                 </select>
                 <svg
-                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-fog)]"
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-fog"
                     width="10"
                     height="6"
                     viewBox="0 0 10 6"

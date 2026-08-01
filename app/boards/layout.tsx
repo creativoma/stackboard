@@ -17,15 +17,15 @@ export default async function BoardsLayout({
     if (!user) redirect('/login')
 
     return (
-        <div className="min-h-screen flex bg-[var(--color-snow)]">
-            <aside className="w-60 shrink-0 h-screen sticky top-0 bg-[var(--color-paper)] border-r border-[var(--color-mist)] flex flex-col justify-between py-4">
+        <div className="min-h-screen flex bg-snow">
+            <aside className="w-60 shrink-0 h-screen sticky top-0 bg-paper border-r border-mist flex flex-col justify-between py-4">
                 <div>
                     <Link
                         href="/boards"
-                        className="flex items-center gap-2 font-bold text-[17px] text-[var(--color-ink)] px-4 mb-6"
+                        className="flex items-center gap-2 font-bold text-[17px] text-ink px-4 mb-6"
                     >
                         <span
-                            className="w-7 h-7 rounded-[var(--radius-tags)] flex items-center justify-center text-white text-xs font-bold shrink-0"
+                            className="w-7 h-7 rounded-tags flex items-center justify-center text-white text-xs font-bold shrink-0"
                             style={{
                                 background:
                                     'linear-gradient(155deg, #1090df 0%, var(--color-board-blue) 100%)',
@@ -42,7 +42,7 @@ export default async function BoardsLayout({
                     >
                         <Link
                             href="/boards"
-                            className="flex items-center gap-2.5 rounded-[var(--radius-buttons)] px-2.5 py-2 text-sm font-semibold text-[var(--color-electric-blue)] bg-[var(--color-electric-blue-tint)]"
+                            className="flex items-center gap-2.5 rounded-buttons px-2.5 py-2 text-sm font-semibold text-electric-blue bg-(--color-electric-blue-tint)"
                         >
                             <svg
                                 width="17"
@@ -86,18 +86,18 @@ export default async function BoardsLayout({
                 </div>
 
                 <div className="px-2">
-                    <div className="flex items-center gap-2.5 rounded-[var(--radius-buttons)] px-2.5 py-2">
+                    <div className="flex items-center gap-2.5 rounded-buttons px-2.5 py-2">
                         <span
-                            className="w-8 h-8 rounded-full bg-[var(--color-lavender)] text-[var(--color-ink)] text-[12px] font-semibold flex items-center justify-center shrink-0"
+                            className="w-8 h-8 rounded-full bg-lavender text-ink text-[12px] font-semibold flex items-center justify-center shrink-0"
                             aria-hidden="true"
                         >
                             {user.name.slice(0, 1).toUpperCase()}
                         </span>
                         <div className="min-w-0">
-                            <p className="text-sm font-medium text-[var(--color-ink)] truncate">
+                            <p className="text-sm font-medium text-ink truncate">
                                 {user.name}
                             </p>
-                            <p className="text-xs text-[var(--color-fog)] truncate">
+                            <p className="text-xs text-fog truncate">
                                 {user.email}
                             </p>
                         </div>
@@ -105,7 +105,7 @@ export default async function BoardsLayout({
                     <form action={logoutAction} className="mt-1">
                         <button
                             type="submit"
-                            className="w-full text-left flex items-center gap-2.5 rounded-[var(--radius-buttons)] px-2.5 py-2 text-sm font-medium text-[var(--color-smoke)] hover:bg-[var(--color-snow)] hover:text-[var(--color-ink)] transition-colors"
+                            className="w-full text-left flex items-center gap-2.5 rounded-buttons px-2.5 py-2 text-sm font-medium text-smoke hover:bg-snow hover:text-ink transition-colors"
                         >
                             <svg
                                 width="16"
@@ -142,15 +142,29 @@ export default async function BoardsLayout({
             </aside>
 
             <div className="flex-1 min-w-0 flex flex-col min-h-screen">
-                <main className="flex-1 w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-6">
+                <main className="flex-1 w-full mx-auto px-6 py-6">
                     {children}
                 </main>
-                <footer className="border-t border-[var(--color-mist)]">
-                    <div className="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 lg:px-10 py-4 text-xs text-[var(--color-fog)]">
-                        <span>© {new Date().getFullYear()} Stackboard</span>
+                <footer className="border-t border-mist">
+                    <div className="w-full mx-auto flex flex-wrap items-center justify-between gap-3 px-6 py-4 text-xs text-fog">
+                        <span>
+                            © {new Date().getFullYear()} Stackboard. All rights
+                            reserved.
+                        </span>
+                        <nav
+                            aria-label="Footer"
+                            className="flex items-center gap-4"
+                        >
+                            <Link
+                                href="/boards"
+                                className="hover:text-ink transition-colors"
+                            >
+                                Boards
+                            </Link>
+                        </nav>
                         <span className="inline-flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-success)]" />
-                            v0.1.0
+                            <span className="w-1.5 h-1.5 rounded-full bg-(--color-success)" />
+                            All systems operational · v0.1.0
                         </span>
                     </div>
                 </footer>
