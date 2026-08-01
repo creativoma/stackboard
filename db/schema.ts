@@ -1,0 +1,285 @@
+import {
+    pgTable,
+    uuid,
+    text,
+    timestamp,
+    integer,
+    boolean,
+    uniqueIndex,
+    index,
+    primaryKey,
+} from 'drizzle-orm/pg-core'
+
+/**
+ * Users are the only tenant-independent table. Every other table is scoped
+ * to a board (directly or via a card/column FK) which is the tenant boundary.
+ */
+export const users = pgTable(
+    'users',
+    {
+        id: uuid('id').primaryKey().defaultRandom(),
+        email: text('email').notNull(),
+        passwordHash: text('password_hash').notNull(),
+        name: text('name').notNull(),
+        createdAt: timestamp('created_at', { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+    },
+    (t) => [uniqueIndex('users_email_idx').on(t.email)]
+)
+
+// Server-side session store so sessions can be revoked (e.g. on membership removal).
+export const sessions = pgTable(
+    'sessions',
+    {
+        id: text('id').primaryKey(), // hashed token
+        userId: uuid('user_id')
+            .notNull()
+            .references(() => users.id, { onDelete: 'cascade' }),
+        expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+        createdAt: timestamp('created_at', { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+    },
+    (t) => [index('sessions_user_idx').on(t.userId)]
+)
+
+export const boardStatusValues = ['active', 'closed'] as const
+export type BoardStatus = (typeof boardStatusValues)[number]
+
+export const boards = pgTable('boards', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: text('name').notNull(),
+    ownerId: uuid('owner_id')
+        .notNull()
+        .references(() => users.id),
+    status: text('status', { enum: boardStatusValues })
+        .notNull()
+        .default('active'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+        .notNull()
+        .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+        .notNull()
+        .defaultNow(),
+    closedAt: timestamp('closed_at', { withTimezone: true }),
+})
+
+export const membershipRoleValues = ['owner', 'member'] as const
+export type MembershipRole = (typeof membershipRoleValues)[number]
+export const membershipStatusValues = ['active', 'removed'] as const
+export type MembershipStatus = (typeof membershipStatusValues)[number]
+
+// The authorization boundary for every mutation: a row here with status
+// 'active' is required before a user may touch anything under a board.
+export const boardMemberships = pgTable(
+    'board_memberships',
+    {
+        id: uuid('id').primaryKey().defaultRandom(),
+        boardId: uuid('board_id')
+            .notNull()
+            .references(() => boards.id, { onDelete: 'cascade' }),
+        userId: uuid('user_id')
+            .notNull()
+            .references(() => users.id, { onDelete: 'cascade' }),
+        role: text('role', { enum: membershipRoleValues })
+            .notNull()
+            .default('member'),
+        status: text('status', { enum: membershipStatusValues })
+            .notNull()
+            .default('active'),
+        createdAt: timestamp('created_at', { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+        removedAt: timestamp('removed_at', { withTimezone: true }),
+    },
+    (t) => [uniqueIndex('memberships_board_user_idx').on(t.boardId, t.userId)]
+)
+
+export const invitationStatusValues = [
+    'pending',
+    'accepted',
+    'revoked',
+    'expired',
+] as const
+export type InvitationStatus = (typeof invitationStatusValues)[number]
+
+export const invitations = pgTable(
+    'invitations',
+    {
+        id: uuid('id').primaryKey().defaultRandom(),
+        boardId: uuid('board_id')
+            .notNull()
+            .references(() => boards.id, { onDelete: 'cascade' }),
+        email: text('email').notNull(),
+        invitedByUserId: uuid('invited_by_user_id')
+            .notNull()
+            .references(() => users.id),
+        token: text('token').notNull(), // hashed
+        status: text('status', { enum: invitationStatusValues })
+            .notNull()
+            .default('pending'),
+        createdAt: timestamp('created_at', { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+        expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+        acceptedAt: timestamp('accepted_at', { withTimezone: true }),
+    },
+    (t) => [
+        uniqueIndex('invitations_token_idx').on(t.token),
+        index('invitations_board_idx').on(t.boardId),
+        // A given email can only have one *pending* invite per board; enforced in
+        // application code (partial unique indexes need raw SQL, kept simple here).
+    ]
+)
+
+export const columnStatusValues = ['active', 'archived'] as const
+export type ColumnStatus = (typeof columnStatusValues)[number]
+
+export const columns = pgTable(
+    'columns',
+    {
+        id: uuid('id').primaryKey().defaultRandom(),
+        boardId: uuid('board_id')
+            .notNull()
+            .references(() => boards.id, { onDelete: 'cascade' }),
+        name: text('name').notNull(),
+        position: integer('position').notNull(),
+        status: text('status', { enum: columnStatusValues })
+            .notNull()
+            .default('active'),
+        createdAt: timestamp('created_at', { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+        archivedAt: timestamp('archived_at', { withTimezone: true }),
+    },
+    (t) => [index('columns_board_idx').on(t.boardId, t.position)]
+)
+
+export const cardStatusValues = ['active', 'archived'] as const
+export type CardStatus = (typeof cardStatusValues)[number]
+
+export const cards = pgTable(
+    'cards',
+    {
+        id: uuid('id').primaryKey().defaultRandom(),
+        boardId: uuid('board_id')
+            .notNull()
+            .references(() => boards.id, { onDelete: 'cascade' }),
+        columnId: uuid('column_id')
+            .notNull()
+            .references(() => columns.id, { onDelete: 'cascade' }),
+        title: text('title').notNull(),
+        description: text('description').notNull().default(''),
+        assigneeId: uuid('assignee_id').references(() => users.id),
+        dueDate: timestamp('due_date', { withTimezone: true }),
+        position: integer('position').notNull(),
+        status: text('status', { enum: cardStatusValues })
+            .notNull()
+            .default('active'),
+        createdAt: timestamp('created_at', { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+        updatedAt: timestamp('updated_at', { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+        archivedAt: timestamp('archived_at', { withTimezone: true }),
+    },
+    (t) => [
+        index('cards_column_idx').on(t.columnId, t.position),
+        index('cards_board_idx').on(t.boardId),
+        index('cards_assignee_idx').on(t.assigneeId),
+    ]
+)
+
+export const labels = pgTable(
+    'labels',
+    {
+        id: uuid('id').primaryKey().defaultRandom(),
+        boardId: uuid('board_id')
+            .notNull()
+            .references(() => boards.id, { onDelete: 'cascade' }),
+        name: text('name').notNull(),
+        color: text('color').notNull(),
+        createdAt: timestamp('created_at', { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+    },
+    (t) => [uniqueIndex('labels_board_name_idx').on(t.boardId, t.name)]
+)
+
+export const cardLabels = pgTable(
+    'card_labels',
+    {
+        cardId: uuid('card_id')
+            .notNull()
+            .references(() => cards.id, { onDelete: 'cascade' }),
+        labelId: uuid('label_id')
+            .notNull()
+            .references(() => labels.id, { onDelete: 'cascade' }),
+    },
+    (t) => [primaryKey({ columns: [t.cardId, t.labelId] })]
+)
+
+export const checklistItems = pgTable(
+    'checklist_items',
+    {
+        id: uuid('id').primaryKey().defaultRandom(),
+        cardId: uuid('card_id')
+            .notNull()
+            .references(() => cards.id, { onDelete: 'cascade' }),
+        text: text('text').notNull(),
+        done: boolean('done').notNull().default(false),
+        position: integer('position').notNull(),
+        createdAt: timestamp('created_at', { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+    },
+    (t) => [index('checklist_items_card_idx').on(t.cardId, t.position)]
+)
+
+export const comments = pgTable(
+    'comments',
+    {
+        id: uuid('id').primaryKey().defaultRandom(),
+        cardId: uuid('card_id')
+            .notNull()
+            .references(() => cards.id, { onDelete: 'cascade' }),
+        authorId: uuid('author_id')
+            .notNull()
+            .references(() => users.id),
+        body: text('body').notNull(),
+        createdAt: timestamp('created_at', { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+    },
+    (t) => [index('comments_card_idx').on(t.cardId, t.createdAt)]
+)
+
+// Immutable append-only audit trail. Never updated or deleted by application code.
+export const activityEvents = pgTable(
+    'activity_events',
+    {
+        id: uuid('id').primaryKey().defaultRandom(),
+        boardId: uuid('board_id')
+            .notNull()
+            .references(() => boards.id, { onDelete: 'cascade' }),
+        cardId: uuid('card_id').references(() => cards.id, {
+            onDelete: 'cascade',
+        }),
+        actorId: uuid('actor_id')
+            .notNull()
+            .references(() => users.id),
+        type: text('type').notNull(), // e.g. 'card.moved', 'card.archived', 'checklist.item.completed'
+        field: text('field'),
+        oldValue: text('old_value'),
+        newValue: text('new_value'),
+        createdAt: timestamp('created_at', { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+    },
+    (t) => [
+        index('activity_board_idx').on(t.boardId, t.createdAt),
+        index('activity_card_idx').on(t.cardId, t.createdAt),
+    ]
+)
