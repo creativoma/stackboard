@@ -1,26 +1,237 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+    /* Mapped from the Trello-iOS design system in DESIGN.md. Token *names*
+       are kept stable across the reskin so component code doesn't need to
+       change — only the values moved to the new palette. */
+    --font-open-runde:
+        -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto,
+        Helvetica, Arial, sans-serif;
+
+    --color-ink: #172b4d; /* Text Primary (navy-charcoal) */
+    --color-carbon: #172b4d;
+    --color-midnight: #0c66e4; /* Action Blue — primary CTA */
+    --color-midnight-pressed: #0055cc;
+    --color-smoke: #5e6c84; /* Text Secondary */
+    --color-fog: #8993a4; /* Text Tertiary */
+    --color-ash: #8993a4;
+    --color-mist: #dfe1e6; /* Divider */
+    --color-border-strong: #c1c7d0;
+    --color-paper: #ffffff; /* Card / canvas white */
+    --color-snow: #f1f2f4; /* List surface */
+    --color-sunken: #ebecf0; /* Pressed list area, filled inputs */
+    --color-concrete: #c1c7d0;
+    --color-electric-blue: #0c66e4; /* Action Blue */
+    --color-electric-blue-tint: #e9f2ff;
+    --color-board-blue: #0079bf; /* Default board backdrop */
+
+    /* Fixed six-color functional label palette */
+    --color-label-green: #4bce97;
+    --color-label-green-subtle: #baf3db;
+    --color-label-yellow: #f5cd47;
+    --color-label-yellow-subtle: #f8e6a0;
+    --color-label-orange: #fea362;
+    --color-label-orange-subtle: #fedec8;
+    --color-label-red: #f87168;
+    --color-label-red-subtle: #ffd5d2;
+    --color-label-purple: #9f8fef;
+    --color-label-purple-subtle: #dfd8fd;
+    --color-label-blue: #579dff;
+    --color-label-blue-subtle: #cce0ff;
+
+    /* Existing accent aliases repointed at the closest label/semantic color */
+    --color-iris: var(--color-label-purple);
+    --color-magenta: var(--color-label-red);
+    --color-leaf: var(--color-label-green);
+    --color-coral: #c9372c; /* Overdue Red — errors, destructive actions */
+    --color-due-soon: #b65c02;
+    --color-success: #1f845a;
+    --color-ice: var(--color-electric-blue-tint);
+    --color-lavender: var(--color-label-purple-subtle);
+    --color-blush: var(--color-label-red-subtle);
+
+    --background: var(--color-paper);
+    --foreground: var(--color-ink);
+
+    --radius-tags: 4px; /* label bars/chips */
+    --radius-cards: 8px; /* cards, buttons, inputs */
+    --radius-buttons: 8px; /* Trello buttons are rounded rects, not pills */
+    --radius-largecards: 12px; /* lists/columns */
+    --radius-sheet: 16px; /* card detail sheet top corners */
+
+    --shadow-subtle: rgba(9, 30, 66, 0.08) 0px 1px 2px 0px; /* list level */
+    --shadow-elevated:
+        rgba(9, 30, 66, 0.13) 0px 1px 1px 0px,
+        rgba(9, 30, 66, 0.06) 0px 0px 1px 0px; /* card at rest */
+    --shadow-dragging: rgba(9, 30, 66, 0.25) 0px 12px 24px 0px;
+    --shadow-sheet: rgba(9, 30, 66, 0.31) 0px 16px 40px 0px;
+    --shadow-button: none;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+    --color-ink: var(--color-ink);
+    --color-carbon: var(--color-carbon);
+    --color-midnight: var(--color-midnight);
+    --color-smoke: var(--color-smoke);
+    --color-fog: var(--color-fog);
+    --color-ash: var(--color-ash);
+    --color-mist: var(--color-mist);
+    --color-paper: var(--color-paper);
+    --color-snow: var(--color-snow);
+    --color-concrete: var(--color-concrete);
+    --color-electric-blue: var(--color-electric-blue);
+    --color-iris: var(--color-iris);
+    --color-magenta: var(--color-magenta);
+    --color-leaf: var(--color-leaf);
+    --color-coral: var(--color-coral);
+    --color-ice: var(--color-ice);
+    --color-lavender: var(--color-lavender);
+    --color-blush: var(--color-blush);
+    --color-board-blue: var(--color-board-blue);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --font-sans: var(--font-open-runde);
+    --radius-tags: var(--radius-tags);
+    --radius-cards: var(--radius-cards);
+    --radius-buttons: var(--radius-buttons);
+    --radius-largecards: var(--radius-largecards);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+    :root {
+        --background: #1d2125;
+        --foreground: #b6c2cf;
+        --color-paper: #2c333a;
+        --color-snow: #22272b;
+        --color-sunken: #1d2125;
+        --color-mist: #3a4148;
+        --color-smoke: #9fadbc;
+        --color-fog: #8993a4;
+        --color-ink: #b6c2cf;
+        --color-electric-blue: #579dff;
+        --color-midnight: #579dff;
+    }
+}
+
+* {
+    border-color: var(--color-mist);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+:focus-visible {
+    outline: 2px solid var(--color-electric-blue);
+    outline-offset: 2px;
+}
+
+.btn-primary {
+    background: var(--color-midnight);
+    color: #fff;
+    border-radius: var(--radius-buttons);
+    padding: 10px 16px;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: var(--shadow-button);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 40px;
+    transition: background-color 120ms ease;
+}
+.btn-primary:hover {
+    background: var(--color-midnight-pressed);
+}
+.btn-primary:disabled {
+    background: rgba(9, 30, 66, 0.06);
+    color: var(--color-fog);
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: rgba(9, 30, 66, 0.06);
+    color: var(--color-ink);
+    border-radius: var(--radius-buttons);
+    padding: 9px 14px;
+    font-weight: 600;
+    font-size: 14px;
+    min-height: 38px;
+    transition: background-color 120ms ease;
+}
+.btn-secondary:hover {
+    background: rgba(9, 30, 66, 0.14);
+}
+
+.btn-outline {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-buttons);
+    padding: 8px 14px;
+    font-weight: 600;
+    font-size: 14px;
+    min-height: 38px;
+    transition: background-color 120ms ease;
+}
+.btn-outline:hover {
+    background: var(--color-snow);
+}
+
+.card-surface {
+    background: var(--color-snow);
+    border-radius: var(--radius-largecards);
+    padding: 24px;
+}
+
+.elevated-surface {
+    background: var(--color-paper);
+    border-radius: var(--radius-cards);
+    box-shadow: var(--shadow-elevated);
+}
+
+.pill {
+    border-radius: var(--radius-tags);
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.input {
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-cards);
+    padding: 9px 12px;
+    font-size: 15px;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    width: 100%;
+}
+.input:focus {
+    outline: 2px solid var(--color-electric-blue);
+    outline-offset: 1px;
+}
+
+.eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-smoke);
 }
