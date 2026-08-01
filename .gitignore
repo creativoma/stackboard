@@ -52,3 +52,6 @@ next-env.d.ts
 
 # vendored agent skills (installed/reproducible from skills-lock.json)
 /.agents/
+
+# local personal exports/data dropped into public/ for reference — never ship these
+/public/*.json
