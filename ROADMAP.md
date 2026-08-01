@@ -27,8 +27,7 @@ by expected value.
   Server Action request, which is fine at this app's scale. A queue
   (e.g. a Postgres-backed job table or a hosted queue) would be worth it if
   invite volume grows or more async work (digest emails, exports) is added.
-- **Trello board import.** Trello's board export (`Menu → More → Print and
-  Export → Export as JSON`) contains lists, cards, labels, checklists, and
+- **Trello board import.** Trello's board export (`Menu → More → Print and Export → Export as JSON`) contains lists, cards, labels, checklists, and
   comments in a stable schema — a one-time import mapping that onto
   `db/schema.ts` (columns/cards/checklists/comments) would let a team bring
   an existing Trello board into Stackboard instead of rebuilding it by hand.
