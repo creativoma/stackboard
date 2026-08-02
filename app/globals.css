@@ -139,20 +139,27 @@ body {
     outline-offset: 2px;
 }
 
-.btn-primary {
-    background: var(--color-midnight);
-    color: #fff;
+.btn-primary,
+.btn-secondary,
+.btn-outline,
+.btn-destructive {
     border-radius: var(--radius-buttons);
-    padding: 10px 16px;
+    padding: 0 16px;
     font-weight: 600;
     font-size: 14px;
-    box-shadow: var(--shadow-button);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    min-height: 40px;
+    min-height: 44px;
+    border: 1px solid transparent;
     transition: background-color 120ms ease;
+}
+
+.btn-primary {
+    background: var(--color-midnight);
+    color: #fff;
+    box-shadow: var(--shadow-button);
 }
 .btn-primary:hover {
     background: var(--color-midnight-pressed);
@@ -166,12 +173,6 @@ body {
 .btn-secondary {
     background: rgba(9, 30, 66, 0.06);
     color: var(--color-ink);
-    border-radius: var(--radius-buttons);
-    padding: 9px 14px;
-    font-weight: 600;
-    font-size: 14px;
-    min-height: 38px;
-    transition: background-color 120ms ease;
 }
 .btn-secondary:hover {
     background: rgba(9, 30, 66, 0.14);
@@ -180,16 +181,92 @@ body {
 .btn-outline {
     background: var(--color-paper);
     color: var(--color-ink);
-    border: 1px solid var(--color-border-strong);
+    border-color: var(--color-border-strong);
+}
+.btn-outline:hover {
+    background: var(--color-snow);
+}
+
+.btn-destructive {
+    background: var(--color-paper);
+    color: var(--color-coral);
+    border-color: var(--color-coral);
+}
+.btn-destructive:hover {
+    background: rgba(201, 55, 44, 0.08);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--color-electric-blue);
+    border-radius: var(--radius-buttons);
+    padding: 6px 8px;
+    font-weight: 600;
+    font-size: 15px;
+    min-height: auto;
+    text-decoration: none;
+    transition: color 120ms ease;
+}
+.btn-ghost:hover {
+    color: var(--color-midnight-pressed);
+}
+
+.btn-onboard {
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
     border-radius: var(--radius-buttons);
     padding: 8px 14px;
     font-weight: 600;
     font-size: 14px;
-    min-height: 38px;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     transition: background-color 120ms ease;
 }
-.btn-outline:hover {
-    background: var(--color-snow);
+.btn-onboard:hover {
+    background: rgba(255, 255, 255, 0.28);
+}
+.btn-onboard--dashed {
+    background: transparent;
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.9);
+}
+.btn-onboard--dashed:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.btn-icon {
+    background: transparent;
+    color: var(--color-fog);
+    border-radius: var(--radius-cards);
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+        background-color 120ms ease,
+        color 120ms ease;
+}
+.btn-icon:hover {
+    background: var(--color-sunken);
+    color: var(--color-coral);
+}
+.btn-icon[data-active='true'] {
+    color: var(--color-electric-blue);
+}
+
+.btn--sm {
+    padding: 4px 10px;
+    font-size: 12px;
+    min-height: 28px;
+}
+.btn-icon.btn--sm {
+    width: 32px;
+    height: 32px;
 }
 
 .card-surface {

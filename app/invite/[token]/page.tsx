@@ -1,8 +1,8 @@
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getCurrentUser } from '@/lib/auth/session'
 import { acceptInvitationAction } from '@/lib/actions/invitations'
+import { Button } from '@/app/_components/button'
 
 export const metadata: Metadata = {
     robots: { index: false, follow: false },
@@ -28,18 +28,20 @@ export default async function AcceptInvitePage({
                         accept.
                     </p>
                     <div className="flex flex-col gap-2">
-                        <Link
+                        <Button
                             href={`/login?next=/invite/${token}`}
-                            className="btn-primary justify-center"
+                            variant="primary"
+                            className="justify-center"
                         >
                             Log in
-                        </Link>
-                        <Link
+                        </Button>
+                        <Button
                             href={`/signup?next=/invite/${token}`}
-                            className="btn-outline justify-center"
+                            variant="outline"
+                            className="justify-center"
                         >
                             Sign up
-                        </Link>
+                        </Button>
                     </div>
                 </div>
             </main>
@@ -58,12 +60,9 @@ export default async function AcceptInvitePage({
                 <p className="text-sm text-[var(--color-coral)] mb-6">
                     {result.error}
                 </p>
-                <Link
-                    href="/boards"
-                    className="text-[var(--color-electric-blue)]"
-                >
+                <Button href="/boards" variant="ghost">
                     Go to your boards
-                </Link>
+                </Button>
             </div>
         </main>
     )

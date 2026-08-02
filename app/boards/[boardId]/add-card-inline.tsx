@@ -2,6 +2,7 @@
 
 import { useActionState, useRef, useState } from 'react'
 import { createCardAction } from '@/lib/actions/cards'
+import { Button } from '../../_components/button'
 
 export function AddCardInline({
     boardId,
@@ -17,13 +18,14 @@ export function AddCardInline({
 
     if (!open) {
         return (
-            <button
-                type="button"
+            <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setOpen(true)}
-                className="text-sm text-[var(--color-smoke)] hover:text-[var(--color-ink)] px-2 py-1.5 w-full text-left rounded-lg hover:bg-[var(--color-mist)]/30"
+                className="w-full text-left"
             >
                 + Add a card
-            </button>
+            </Button>
         )
     }
 
@@ -54,16 +56,12 @@ export function AddCardInline({
                 </p>
             ) : null}
             <div className="flex gap-2">
-                <button type="submit" className="btn-secondary">
+                <Button type="submit" variant="secondary">
                     Add card
-                </button>
-                <button
-                    type="button"
-                    className="btn-outline"
-                    onClick={() => setOpen(false)}
-                >
+                </Button>
+                <Button variant="outline" onClick={() => setOpen(false)}>
                     Cancel
-                </button>
+                </Button>
             </div>
         </form>
     )

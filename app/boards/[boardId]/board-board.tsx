@@ -1,7 +1,13 @@
 'use client'
 
-import { useEffect, useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
+import { useGSAP } from '@gsap/react'
+import gsap from 'gsap'
+import { Archive, Calendar, CheckSquare } from 'lucide-react'
+import { Button } from '../../_components/button'
+import { Avatar } from '../../_components/avatar-stack'
+import { ProgressBar } from '../../_components/progress-bar'
 import {
     DndContext,
     DragOverlay,
@@ -31,8 +37,14 @@ import type {
     MemberSummary,
 } from './board-types'
 import { AddCardInline } from './add-card-inline'
-import { LABEL_COLOR_VAR, LABEL_COLOR_SUBTLE_VAR } from '@/lib/labels'
+import {
+    LABEL_COLOR_VAR,
+    LABEL_COLOR_SUBTLE_VAR,
+    columnAccentColor,
+} from '@/lib/labels'
 import { formatDate } from '@/lib/format'
+
+gsap.registerPlugin(useGSAP)
 
 function CardChip({
     card,
@@ -103,11 +115,18 @@ function CardChip({
             ) : null}
             <Link
                 href={`/boards/${card.boardId}/cards/${card.id}`}
-                className="text-sm font-medium leading-snug text-[var(--color-ink)] hover:text-[var(--color-electric-blue)]"
+                className="text-sm font-medium leading-snug text-[var(--color-ink)] hover:text-[var(--color-electric-blue)] break-words"
                 onClick={(e) => e.stopPropagation()}
             >
                 {card.title}
             </Link>
+            {card.checklist.total > 0 ? (
+                <ProgressBar
+                    value={card.checklist.done}
+                    max={card.checklist.total}
+                    label={`Checklist ${card.checklist.done} of ${card.checklist.total} complete`}
+                />
+            ) : null}
             {card.dueDate || card.checklist.total > 0 || assignee ? (
                 <div className="flex items-center justify-between text-xs text-[var(--color-fog)]">
                     <span className="flex items-center gap-2.5">
@@ -119,85 +138,29 @@ function CardChip({
                                         : 'inline-flex items-center gap-1'
                                 }
                             >
-                                <svg
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 16 16"
-                                    fill="none"
-                                    aria-hidden="true"
+                                <Calendar
+                                    size={12}
+                                    strokeWidth={2}
                                     className="shrink-0"
-                                >
-                                    <rect
-                                        x="2.5"
-                                        y="3.5"
-                                        width="11"
-                                        height="10"
-                                        rx="1.5"
-                                        stroke="currentColor"
-                                        strokeWidth="1.3"
-                                    />
-                                    <path
-                                        d="M2.5 6.5H13.5"
-                                        stroke="currentColor"
-                                        strokeWidth="1.3"
-                                    />
-                                    <path
-                                        d="M5.5 2V4.5"
-                                        stroke="currentColor"
-                                        strokeWidth="1.3"
-                                        strokeLinecap="round"
-                                    />
-                                    <path
-                                        d="M10.5 2V4.5"
-                                        stroke="currentColor"
-                                        strokeWidth="1.3"
-                                        strokeLinecap="round"
-                                    />
-                                </svg>
+                                    aria-hidden="true"
+                                />
                                 {overdue ? 'Overdue: ' : ''}
                                 {formatDate(card.dueDate)}
                             </span>
                         ) : null}
                         {card.checklist.total > 0 ? (
                             <span className="inline-flex items-center gap-1">
-                                <svg
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 16 16"
-                                    fill="none"
-                                    aria-hidden="true"
+                                <CheckSquare
+                                    size={12}
+                                    strokeWidth={2}
                                     className="shrink-0"
-                                >
-                                    <rect
-                                        x="2.5"
-                                        y="2.5"
-                                        width="11"
-                                        height="11"
-                                        rx="2.5"
-                                        stroke="currentColor"
-                                        strokeWidth="1.3"
-                                    />
-                                    <path
-                                        d="M5.2 8.2L7.1 10L10.8 6"
-                                        stroke="currentColor"
-                                        strokeWidth="1.3"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    />
-                                </svg>
+                                    aria-hidden="true"
+                                />
                                 {card.checklist.done}/{card.checklist.total}
                             </span>
                         ) : null}
                     </span>
-                    {assignee ? (
-                        <span
-                            className="rounded-full bg-[var(--color-lavender)] text-[var(--color-ink)] w-6 h-6 flex items-center justify-center text-[11px] font-semibold shrink-0"
-                            title={assignee.name}
-                            aria-label={`Assigned to ${assignee.name}`}
-                        >
-                            {assignee.name.slice(0, 1).toUpperCase()}
-                        </span>
-                    ) : null}
+                    {assignee ? <Avatar person={assignee} size="sm" /> : null}
                 </div>
             ) : null}
         </li>
@@ -206,12 +169,14 @@ function CardChip({
 
 function Column({
     column,
+    index,
     cards,
     members,
     labels,
     canManage,
 }: {
     column: ColumnSummary
+    index: number
     cards: CardSummary[]
     members: MemberSummary[]
     labels: LabelSummary[]
@@ -220,6 +185,25 @@ function Column({
     const [, startTransition] = useTransition()
     const [error, setError] = useState<string | null>(null)
     const cardIds = cards.map((c) => c.id)
+    const listRef = useRef<HTMLUListElement>(null)
+
+    useGSAP(
+        () => {
+            if (!listRef.current) return
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+                return
+            const items = listRef.current.children
+            if (items.length === 0) return
+            gsap.from(items, {
+                opacity: 0,
+                duration: 0.3,
+                stagger: 0.04,
+                ease: 'power1.out',
+                clearProps: 'opacity',
+            })
+        },
+        { scope: listRef, dependencies: [column.id] }
+    )
 
     function handleArchive() {
         if (cards.length > 0) {
@@ -243,48 +227,27 @@ function Column({
         >
             <div className="flex items-center justify-between mb-2 px-1">
                 <h3 className="font-semibold text-sm tracking-[-0.01em] text-[var(--color-ink)] flex items-center gap-1.5">
+                    <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ background: columnAccentColor(index) }}
+                        aria-hidden="true"
+                    />
                     {column.name}
                     <span className="text-[10px] font-semibold text-[var(--color-smoke)] bg-[var(--color-sunken)] rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center">
                         {cards.length}
                     </span>
                 </h3>
                 {canManage ? (
-                    <button
-                        type="button"
+                    <Button
+                        variant="icon"
+                        size="sm"
                         onClick={handleArchive}
-                        className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 text-[var(--color-fog)] hover:text-[var(--color-coral)] w-6 h-6 flex items-center justify-center rounded hover:bg-[var(--color-sunken)] transition-opacity"
+                        className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
                         aria-label={`Archive column ${column.name}`}
                         title="Archive column"
                     >
-                        <svg
-                            width="15"
-                            height="15"
-                            viewBox="0 0 16 16"
-                            fill="none"
-                            aria-hidden="true"
-                        >
-                            <rect
-                                x="2"
-                                y="3.5"
-                                width="12"
-                                height="2.2"
-                                rx="0.8"
-                                stroke="currentColor"
-                                strokeWidth="1.2"
-                            />
-                            <path
-                                d="M3 6.3V11.5C3 12.3 3.7 13 4.5 13H11.5C12.3 13 13 12.3 13 11.5V6.3"
-                                stroke="currentColor"
-                                strokeWidth="1.2"
-                            />
-                            <path
-                                d="M6.3 8.7H9.7"
-                                stroke="currentColor"
-                                strokeWidth="1.2"
-                                strokeLinecap="round"
-                            />
-                        </svg>
-                    </button>
+                        <Archive size={15} strokeWidth={2} aria-hidden="true" />
+                    </Button>
                 ) : null}
             </div>
             {error ? (
@@ -296,13 +259,20 @@ function Column({
                 </p>
             ) : null}
 
+            <div className="mb-2 shrink-0">
+                <AddCardInline boardId={column.boardId} columnId={column.id} />
+            </div>
+
             <div className="flex-1 min-h-0 overflow-y-auto -mx-1 px-1">
                 <SortableContext
                     items={cardIds}
                     strategy={verticalListSortingStrategy}
                 >
                     <DroppableColumnBody columnId={column.id}>
-                        <ul className="flex flex-col gap-2 min-h-[40px]">
+                        <ul
+                            ref={listRef}
+                            className="flex flex-col gap-2 min-h-[40px]"
+                        >
                             {cards.map((card) => (
                                 <CardChip
                                     key={card.id}
@@ -314,10 +284,6 @@ function Column({
                         </ul>
                     </DroppableColumnBody>
                 </SortableContext>
-            </div>
-
-            <div className="mt-2 shrink-0">
-                <AddCardInline boardId={column.boardId} columnId={column.id} />
             </div>
         </div>
     )
@@ -355,6 +321,23 @@ export function BoardBoard({
 }) {
     const [localCards, setLocalCards] = useState(cardsByColumn)
     const [activeCard, setActiveCard] = useState<CardSummary | null>(null)
+    const columnsRef = useRef<HTMLDivElement>(null)
+
+    useGSAP(
+        () => {
+            if (!columnsRef.current) return
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+                return
+            gsap.from(columnsRef.current.children, {
+                opacity: 0,
+                duration: 0.35,
+                stagger: 0.06,
+                ease: 'power1.out',
+                clearProps: 'opacity',
+            })
+        },
+        { scope: columnsRef, dependencies: [boardId] }
+    )
 
     // The server re-renders this page after every mutation (revalidatePath),
     // handing down a fresh `cardsByColumn`. Sync it in whenever that happens
@@ -442,11 +425,15 @@ export function BoardBoard({
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
         >
-            <div className="flex flex-1 min-h-0 gap-4 overflow-x-auto pb-4 -mx-1 px-1">
-                {columns.map((column) => (
+            <div
+                ref={columnsRef}
+                className="flex flex-1 min-h-0 gap-4 overflow-x-auto pb-4 -mx-1 px-1"
+            >
+                {columns.map((column, index) => (
                     <Column
                         key={column.id}
                         column={column}
+                        index={index}
                         cards={localCards[column.id] ?? []}
                         members={members}
                         labels={labels}

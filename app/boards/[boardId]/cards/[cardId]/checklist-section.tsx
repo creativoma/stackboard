@@ -5,6 +5,7 @@ import {
     addChecklistItemAction,
     toggleChecklistItemAction,
 } from '@/lib/actions/checklist'
+import { Button } from '../../../../_components/button'
 
 type ChecklistItem = { id: string; text: string; done: boolean }
 
@@ -113,9 +114,9 @@ export function ChecklistSection({
                     placeholder="Add checklist item"
                     className="input"
                 />
-                <button type="submit" className="btn-outline shrink-0">
+                <Button type="submit" variant="outline" className="shrink-0">
                     Add
-                </button>
+                </Button>
             </form>
             {state?.error ? (
                 <p role="alert" className="text-xs text-[var(--color-coral)]">

@@ -1,10 +1,10 @@
 'use client'
 
 import { useActionState } from 'react'
-import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { signupAction } from '../actions'
 import { SubmitButton } from '../submit-button'
+import { Button } from '@/app/_components/button'
 
 export default function SignupPage() {
     const [state, formAction] = useActionState(signupAction, undefined)
@@ -89,12 +89,13 @@ export default function SignupPage() {
 
                 <p className="text-sm text-[var(--color-smoke)] mt-6">
                     Already have an account?{' '}
-                    <Link
+                    <Button
                         href="/login"
-                        className="text-[var(--color-electric-blue)] font-medium"
+                        variant="ghost"
+                        className="!inline-flex !p-0 !min-h-0 font-medium"
                     >
                         Log in
-                    </Link>
+                    </Button>
                 </p>
             </div>
         </main>

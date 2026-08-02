@@ -1,6 +1,14 @@
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import type { Metadata } from 'next'
+import {
+    Download,
+    LayoutGrid,
+    Settings as SettingsIcon,
+    UserPlus,
+} from 'lucide-react'
+import { Button } from '@/app/_components/button'
+import { AvatarStack } from '@/app/_components/avatar-stack'
+import { ProgressBar } from '@/app/_components/progress-bar'
 import { requireUser } from '@/lib/auth/session'
 import { getMembership } from '@/lib/auth/membership'
 import { isActiveMember, isBoardOwner } from '@/lib/domain/authorization'
@@ -70,12 +78,13 @@ export default async function BoardPage({
                     This board was permanently closed and can no longer be
                     edited.
                 </p>
-                <Link
+                <Button
                     href="/boards"
-                    className="text-[var(--color-electric-blue)] mt-3 inline-block"
+                    variant="ghost"
+                    className="!p-0 !min-h-0 mt-3 !inline-flex"
                 >
                     Back to your boards
-                </Link>
+                </Button>
             </div>
         )
     }
@@ -93,6 +102,9 @@ export default async function BoardPage({
         q: sp.q,
     }
     const filteredCards = cards.filter((c) => matchesFilters(c, filters))
+
+    const checklistDone = cards.reduce((sum, c) => sum + c.checklist.done, 0)
+    const checklistTotal = cards.reduce((sum, c) => sum + c.checklist.total, 0)
 
     const cardsByColumn: Record<string, CardSummary[]> = {}
     for (const column of columns) {
@@ -128,49 +140,59 @@ export default async function BoardPage({
                 aria-hidden="true"
             />
             <div className="relative flex items-start justify-between gap-4 flex-wrap">
-                <div>
-                    <h1 className="text-[26px] font-bold tracking-[-0.02em] text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.2)]">
-                        {board.name}
-                    </h1>
-                    <p className="text-sm text-white/80 font-medium">
-                        {columns.length} column{columns.length === 1 ? '' : 's'}{' '}
-                        · {cards.length} card{cards.length === 1 ? '' : 's'}
-                    </p>
+                <div className="flex items-start gap-3 min-w-0">
+                    <span
+                        className="w-11 h-11 rounded-[var(--radius-cards)] flex items-center justify-center shrink-0 bg-white/16 text-white ring-1 ring-white/25"
+                        aria-hidden="true"
+                    >
+                        <LayoutGrid size={20} strokeWidth={2} />
+                    </span>
+                    <div className="min-w-0">
+                        <h1 className="text-[26px] font-bold tracking-[-0.02em] text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.2)] truncate">
+                            {board.name}
+                        </h1>
+                        <p className="text-sm text-white/80 font-medium mb-1.5">
+                            {columns.length} column
+                            {columns.length === 1 ? '' : 's'} · {cards.length}{' '}
+                            card{cards.length === 1 ? '' : 's'}
+                        </p>
+                        {checklistTotal > 0 ? (
+                            <ProgressBar
+                                value={checklistDone}
+                                max={checklistTotal}
+                                label={`${checklistDone} of ${checklistTotal} checklist items complete`}
+                                trackClassName="bg-white/25"
+                                className="w-56 max-w-full [&>span]:text-white/85"
+                            />
+                        ) : null}
+                    </div>
                 </div>
-                <div className="flex items-center gap-3">
-                    {members.length > 0 ? (
-                        <div
-                            className="flex items-center -space-x-2"
-                            aria-label={`${members.length} member${members.length === 1 ? '' : 's'}`}
-                        >
-                            {members.slice(0, 5).map((m) => (
-                                <span
-                                    key={m.user.id}
-                                    className="w-7 h-7 rounded-full bg-[#1c7fc4] text-white text-[11px] font-semibold flex items-center justify-center ring-2 ring-white/70 shadow-[0_1px_3px_rgba(0,0,0,0.25)]"
-                                    title={m.user.name}
-                                >
-                                    {m.user.name.slice(0, 1).toUpperCase()}
-                                </span>
-                            ))}
-                            {members.length > 5 ? (
-                                <span className="w-7 h-7 rounded-full bg-[#1c7fc4] text-white text-[11px] font-semibold flex items-center justify-center ring-2 ring-white/70 shadow-[0_1px_3px_rgba(0,0,0,0.25)]">
-                                    +{members.length - 5}
-                                </span>
-                            ) : null}
-                        </div>
-                    ) : null}
-                    <a
+                <div className="flex items-center gap-2">
+                    <AvatarStack people={members.map((m) => m.user)} onBoard />
+                    <Button
+                        href={`/boards/${boardId}/settings#invite-email`}
+                        variant="onBoard"
+                    >
+                        <UserPlus size={15} strokeWidth={2.25} />
+                        Add Member
+                    </Button>
+                    <Button
                         href={`/boards/${boardId}/export`}
-                        className="rounded-[var(--radius-buttons)] px-3.5 py-2 text-sm font-semibold text-white bg-white/16 hover:bg-white/28 transition-colors"
+                        external
+                        variant="onBoard"
+                        aria-label="Export board"
+                        title="Export board"
                     >
-                        Export
-                    </a>
-                    <Link
+                        <Download size={15} strokeWidth={2.25} />
+                    </Button>
+                    <Button
                         href={`/boards/${boardId}/settings`}
-                        className="rounded-[var(--radius-buttons)] px-3.5 py-2 text-sm font-semibold text-white bg-white/16 hover:bg-white/28 transition-colors"
+                        variant="onBoard"
+                        aria-label="Board settings"
+                        title="Board settings"
                     >
-                        Settings
-                    </Link>
+                        <SettingsIcon size={15} strokeWidth={2.25} />
+                    </Button>
                 </div>
             </div>
 

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { restoreColumnAction } from '@/lib/actions/columns'
+import { Button } from '@/app/_components/button'
 
 export function RestoreColumnButton({
     boardId,
@@ -25,14 +26,14 @@ export function RestoreColumnButton({
 
     return (
         <div className="flex flex-col items-end gap-1">
-            <button
-                type="button"
+            <Button
+                variant="outline"
+                size="sm"
                 onClick={handleClick}
                 disabled={busy}
-                className="btn-outline px-3 py-1 text-xs"
             >
                 Restore
-            </button>
+            </Button>
             {error ? (
                 <p role="alert" className="text-xs text-[var(--color-coral)]">
                     {error}

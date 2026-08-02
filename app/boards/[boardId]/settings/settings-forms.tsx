@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { ArrowDown, ArrowUp } from 'lucide-react'
 import {
     renameBoardAction,
     closeBoardAction,
@@ -15,6 +16,7 @@ import {
     type InviteActionState,
 } from '@/lib/actions/invitations'
 import { SubmitButton } from '@/app/(auth)/submit-button'
+import { Button } from '@/app/_components/button'
 
 export function RenameBoardForm({
     boardId,
@@ -116,14 +118,14 @@ export function RevokeInvitationButton({
 
     return (
         <div className="flex flex-col items-end gap-1">
-            <button
-                type="button"
+            <Button
+                variant="destructive"
+                size="sm"
                 onClick={handleClick}
                 disabled={busy}
-                className="text-sm text-[var(--color-coral)]"
             >
                 Revoke
-            </button>
+            </Button>
             {state?.error ? (
                 <p role="alert" className="text-xs text-[var(--color-coral)]">
                     {state.error}
@@ -162,14 +164,14 @@ export function RemoveMemberButton({
 
     return (
         <div className="flex flex-col items-end gap-1">
-            <button
-                type="button"
+            <Button
+                variant="destructive"
+                size="sm"
                 onClick={handleClick}
                 disabled={busy}
-                className="text-sm text-[var(--color-coral)]"
             >
                 Remove
-            </button>
+            </Button>
             {state?.error ? (
                 <p role="alert" className="text-xs text-[var(--color-coral)]">
                     {state.error}
@@ -207,30 +209,30 @@ export function ColumnOrderRow({
     return (
         <li className="flex items-center justify-between py-2 border-b border-[var(--color-mist)] last:border-0">
             <span className="text-sm font-medium">{name}</span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
                 {error ? (
                     <span className="text-xs text-[var(--color-coral)]">
                         {error}
                     </span>
                 ) : null}
-                <button
-                    type="button"
+                <Button
+                    variant="icon"
+                    size="sm"
                     disabled={busy || index === 0}
                     onClick={() => move(index - 1)}
-                    className="btn-outline px-2 py-1 text-xs"
                     aria-label={`Move ${name} earlier`}
                 >
-                    &uarr;
-                </button>
-                <button
-                    type="button"
+                    <ArrowUp size={14} strokeWidth={2} aria-hidden="true" />
+                </Button>
+                <Button
+                    variant="icon"
+                    size="sm"
                     disabled={busy || index === count - 1}
                     onClick={() => move(index + 1)}
-                    className="btn-outline px-2 py-1 text-xs"
                     aria-label={`Move ${name} later`}
                 >
-                    &darr;
-                </button>
+                    <ArrowDown size={14} strokeWidth={2} aria-hidden="true" />
+                </Button>
             </div>
         </li>
     )
@@ -253,14 +255,9 @@ export function CloseBoardButton({ boardId }: { boardId: string }) {
 
     return (
         <div>
-            <button
-                type="button"
-                onClick={handleClick}
-                disabled={busy}
-                className="btn-outline border-[var(--color-coral)] text-[var(--color-coral)]"
-            >
+            <Button variant="destructive" onClick={handleClick} disabled={busy}>
                 Close this board permanently
-            </button>
+            </Button>
             {error ? (
                 <p
                     role="alert"

@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import type { Metadata } from 'next'
+import { Button } from '@/app/_components/button'
 import { requireUser } from '@/lib/auth/session'
 import { getMembership } from '@/lib/auth/membership'
 import { isActiveMember } from '@/lib/domain/authorization'
@@ -71,12 +71,13 @@ export default async function CardDetailPage({
     return (
         <div className="flex flex-col gap-10 max-w-[720px]">
             <div>
-                <Link
+                <Button
                     href={`/boards/${boardId}`}
-                    className="text-sm text-[var(--color-electric-blue)]"
+                    variant="ghost"
+                    className="!p-0 !min-h-0"
                 >
                     &larr; {board.name}
-                </Link>
+                </Button>
                 {column ? (
                     <p className="eyebrow mt-3 mb-1">In {column.name}</p>
                 ) : null}

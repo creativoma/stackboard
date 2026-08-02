@@ -12,6 +12,7 @@ import { toggleCardLabelAction } from '@/lib/actions/labels'
 import { renderMarkdownLite } from '@/lib/markdown'
 import { LABEL_COLOR_VAR, LABEL_COLOR_SUBTLE_VAR } from '@/lib/labels'
 import type { MemberSummary, LabelSummary } from '../../board-types'
+import { Button } from '../../../../_components/button'
 
 export function TitleField({
     boardId,
@@ -121,16 +122,12 @@ export function DescriptionField({
                 </p>
             ) : null}
             <div className="flex gap-2">
-                <button type="submit" className="btn-secondary">
+                <Button type="submit" variant="secondary">
                     Save
-                </button>
-                <button
-                    type="button"
-                    className="btn-outline"
-                    onClick={() => setEditing(false)}
-                >
+                </Button>
+                <Button variant="outline" onClick={() => setEditing(false)}>
                     Cancel
-                </button>
+                </Button>
             </div>
         </form>
     )
@@ -340,14 +337,14 @@ export function ArchiveRestoreControls({
                 </p>
             ) : null}
             {status === 'active' ? (
-                <button
-                    type="button"
+                <Button
+                    variant="outline"
                     onClick={handleArchive}
                     disabled={busy}
-                    className="btn-outline w-fit"
+                    className="w-fit"
                 >
                     Archive card
-                </button>
+                </Button>
             ) : (
                 <div className="flex items-center gap-2 flex-wrap">
                     <span
@@ -372,14 +369,13 @@ export function ArchiveRestoreControls({
                                     </option>
                                 ))}
                             </select>
-                            <button
-                                type="button"
+                            <Button
+                                variant="secondary"
                                 onClick={handleRestore}
                                 disabled={busy}
-                                className="btn-secondary"
                             >
                                 Restore
-                            </button>
+                            </Button>
                         </>
                     ) : (
                         <span className="text-xs text-[var(--color-fog)]">

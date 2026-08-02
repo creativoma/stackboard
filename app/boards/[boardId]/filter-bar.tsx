@@ -1,4 +1,6 @@
+import { ChevronDown, Search } from 'lucide-react'
 import type { MemberSummary, LabelSummary } from './board-types'
+import { Button } from '../../_components/button'
 
 export function FilterBar({
     boardId,
@@ -20,28 +22,12 @@ export function FilterBar({
             aria-label="Filter cards"
         >
             <div className="relative max-w-55 w-full">
-                <svg
+                <Search
                     className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-fog"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 16 16"
-                    fill="none"
+                    size={16}
+                    strokeWidth={2}
                     aria-hidden="true"
-                >
-                    <circle
-                        cx="7"
-                        cy="7"
-                        r="5.25"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                    />
-                    <path
-                        d="M11 11L14 14"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                    />
-                </svg>
+                />
                 <input
                     type="search"
                     name="q"
@@ -65,22 +51,12 @@ export function FilterBar({
                         </option>
                     ))}
                 </select>
-                <svg
+                <ChevronDown
                     className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-fog"
-                    width="10"
-                    height="6"
-                    viewBox="0 0 10 6"
-                    fill="none"
+                    size={14}
+                    strokeWidth={2}
                     aria-hidden="true"
-                >
-                    <path
-                        d="M1 1L5 5L9 1"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    />
-                </svg>
+                />
             </div>
             <div className="relative max-w-[160px] w-full">
                 <select
@@ -96,22 +72,12 @@ export function FilterBar({
                         </option>
                     ))}
                 </select>
-                <svg
+                <ChevronDown
                     className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-fog)]"
-                    width="10"
-                    height="6"
-                    viewBox="0 0 10 6"
-                    fill="none"
+                    size={14}
+                    strokeWidth={2}
                     aria-hidden="true"
-                >
-                    <path
-                        d="M1 1L5 5L9 1"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    />
-                </svg>
+                />
             </div>
             <label className="flex items-center gap-1.5 h-10 box-border text-sm px-2.5 rounded-[var(--radius-buttons)] bg-[var(--color-snow)] cursor-pointer select-none has-[:checked]:bg-[var(--color-electric-blue-tint)] has-[:checked]:text-[var(--color-electric-blue)] has-[:checked]:font-medium transition-colors">
                 <input
@@ -123,19 +89,17 @@ export function FilterBar({
                 />
                 Overdue only
             </label>
-            <button
+            <Button
                 type="submit"
-                className="btn-primary h-10 min-h-0 box-border"
+                variant="primary"
+                className="h-10 min-h-0 box-border"
             >
                 Apply
-            </button>
+            </Button>
             {filters.member || filters.label || filters.overdue || filters.q ? (
-                <a
-                    href={`/boards/${boardId}`}
-                    className="text-sm font-medium text-[var(--color-electric-blue)] hover:text-[var(--color-midnight-pressed)]"
-                >
+                <Button variant="ghost" href={`/boards/${boardId}`}>
                     Clear
-                </a>
+                </Button>
             ) : null}
         </form>
     )

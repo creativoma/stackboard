@@ -2,6 +2,7 @@
 
 import { useActionState, useRef, useState } from 'react'
 import { createColumnAction } from '@/lib/actions/columns'
+import { Button } from '../../_components/button'
 
 export function NewColumnForm({ boardId }: { boardId: string }) {
     const [open, setOpen] = useState(false)
@@ -11,13 +12,13 @@ export function NewColumnForm({ boardId }: { boardId: string }) {
 
     if (!open) {
         return (
-            <button
-                type="button"
+            <Button
+                variant="onBoardDashed"
                 onClick={() => setOpen(true)}
-                className="w-[280px] shrink-0 rounded-[var(--radius-largecards)] border-2 border-dashed border-white/30 text-white/90 text-sm font-semibold px-3 py-2.5 text-left hover:bg-white/12 hover:border-white/50 transition-colors"
+                className="w-[280px] shrink-0 text-left justify-start"
             >
                 + Add column
-            </button>
+            </Button>
         )
     }
 
@@ -38,16 +39,12 @@ export function NewColumnForm({ boardId }: { boardId: string }) {
                 placeholder="Column name"
                 className="input w-[220px]"
             />
-            <button type="submit" className="btn-secondary">
+            <Button type="submit" variant="secondary">
                 Add
-            </button>
-            <button
-                type="button"
-                className="btn-outline"
-                onClick={() => setOpen(false)}
-            >
+            </Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>
                 Cancel
-            </button>
+            </Button>
             {state?.error ? (
                 <p role="alert" className="text-xs text-[var(--color-coral)]">
                     {state.error}

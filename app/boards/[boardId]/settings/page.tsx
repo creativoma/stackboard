@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import type { Metadata } from 'next'
+import { Archive, ListOrdered, ShieldAlert, Users } from 'lucide-react'
+import { Button } from '@/app/_components/button'
+import { Avatar } from '@/app/_components/avatar-stack'
 import { requireUser } from '@/lib/auth/session'
 import { getMembership } from '@/lib/auth/membership'
 import { isActiveMember, isBoardOwner } from '@/lib/domain/authorization'
@@ -12,7 +14,6 @@ import {
     getBoardMembers,
 } from '@/lib/queries/board'
 import { getPendingInvitationsForBoard } from '@/lib/queries/invitations'
-import { ArchiveRestoreControls } from '../cards/[cardId]/card-fields'
 import {
     RenameBoardForm,
     InviteMemberForm,
@@ -21,7 +22,7 @@ import {
     ColumnOrderRow,
     CloseBoardButton,
 } from './settings-forms'
-import { RestoreColumnButton } from './restore-column-button'
+import { ArchiveDrawer } from './archive-drawer'
 
 export const metadata: Metadata = { title: 'Board settings' }
 
@@ -64,18 +65,24 @@ export default async function BoardSettingsPage({
         owner ? getPendingInvitationsForBoard(boardId) : Promise.resolve([]),
     ])
 
+    const archivedCount = archivedColumns.length + archivedCards.length
+
     return (
-        <div className="flex flex-col gap-10 max-w-[720px]">
+        <div className="flex flex-col gap-8 max-w-[640px]">
             <div>
-                <Link
+                <Button
                     href={`/boards/${boardId}`}
-                    className="text-sm text-[var(--color-electric-blue)]"
+                    variant="ghost"
+                    className="!p-0 !min-h-0"
                 >
                     &larr; {board.name}
-                </Link>
-                <h1 className="text-[24px] font-semibold tracking-[-0.02em] mt-1">
+                </Button>
+                <h1 className="text-[28px] font-semibold tracking-[-0.02em] mt-1">
                     Board settings
                 </h1>
+                <p className="text-[var(--color-smoke)] mt-1 text-sm">
+                    Manage the name, members, and columns for this board.
+                </p>
             </div>
 
             {owner ? (
@@ -91,23 +98,31 @@ export default async function BoardSettingsPage({
             ) : null}
 
             <section aria-labelledby="members-heading" className="card-surface">
-                <h2 id="members-heading" className="eyebrow mb-3">
+                <h2
+                    id="members-heading"
+                    className="eyebrow mb-3 flex items-center gap-1.5"
+                >
+                    <Users size={13} strokeWidth={2.5} aria-hidden="true" />
                     Members
                 </h2>
                 <ul className="flex flex-col">
                     {members.map(({ user: member, role }) => (
                         <li
                             key={member.id}
-                            className="flex items-center justify-between py-2 border-b border-[var(--color-mist)] last:border-0"
+                            className="flex items-center gap-3 py-2.5 border-b border-[var(--color-mist)] last:border-0"
                         >
-                            <div>
-                                <p className="text-sm font-medium">
+                            <Avatar person={member} size="md" />
+                            <div className="min-w-0 flex-1">
+                                <p className="text-sm font-medium truncate">
                                     {member.name}
                                 </p>
-                                <p className="text-xs text-[var(--color-fog)]">
-                                    {member.email} · {role}
+                                <p className="text-xs text-[var(--color-fog)] truncate">
+                                    {member.email}
                                 </p>
                             </div>
+                            <span className="pill bg-[var(--color-sunken)] text-[var(--color-smoke)] shrink-0">
+                                {role}
+                            </span>
                             {owner && role !== 'owner' ? (
                                 <RemoveMemberButton
                                     boardId={boardId}
@@ -148,7 +163,15 @@ export default async function BoardSettingsPage({
             </section>
 
             <section aria-labelledby="columns-heading" className="card-surface">
-                <h2 id="columns-heading" className="eyebrow mb-3">
+                <h2
+                    id="columns-heading"
+                    className="eyebrow mb-3 flex items-center gap-1.5"
+                >
+                    <ListOrdered
+                        size={13}
+                        strokeWidth={2.5}
+                        aria-hidden="true"
+                    />
                     Column order
                 </h2>
                 <ul>
@@ -165,60 +188,36 @@ export default async function BoardSettingsPage({
                 </ul>
             </section>
 
-            {archivedColumns.length > 0 ? (
+            {archivedCount > 0 ? (
                 <section
-                    aria-labelledby="archived-columns-heading"
-                    className="card-surface"
+                    aria-labelledby="archive-heading"
+                    className="card-surface flex items-center justify-between gap-3"
                 >
-                    <h2 id="archived-columns-heading" className="eyebrow mb-3">
-                        Archived columns
-                    </h2>
-                    <ul>
-                        {archivedColumns.map((col) => (
-                            <li
-                                key={col.id}
-                                className="flex items-center justify-between py-2 border-b border-[var(--color-mist)] last:border-0"
-                            >
-                                <span className="text-sm">{col.name}</span>
-                                <RestoreColumnButton
-                                    boardId={boardId}
-                                    columnId={col.id}
-                                />
-                            </li>
-                        ))}
-                    </ul>
-                </section>
-            ) : null}
-
-            {archivedCards.length > 0 ? (
-                <section
-                    aria-labelledby="archived-cards-heading"
-                    className="card-surface"
-                >
-                    <h2 id="archived-cards-heading" className="eyebrow mb-3">
-                        Archived cards
-                    </h2>
-                    <ul className="flex flex-col gap-3">
-                        {archivedCards.map((card) => (
-                            <li
-                                key={card.id}
-                                className="flex items-center justify-between gap-3 py-2 border-b border-[var(--color-mist)] last:border-0"
-                            >
-                                <Link
-                                    href={`/boards/${boardId}/cards/${card.id}`}
-                                    className="text-sm font-medium hover:underline"
-                                >
-                                    {card.title}
-                                </Link>
-                                <ArchiveRestoreControls
-                                    boardId={boardId}
-                                    cardId={card.id}
-                                    status="archived"
-                                    activeColumns={activeColumns}
-                                />
-                            </li>
-                        ))}
-                    </ul>
+                    <div>
+                        <h2
+                            id="archive-heading"
+                            className="eyebrow mb-1 flex items-center gap-1.5"
+                        >
+                            <Archive
+                                size={13}
+                                strokeWidth={2.5}
+                                aria-hidden="true"
+                            />
+                            Archive
+                        </h2>
+                        <p className="text-sm text-[var(--color-smoke)]">
+                            {archivedColumns.length} column
+                            {archivedColumns.length === 1 ? '' : 's'} ·{' '}
+                            {archivedCards.length} card
+                            {archivedCards.length === 1 ? '' : 's'} archived
+                        </p>
+                    </div>
+                    <ArchiveDrawer
+                        boardId={boardId}
+                        archivedColumns={archivedColumns}
+                        archivedCards={archivedCards}
+                        activeColumns={activeColumns}
+                    />
                 </section>
             ) : null}
 
@@ -229,8 +228,13 @@ export default async function BoardSettingsPage({
                 >
                     <h2
                         id="danger-heading"
-                        className="eyebrow mb-3 text-[var(--color-coral)]"
+                        className="eyebrow mb-3 flex items-center gap-1.5 text-[var(--color-coral)]"
                     >
+                        <ShieldAlert
+                            size={13}
+                            strokeWidth={2.5}
+                            aria-hidden="true"
+                        />
                         Danger zone
                     </h2>
                     <p className="text-sm text-[var(--color-smoke)] mb-3">

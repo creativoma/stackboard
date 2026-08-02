@@ -1,9 +1,13 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { LayoutGrid, Lock, Mail, SquareCheck, Users } from 'lucide-react'
 import { getCurrentUser } from '@/lib/auth/session'
 import { listBoardsForUser, listPendingInvitations } from '@/lib/queries/boards'
 import { describeActivity } from '@/lib/domain/activity'
 import { boardGradient } from '@/lib/board-colors'
+import { formatRelativeTime } from '@/lib/format'
+import { StaggerIn } from '@/app/_components/stagger-in'
+import { AvatarStack, Avatar } from '@/app/_components/avatar-stack'
 import { NewBoardForm } from './new-board-form'
 import { ImportBoardForm } from './import-board-form'
 
@@ -17,6 +21,11 @@ export default async function BoardsDashboard() {
         listBoardsForUser(user.id),
         listPendingInvitations(user.email),
     ])
+
+    const totalCards = active.reduce((sum, b) => sum + b.cardCount, 0)
+    const totalMembers = new Set(
+        active.flatMap((b) => b.members.map((m) => m.id))
+    ).size
 
     return (
         <div className="flex flex-col gap-10">
@@ -35,6 +44,50 @@ export default async function BoardsDashboard() {
                 </div>
             </div>
 
+            {active.length > 0 ? (
+                <div className="elevated-surface flex flex-wrap divide-x divide-[var(--color-mist)]">
+                    <div className="flex items-center gap-3 px-6 py-4">
+                        <span className="w-9 h-9 rounded-full bg-[var(--color-electric-blue-tint)] text-[var(--color-electric-blue)] flex items-center justify-center shrink-0">
+                            <LayoutGrid size={17} strokeWidth={2} />
+                        </span>
+                        <div>
+                            <p className="text-lg font-semibold leading-tight text-[var(--color-ink)]">
+                                {active.length}
+                            </p>
+                            <p className="text-xs text-[var(--color-fog)]">
+                                Active board{active.length === 1 ? '' : 's'}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3 px-6 py-4">
+                        <span className="w-9 h-9 rounded-full bg-[var(--color-label-green-subtle)] text-[var(--color-success)] flex items-center justify-center shrink-0">
+                            <SquareCheck size={17} strokeWidth={2} />
+                        </span>
+                        <div>
+                            <p className="text-lg font-semibold leading-tight text-[var(--color-ink)]">
+                                {totalCards}
+                            </p>
+                            <p className="text-xs text-[var(--color-fog)]">
+                                Card{totalCards === 1 ? '' : 's'} in flight
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3 px-6 py-4">
+                        <span className="w-9 h-9 rounded-full bg-[var(--color-lavender)] text-[var(--color-ink)] flex items-center justify-center shrink-0">
+                            <Users size={17} strokeWidth={2} />
+                        </span>
+                        <div>
+                            <p className="text-lg font-semibold leading-tight text-[var(--color-ink)]">
+                                {totalMembers}
+                            </p>
+                            <p className="text-xs text-[var(--color-fog)]">
+                                Teammate{totalMembers === 1 ? '' : 's'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            ) : null}
+
             {pendingInvites.length > 0 ? (
                 <section
                     aria-labelledby="pending-invites-heading"
@@ -48,7 +101,16 @@ export default async function BoardsDashboard() {
                     </h2>
                     <ul className="flex flex-col gap-2">
                         {pendingInvites.map(({ invitation, board }) => (
-                            <li key={invitation.id} className="text-sm">
+                            <li
+                                key={invitation.id}
+                                className="text-sm flex items-center gap-2"
+                            >
+                                <Mail
+                                    size={14}
+                                    strokeWidth={2}
+                                    className="shrink-0 text-[var(--color-midnight)]"
+                                    aria-hidden="true"
+                                />
                                 <strong className="font-medium">
                                     {board.name}
                                 </strong>{' '}
@@ -77,9 +139,15 @@ export default async function BoardsDashboard() {
                         </p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <StaggerIn className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                         {active.map(
-                            ({ board, memberCount, latestActivity }) => (
+                            ({
+                                board,
+                                role,
+                                members,
+                                cardCount,
+                                latestActivity,
+                            }) => (
                                 <Link
                                     key={board.id}
                                     href={`/boards/${board.id}`}
@@ -102,46 +170,64 @@ export default async function BoardsDashboard() {
                                         <h3 className="relative font-semibold text-[17px] tracking-[-0.02em] text-white leading-tight [text-shadow:0_1px_3px_rgba(0,0,0,0.25)] line-clamp-2">
                                             {board.name}
                                         </h3>
+                                        {role === 'owner' ? (
+                                            <span className="pill absolute top-3 right-3 bg-white/20 text-white">
+                                                Owner
+                                            </span>
+                                        ) : null}
                                     </div>
-                                    <div className="flex flex-col gap-2 p-4">
-                                        <p className="text-sm text-[var(--color-smoke)] flex items-center gap-1.5">
-                                            <svg
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 16 16"
-                                                fill="none"
-                                                aria-hidden="true"
-                                                className="shrink-0"
-                                            >
-                                                <circle
-                                                    cx="8"
-                                                    cy="5.5"
-                                                    r="2.5"
-                                                    stroke="currentColor"
-                                                    strokeWidth="1.3"
+                                    <div className="flex flex-col gap-3 p-4">
+                                        <div className="flex items-center justify-between">
+                                            <AvatarStack
+                                                people={members}
+                                                max={4}
+                                                size="sm"
+                                            />
+                                            <span className="text-xs text-[var(--color-fog)] flex items-center gap-1 shrink-0">
+                                                <SquareCheck
+                                                    size={13}
+                                                    strokeWidth={2}
+                                                    aria-hidden="true"
                                                 />
-                                                <path
-                                                    d="M2.8 13.2C3.4 10.7 5.5 9.5 8 9.5C10.5 9.5 12.6 10.7 13.2 13.2"
-                                                    stroke="currentColor"
-                                                    strokeWidth="1.3"
-                                                    strokeLinecap="round"
+                                                {cardCount}
+                                            </span>
+                                        </div>
+                                        {latestActivity ? (
+                                            <div className="flex items-center gap-2 pt-2 border-t border-[var(--color-mist)]">
+                                                <Avatar
+                                                    person={{
+                                                        id: latestActivity.actorName,
+                                                        name: latestActivity.actorName,
+                                                    }}
+                                                    size="sm"
                                                 />
-                                            </svg>
-                                            {memberCount} member
-                                            {memberCount === 1 ? '' : 's'}
-                                        </p>
-                                        <p className="text-xs text-[var(--color-fog)] mt-auto line-clamp-1">
-                                            {latestActivity
-                                                ? describeActivity(
-                                                      latestActivity
-                                                  )
-                                                : 'No activity yet'}
-                                        </p>
+                                                <p className="text-xs text-[var(--color-fog)] line-clamp-1 min-w-0">
+                                                    <span className="text-[var(--color-smoke)] font-medium">
+                                                        {
+                                                            latestActivity.actorName.split(
+                                                                ' '
+                                                            )[0]
+                                                        }
+                                                    </span>{' '}
+                                                    {describeActivity(
+                                                        latestActivity
+                                                    )}{' '}
+                                                    ·{' '}
+                                                    {formatRelativeTime(
+                                                        latestActivity.createdAt
+                                                    )}
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-[var(--color-fog)] pt-2 border-t border-[var(--color-mist)]">
+                                                No activity yet
+                                            </p>
+                                        )}
                                     </div>
                                 </Link>
                             )
                         )}
-                    </div>
+                    </StaggerIn>
                 )}
             </section>
 
@@ -153,19 +239,25 @@ export default async function BoardsDashboard() {
                     >
                         Archived boards
                     </h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <StaggerIn className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                         {closed.map(({ board, memberCount }) => (
                             <div
                                 key={board.id}
                                 className="flex items-center gap-3 rounded-[var(--radius-cards)] p-4 bg-[var(--color-snow)]"
                             >
                                 <span
-                                    className="w-9 h-9 rounded-[var(--radius-tags)] shrink-0 opacity-60"
+                                    className="relative w-9 h-9 rounded-[var(--radius-tags)] shrink-0 opacity-60 flex items-center justify-center"
                                     style={{
                                         background: boardGradient(board.id),
                                     }}
                                     aria-hidden="true"
-                                />
+                                >
+                                    <Lock
+                                        size={14}
+                                        strokeWidth={2}
+                                        className="text-white"
+                                    />
+                                </span>
                                 <div className="min-w-0">
                                     <h3 className="font-semibold text-[15px] text-[var(--color-smoke)] truncate">
                                         {board.name}
@@ -177,7 +269,7 @@ export default async function BoardsDashboard() {
                                 </div>
                             </div>
                         ))}
-                    </div>
+                    </StaggerIn>
                 </section>
             ) : null}
         </div>
