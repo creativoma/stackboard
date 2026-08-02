@@ -20,9 +20,13 @@ export async function listBoardsForUser(userId: string) {
 
     const boards = await Promise.all(
         memberships.map(async ({ board, role }) => {
-            const [{ value: memberCount }] = await db
-                .select({ value: count() })
+            const activeMembers = await db
+                .select({ id: schema.users.id, name: schema.users.name })
                 .from(schema.boardMemberships)
+                .innerJoin(
+                    schema.users,
+                    eq(schema.users.id, schema.boardMemberships.userId)
+                )
                 .where(
                     and(
                         eq(schema.boardMemberships.boardId, board.id),
@@ -30,14 +34,42 @@ export async function listBoardsForUser(userId: string) {
                     )
                 )
 
+            const [{ value: cardCount }] = await db
+                .select({ value: count() })
+                .from(schema.cards)
+                .where(
+                    and(
+                        eq(schema.cards.boardId, board.id),
+                        eq(schema.cards.status, 'active')
+                    )
+                )
+
             const [latestActivity] = await db
-                .select()
+                .select({
+                    type: schema.activityEvents.type,
+                    field: schema.activityEvents.field,
+                    oldValue: schema.activityEvents.oldValue,
+                    newValue: schema.activityEvents.newValue,
+                    createdAt: schema.activityEvents.createdAt,
+                    actorName: schema.users.name,
+                })
                 .from(schema.activityEvents)
+                .innerJoin(
+                    schema.users,
+                    eq(schema.users.id, schema.activityEvents.actorId)
+                )
                 .where(eq(schema.activityEvents.boardId, board.id))
                 .orderBy(desc(schema.activityEvents.createdAt))
                 .limit(1)
 
-            return { board, role, memberCount, latestActivity }
+            return {
+                board,
+                role,
+                members: activeMembers,
+                memberCount: activeMembers.length,
+                cardCount,
+                latestActivity,
+            }
         })
     )
 

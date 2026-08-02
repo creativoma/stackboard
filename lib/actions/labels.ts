@@ -1,53 +1,11 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { z } from 'zod'
 import { and, eq } from 'drizzle-orm'
 import { db, schema } from '@/db'
 import { requireMembership, actionErrorMessage, ActionError } from './helpers'
 
 export type LabelActionState = { error?: string; ok?: boolean } | undefined
-
-// Trello's fixed six-color functional label palette (see DESIGN.md).
-const LABEL_COLORS = [
-    'green',
-    'yellow',
-    'orange',
-    'red',
-    'purple',
-    'blue',
-] as const
-
-const createLabelSchema = z.object({
-    name: z.string().trim().min(1).max(40),
-    color: z.enum(LABEL_COLORS),
-})
-
-export async function createLabelAction(
-    boardId: string,
-    _prev: LabelActionState,
-    formData: FormData
-): Promise<LabelActionState> {
-    try {
-        await requireMembership(boardId)
-        const parsed = createLabelSchema.safeParse({
-            name: formData.get('name'),
-            color: formData.get('color'),
-        })
-        if (!parsed.success)
-            return { error: parsed.error.issues[0]?.message ?? 'Invalid label' }
-
-        await db.insert(schema.labels).values({
-            boardId,
-            name: parsed.data.name,
-            color: parsed.data.color,
-        })
-        revalidatePath(`/boards/${boardId}`)
-        return { ok: true }
-    } catch (err) {
-        return { error: actionErrorMessage(err) }
-    }
-}
 
 export async function toggleCardLabelAction(
     boardId: string,
