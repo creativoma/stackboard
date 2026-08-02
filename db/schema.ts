@@ -5,6 +5,7 @@ import {
     timestamp,
     integer,
     boolean,
+    jsonb,
     uniqueIndex,
     index,
     primaryKey,
@@ -254,6 +255,42 @@ export const comments = pgTable(
             .defaultNow(),
     },
     (t) => [index('comments_card_idx').on(t.cardId, t.createdAt)]
+)
+
+export const jobStatusValues = [
+    'pending',
+    'processing',
+    'done',
+    'failed',
+] as const
+export type JobStatus = (typeof jobStatusValues)[number]
+
+// Minimal Postgres-backed queue for work that shouldn't block a Server
+// Action's request/response cycle (e.g. sending invite emails). Polled by
+// the worker in db/jobs-worker.ts rather than requiring a separate queue
+// service, consistent with this app's DB-backed-over-hosted-service bias.
+export const jobs = pgTable(
+    'jobs',
+    {
+        id: uuid('id').primaryKey().defaultRandom(),
+        type: text('type').notNull(), // e.g. 'send_invite_email'
+        payload: jsonb('payload').notNull(),
+        status: text('status', { enum: jobStatusValues })
+            .notNull()
+            .default('pending'),
+        attempts: integer('attempts').notNull().default(0),
+        lastError: text('last_error'),
+        runAfter: timestamp('run_after', { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+        createdAt: timestamp('created_at', { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+        updatedAt: timestamp('updated_at', { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+    },
+    (t) => [index('jobs_status_run_after_idx').on(t.status, t.runAfter)]
 )
 
 // Immutable append-only audit trail. Never updated or deleted by application code.

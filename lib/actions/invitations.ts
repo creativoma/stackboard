@@ -18,7 +18,8 @@ import {
     isValidEmail,
     normalizeEmail,
 } from '@/lib/domain/invitations'
-import { sendEmail, inviteEmailContent } from '@/lib/email/adapter'
+import { inviteEmailContent } from '@/lib/email/adapter'
+import { enqueueJob } from '@/lib/jobs/queue'
 
 export type InviteActionState = { error?: string; ok?: boolean } | undefined
 
@@ -97,13 +98,7 @@ export async function inviteMemberAction(
             acceptUrl,
         })
 
-        try {
-            await sendEmail({ to: email, ...content })
-        } catch {
-            return {
-                error: 'Invitation saved, but the email failed to send. Share the link manually from board settings.',
-            }
-        }
+        await enqueueJob('send_invite_email', { to: email, ...content })
 
         await logActivity({
             boardId,

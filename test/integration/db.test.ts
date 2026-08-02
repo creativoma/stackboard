@@ -6,6 +6,7 @@ import * as schema from '@/db/schema'
 import { getMembership as getMembershipFactory } from '@/lib/auth/membership'
 import { isActiveMember } from '@/lib/domain/authorization'
 import { moveBetweenLists, toPositionRows } from '@/lib/domain/positions'
+import { processDueJobs } from '@/lib/jobs/worker'
 
 // This suite must run with DATABASE_URL pointed at an isolated test database
 // (see the `test:integration` script), never the dev/seed database — every
@@ -13,9 +14,9 @@ import { moveBetweenLists, toPositionRows } from '@/lib/domain/positions'
 // client, which reads DATABASE_URL at import time, so the env var has to be
 // set by the process that launches vitest, not by code inside this file.
 const TEST_DATABASE_URL = process.env.DATABASE_URL ?? ''
-if (!TEST_DATABASE_URL.includes('deck_test')) {
+if (!TEST_DATABASE_URL.includes('stackboard_test')) {
     throw new Error(
-        'Refusing to run destructive integration tests: DATABASE_URL must point at the deck_test database. Use `bun run test:integration`.'
+        'Refusing to run destructive integration tests: DATABASE_URL must point at the stackboard_test database. Use `bun run test:integration`.'
     )
 }
 
@@ -50,6 +51,7 @@ afterAll(async () => {
 })
 
 beforeEach(async () => {
+    await db.delete(schema.jobs)
     await db.delete(schema.activityEvents)
     await db.delete(schema.comments)
     await db.delete(schema.checklistItems)
@@ -204,5 +206,78 @@ describe('card move persists an atomic, collision-free reorder', () => {
         expect(new Set(columnBCards.map((c) => c.position)).size).toBe(
             columnBCards.length
         )
+    })
+})
+
+describe('background jobs worker', () => {
+    it('claims and completes a due job with a registered handler', async () => {
+        const [job] = await db
+            .insert(schema.jobs)
+            .values({
+                type: 'send_invite_email',
+                payload: {
+                    to: 'someone@test.dev',
+                    subject: 'Hi',
+                    text: 'Hi',
+                    html: '<p>Hi</p>',
+                },
+            })
+            .returning()
+
+        const processed = await processDueJobs(db)
+        expect(processed).toBe(1)
+
+        const [updated] = await db
+            .select()
+            .from(schema.jobs)
+            .where(eq(schema.jobs.id, job.id))
+        expect(updated.status).toBe('done')
+    })
+
+    it('leaves a job scheduled in the future untouched', async () => {
+        await db.insert(schema.jobs).values({
+            type: 'send_invite_email',
+            payload: { to: 'x@test.dev', subject: '', text: '', html: '' },
+            runAfter: new Date(Date.now() + 60_000),
+        })
+
+        const processed = await processDueJobs(db)
+        expect(processed).toBe(0)
+    })
+
+    it('retries a job with no registered handler, recording the error and backing off', async () => {
+        const [job] = await db
+            .insert(schema.jobs)
+            .values({ type: 'no_such_handler', payload: {} })
+            .returning()
+
+        await processDueJobs(db)
+
+        const [updated] = await db
+            .select()
+            .from(schema.jobs)
+            .where(eq(schema.jobs.id, job.id))
+        expect(updated.status).toBe('pending')
+        expect(updated.attempts).toBe(1)
+        expect(updated.lastError).toMatch(/No handler registered/)
+        expect(updated.runAfter.getTime()).toBeGreaterThan(Date.now())
+    })
+
+    it('marks a job failed once it exhausts its retry attempts', async () => {
+        // MAX_ATTEMPTS in lib/jobs/worker.ts is 5 — seed the job one attempt
+        // away from exhausted so this test doesn't wait through 4 backoffs.
+        const [job] = await db
+            .insert(schema.jobs)
+            .values({ type: 'no_such_handler', payload: {}, attempts: 4 })
+            .returning()
+
+        await processDueJobs(db)
+
+        const [updated] = await db
+            .select()
+            .from(schema.jobs)
+            .where(eq(schema.jobs.id, job.id))
+        expect(updated.status).toBe('failed')
+        expect(updated.attempts).toBe(5)
     })
 })
