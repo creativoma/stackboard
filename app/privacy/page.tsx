@@ -8,21 +8,12 @@ export default function PrivacyPage() {
         <div className="min-h-full bg-snow">
             <header className="border-b border-mist">
                 <div className="max-w-[720px] mx-auto px-6 py-4">
-                    <Link
-                        href="/"
-                        className="flex items-center gap-2 font-bold text-[17px] text-ink w-fit"
-                    >
-                        <span
-                            className="w-7 h-7 rounded-tags flex items-center justify-center text-white text-xs font-bold shrink-0"
-                            style={{
-                                background:
-                                    'linear-gradient(155deg, #1090df 0%, var(--color-board-blue) 100%)',
-                            }}
-                            aria-hidden="true"
-                        >
-                            S
-                        </span>
-                        Stackboard
+                    <Link href="/" className="flex items-center w-fit">
+                        <img
+                            src="/logos/logo-color.svg"
+                            alt="Stackboard"
+                            className="h-7 w-auto"
+                        />
                     </Link>
                 </div>
             </header>
