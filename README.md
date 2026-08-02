@@ -1,4 +1,12 @@
-# Stackboard
+<p align="center">
+  <img src="./public/logos/logo-color.svg" alt="Stackboard" height="56">
+</p>
+
+<p align="center">
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
+  <img src="https://img.shields.io/badge/Next.js-App%20Router-black" alt="Next.js App Router">
+  <img src="https://img.shields.io/badge/Postgres-Drizzle%20ORM-4169E1" alt="Postgres via Drizzle ORM">
+</p>
 
 A focused, Trello-style board for one team managing one shared project. Boards with ordered columns, drag-and-drop cards, checklists, comments, an activity trail, filters, and reversible archiving — built with Next.js App Router, Server Components, Server Actions, and Postgres via Drizzle ORM.
 
@@ -102,11 +110,20 @@ Any Node.js host that supports Next.js App Router works (Vercel, Fly, Render, a 
 
 ## Integration setup: email (Resend)
 
-- Without `RESEND_API_KEY`, `lib/email/adapter.ts` logs the invite email to the console instead of sending it — the invite flow is fully usable in development without any credentials.
-- With a key set, the adapter sends via Resend, races the call against an 8s timeout, and normalizes provider/timeout errors into a single `EmailDeliveryError` so callers never see raw SDK exceptions.
+- Without `RESEND_API_KEY`, `lib/email/send.ts` logs the invite email to the console instead of sending it — the invite flow is fully usable in development without any credentials.
+- With a key set, it sends via Resend, races the call against an 8s timeout, and normalizes provider/timeout errors into a single `EmailDeliveryError` so callers never see raw SDK exceptions.
 - Invite tokens are cryptographically random, stored **hashed** (SHA-256) — the raw token only ever exists in the emailed URL and is never persisted or logged.
 - Email content is HTML-escaped before interpolation (board name, inviter name, URL) to prevent injection into the outbound message.
-- Failure is surfaced to the owner in the UI ("Invitation saved, but the email failed to send...") rather than silently swallowed; the invitation row still exists so it can be manually shared or the owner can retry.
+- Sending happens out of the request path — see Background jobs below.
+
+## Background jobs
+
+Invite emails are sent by a Postgres-backed job queue instead of inline within the Server Action request:
+
+- `inviteMemberAction` (`lib/actions/invitations.ts`) enqueues a `send_invite_email` job via `lib/jobs/queue.ts` and returns immediately — the invitation row and job are both written before the response goes out, so an invite is never lost even if no worker is running yet.
+- `bun run db:jobs:work` (`db/jobs-worker.ts`) polls the `jobs` table every 2s, claims due rows with `SELECT ... FOR UPDATE SKIP LOCKED` (safe with multiple worker processes), and dispatches by `type` to a handler in `lib/jobs/handlers.ts`. A failed job is retried with exponential backoff (capped at 60s) up to 5 attempts, then marked `failed` with the error recorded on the row.
+- Run the worker alongside the app in any environment that can host a long-lived process (a second container/dyno, a systemd service, etc.) — there's no separate queue service to stand up.
+- `lib/email/send.ts` has no `server-only` import (unlike most server code in this app) specifically so the worker — a plain `tsx` script outside Next's server bundling — can import it directly; `lib/email/adapter.ts` re-exports it with the guard for use inside Next Server Actions.
 
 ## Backup and restore
 
@@ -127,15 +144,13 @@ Take a backup before running `db:migrate` against a production database, and bef
 - **Markdown descriptions** go through a hand-rolled `renderMarkdownLite` (`lib/markdown.ts`) that HTML-escapes the entire input _before_ applying any formatting substitution, so user input can never introduce a new tag or attribute — only the literal `<strong>`/`<em>`/`<code>`/`<a>` tags the renderer itself writes ever appear in the output. Links are restricted to `http(s)://` schemes.
 - **Invite emails** escape all interpolated values and only ever link to a same-origin `/invite/<token>` URL.
 - **File uploads and OAuth are not implemented** — they're out of scope for the three named journeys, so there's no attack surface to secure for them. If added later, uploads should go through a server-only object-storage adapter with short-lived signed URLs, per the working agreement.
-- **Board import (Trello/Stackboard JSON exports)** is authenticated-only, validates and length-limits every field server-side with `zod` before insert, and creates a brand-new board scoped to the importing user — it never merges into or overwrites an existing board.
+- **Board import (Trello/Stackboard JSON exports, or a Stackboard CSV export)** is authenticated-only, validates and length-limits every field server-side (via `zod` for JSON, matching length checks for CSV) before insert, and creates a brand-new board scoped to the importing user — it never merges into or overwrites an existing board.
 - Every user-facing form validates and length-limits input server-side with `zod`, independent of any client-side `maxLength`/`required` attributes.
 
 ## Known limitations
 
 - **No real-time sync.** Two members viewing the same board converge only on next navigation/mutation (each Server Action calls `revalidatePath`), not via WebSockets/SSE. This satisfies "no duplicate cards after a move" but not live cross-tab updates.
 - **No file attachments / object storage adapter.** Not required by the three named journeys; the brief's S3-compatible adapter guidance would apply if this is added.
-- **No background job runner.** Invite emails send inline within the Server Action request. At this app's scale (small team, low invite volume) this is an acceptable trade-off instead of standing up a queue; the email adapter's timeout keeps a slow provider from hanging the request indefinitely.
-- **Column reordering in Settings** uses simple up/down buttons rather than drag-and-drop, for a simpler, fully-keyboard-accessible control on a secondary screen (the board view's card drag-and-drop supports both pointer and keyboard).
 - **`bun run lint`** currently fails in this environment because `typescript-eslint` doesn't yet support the TypeScript 7.0 compiler this project ships with (a preview-track dependency, not something introduced by this app) — `bun run typecheck` (plain `tsc --noEmit`) is the enforced type-safety gate instead and passes cleanly.
 - **Drizzle-kit has no down-migration runner** — see the Migrations section for the rollback approach used instead.
 
@@ -143,3 +158,11 @@ Take a backup before running `db:migrate` against a production database, and bef
 
 See [ROADMAP.md](./ROADMAP.md) for planned work beyond the current three
 journeys, and [CHANGELOG.md](./CHANGELOG.md) for release history.
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for how to propose changes, coding conventions, and the PR checklist.
+
+## License
+
+[MIT](./LICENSE)

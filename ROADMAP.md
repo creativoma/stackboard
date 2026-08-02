@@ -10,10 +10,6 @@ by expected value.
   next navigation/mutation, not live updates. Add a WebSocket/SSE channel
   (or a hosted realtime provider) so two members on the same board see
   moves/edits without a refresh.
-- **Drag-and-drop column reordering in Settings.** Columns can be reordered
-  today via up/down buttons for keyboard accessibility; a drag-and-drop
-  control (mirroring the board view's card drag) is a natural upgrade once
-  it's confirmed to stay keyboard-accessible.
 - **`bun run lint`.** Currently blocked because `typescript-eslint` doesn't
   yet support the TypeScript 7.0 compiler this project ships with. Track
   upstream support and re-enable lint as a CI gate once available.
@@ -23,14 +19,6 @@ by expected value.
 - **File attachments.** Requires a server-only object-storage adapter with
   short-lived signed URLs, per the working agreement in the Security
   decisions section of the README — not a client-side upload form.
-- **Background job runner.** Invite emails currently send inline within the
-  Server Action request, which is fine at this app's scale. A queue
-  (e.g. a Postgres-backed job table or a hosted queue) would be worth it if
-  invite volume grows or more async work (digest emails, exports) is added.
-- **CSV import/export.** Out of scope for the three named journeys today;
-  revisit if bulk board migration becomes a real user need. (JSON import from
-  Trello/Stackboard exports and JSON board export are already shipped — see
-  README.)
 
 ## Exploratory
 

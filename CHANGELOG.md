@@ -9,12 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Board import from a Trello board export or a Stackboard board export (JSON), creating a new board with columns, cards, labels, checklists, and comments.
-- Board export as JSON (`/boards/:boardId/export`), authenticated and membership-scoped.
+- Board import from a Trello board export, a Stackboard board export (JSON), or a Stackboard CSV export, creating a new board with columns, cards, labels, checklists, and comments.
+- Board export as JSON or CSV (`/boards/:boardId/export`, `?format=csv`), authenticated and membership-scoped.
+- Postgres-backed background job queue (`jobs` table) with a polling worker (`bun run db:jobs:work`), retries with exponential backoff, and a `send_invite_email` handler.
 - Project documentation: `ROADMAP.md` and this changelog.
 
 ### Changed
 
+- Column reordering in Settings is now drag-and-drop (`@dnd-kit`), mirroring the board view's card drag, with full keyboard support. Replaces the previous up/down buttons.
+- Invite emails are now sent by the background job worker instead of inline within the `inviteMemberAction` Server Action request, so sending a slow/failing email no longer holds up the response.
 - Refined `FilterBar`, `BoardsLayout`, and card detail page styling for visual consistency.
 
 ## [0.1.0] - 2026-08-01
