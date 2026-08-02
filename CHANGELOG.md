@@ -9,7 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Board import from a Trello board export or a Stackboard board export (JSON), creating a new board with columns, cards, labels, checklists, and comments.
+- Board export as JSON (`/boards/:boardId/export`), authenticated and membership-scoped.
 - Project documentation: `ROADMAP.md` and this changelog.
+
+### Changed
+
+- Refined `FilterBar`, `BoardsLayout`, and card detail page styling for visual consistency.
 
 ## [0.1.0] - 2026-08-01
 

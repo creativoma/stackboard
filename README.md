@@ -126,7 +126,8 @@ Take a backup before running `db:migrate` against a production database, and bef
 - **Passwords** are hashed with scrypt (Node's built-in `crypto.scrypt`, 64-byte derived key, random 16-byte salt per password) and compared with `timingSafeEqual`.
 - **Markdown descriptions** go through a hand-rolled `renderMarkdownLite` (`lib/markdown.ts`) that HTML-escapes the entire input _before_ applying any formatting substitution, so user input can never introduce a new tag or attribute — only the literal `<strong>`/`<em>`/`<code>`/`<a>` tags the renderer itself writes ever appear in the output. Links are restricted to `http(s)://` schemes.
 - **Invite emails** escape all interpolated values and only ever link to a same-origin `/invite/<token>` URL.
-- **CSV import/export, file uploads, and OAuth are not implemented** — they're out of scope for the three named journeys, so there's no attack surface to secure for them. If added later, uploads should go through a server-only object-storage adapter with short-lived signed URLs, per the working agreement.
+- **File uploads and OAuth are not implemented** — they're out of scope for the three named journeys, so there's no attack surface to secure for them. If added later, uploads should go through a server-only object-storage adapter with short-lived signed URLs, per the working agreement.
+- **Board import (Trello/Stackboard JSON exports)** is authenticated-only, validates and length-limits every field server-side with `zod` before insert, and creates a brand-new board scoped to the importing user — it never merges into or overwrites an existing board.
 - Every user-facing form validates and length-limits input server-side with `zod`, independent of any client-side `maxLength`/`required` attributes.
 
 ## Known limitations
