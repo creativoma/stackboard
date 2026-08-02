@@ -17,7 +17,7 @@ export default async function BoardsLayout({
     if (!user) redirect('/login')
 
     return (
-        <div className="min-h-screen flex bg-snow">
+        <div className="h-screen flex bg-snow">
             <aside className="w-60 shrink-0 h-screen sticky top-0 bg-paper border-r border-mist flex flex-col justify-between py-4">
                 <div>
                     <Link
@@ -141,8 +141,8 @@ export default async function BoardsLayout({
                 </div>
             </aside>
 
-            <div className="flex-1 min-w-0 flex flex-col min-h-screen">
-                <main className="flex-1 w-full mx-auto px-6 py-6">
+            <div className="flex-1 min-w-0 flex flex-col h-screen">
+                <main className="flex-1 min-h-0 w-full mx-auto px-6 py-6 overflow-y-auto">
                     {children}
                 </main>
                 <footer className="border-t border-mist">

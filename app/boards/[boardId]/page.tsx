@@ -159,6 +159,12 @@ export default async function BoardPage({
                             ) : null}
                         </div>
                     ) : null}
+                    <a
+                        href={`/boards/${boardId}/export`}
+                        className="rounded-[var(--radius-buttons)] px-3.5 py-2 text-sm font-semibold text-white bg-white/16 hover:bg-white/28 transition-colors"
+                    >
+                        Export
+                    </a>
                     <Link
                         href={`/boards/${boardId}/settings`}
                         className="rounded-[var(--radius-buttons)] px-3.5 py-2 text-sm font-semibold text-white bg-white/16 hover:bg-white/28 transition-colors"

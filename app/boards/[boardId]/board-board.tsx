@@ -238,7 +238,7 @@ function Column({
         <div
             data-testid={`column-${column.id}`}
             data-column-name={column.name}
-            className="group flex flex-col w-[280px] shrink-0 bg-[var(--color-snow)] rounded-[var(--radius-largecards)] p-3 max-h-full"
+            className="group flex flex-col w-[280px] shrink-0 bg-[var(--color-snow)] rounded-[var(--radius-largecards)] p-3 max-h-full min-h-0"
             style={{ boxShadow: 'var(--shadow-subtle)' }}
         >
             <div className="flex items-center justify-between mb-2 px-1">
@@ -296,25 +296,27 @@ function Column({
                 </p>
             ) : null}
 
-            <SortableContext
-                items={cardIds}
-                strategy={verticalListSortingStrategy}
-            >
-                <DroppableColumnBody columnId={column.id}>
-                    <ul className="flex flex-col gap-2 min-h-[40px]">
-                        {cards.map((card) => (
-                            <CardChip
-                                key={card.id}
-                                card={card}
-                                members={members}
-                                labels={labels}
-                            />
-                        ))}
-                    </ul>
-                </DroppableColumnBody>
-            </SortableContext>
+            <div className="flex-1 min-h-0 overflow-y-auto -mx-1 px-1">
+                <SortableContext
+                    items={cardIds}
+                    strategy={verticalListSortingStrategy}
+                >
+                    <DroppableColumnBody columnId={column.id}>
+                        <ul className="flex flex-col gap-2 min-h-[40px]">
+                            {cards.map((card) => (
+                                <CardChip
+                                    key={card.id}
+                                    card={card}
+                                    members={members}
+                                    labels={labels}
+                                />
+                            ))}
+                        </ul>
+                    </DroppableColumnBody>
+                </SortableContext>
+            </div>
 
-            <div className="mt-2">
+            <div className="mt-2 shrink-0">
                 <AddCardInline boardId={column.boardId} columnId={column.id} />
             </div>
         </div>
@@ -440,10 +442,7 @@ export function BoardBoard({
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
         >
-            <div
-                className="flex gap-4 overflow-x-auto pb-4 -mx-1 px-1"
-                style={{ minHeight: '60vh' }}
-            >
+            <div className="flex flex-1 min-h-0 gap-4 overflow-x-auto pb-4 -mx-1 px-1">
                 {columns.map((column) => (
                     <Column
                         key={column.id}

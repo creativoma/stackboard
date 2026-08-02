@@ -5,6 +5,7 @@ import { listBoardsForUser, listPendingInvitations } from '@/lib/queries/boards'
 import { describeActivity } from '@/lib/domain/activity'
 import { boardGradient } from '@/lib/board-colors'
 import { NewBoardForm } from './new-board-form'
+import { ImportBoardForm } from './import-board-form'
 
 export const metadata: Metadata = { title: 'Your boards' }
 
@@ -28,7 +29,10 @@ export default async function BoardsDashboard() {
                         Everything your team is working on, in one place.
                     </p>
                 </div>
-                <NewBoardForm />
+                <div className="flex items-start gap-2 flex-wrap">
+                    <ImportBoardForm />
+                    <NewBoardForm />
+                </div>
             </div>
 
             {pendingInvites.length > 0 ? (
