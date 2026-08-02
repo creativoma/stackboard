@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import {
     Download,
+    FileSpreadsheet,
     LayoutGrid,
     Settings as SettingsIcon,
     UserPlus,
@@ -180,10 +181,19 @@ export default async function BoardPage({
                         href={`/boards/${boardId}/export`}
                         external
                         variant="onBoard"
-                        aria-label="Export board"
-                        title="Export board"
+                        aria-label="Export board as JSON"
+                        title="Export board as JSON"
                     >
                         <Download size={15} strokeWidth={2.25} />
+                    </Button>
+                    <Button
+                        href={`/boards/${boardId}/export?format=csv`}
+                        external
+                        variant="onBoard"
+                        aria-label="Export board as CSV"
+                        title="Export board as CSV"
+                    >
+                        <FileSpreadsheet size={15} strokeWidth={2.25} />
                     </Button>
                     <Button
                         href={`/boards/${boardId}/settings`}

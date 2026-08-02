@@ -19,7 +19,7 @@ import {
     InviteMemberForm,
     RevokeInvitationButton,
     RemoveMemberButton,
-    ColumnOrderRow,
+    ColumnOrderList,
     CloseBoardButton,
 } from './settings-forms'
 import { ArchiveDrawer } from './archive-drawer'
@@ -174,18 +174,13 @@ export default async function BoardSettingsPage({
                     />
                     Column order
                 </h2>
-                <ul>
-                    {activeColumns.map((col, i) => (
-                        <ColumnOrderRow
-                            key={col.id}
-                            boardId={boardId}
-                            columnId={col.id}
-                            name={col.name}
-                            index={i}
-                            count={activeColumns.length}
-                        />
-                    ))}
-                </ul>
+                <ColumnOrderList
+                    boardId={boardId}
+                    columns={activeColumns.map((col) => ({
+                        id: col.id,
+                        name: col.name,
+                    }))}
+                />
             </section>
 
             {archivedCount > 0 ? (

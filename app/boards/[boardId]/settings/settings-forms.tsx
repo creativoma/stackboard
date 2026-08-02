@@ -1,8 +1,24 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowDown, ArrowUp } from 'lucide-react'
+import { GripVertical } from 'lucide-react'
+import {
+    DndContext,
+    KeyboardSensor,
+    PointerSensor,
+    closestCenter,
+    useSensor,
+    useSensors,
+    type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+    SortableContext,
+    sortableKeyboardCoordinates,
+    useSortable,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import {
     renameBoardAction,
     closeBoardAction,
@@ -181,60 +197,113 @@ export function RemoveMemberButton({
     )
 }
 
-export function ColumnOrderRow({
+type ColumnItem = { id: string; name: string }
+
+function SortableColumnRow({ column }: { column: ColumnItem }) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id: column.id })
+
+    return (
+        <li
+            ref={setNodeRef}
+            style={{
+                transform: CSS.Transform.toString(transform),
+                transition,
+                opacity: isDragging ? 0.4 : 1,
+            }}
+            className="flex items-center gap-2 py-2 border-b border-[var(--color-mist)] last:border-0"
+        >
+            <button
+                type="button"
+                {...attributes}
+                {...listeners}
+                className="touch-none cursor-grab active:cursor-grabbing text-[var(--color-fog)] focus-visible:outline-2 focus-visible:outline-[var(--color-electric-blue)] rounded"
+                aria-label={`Reorder ${column.name}`}
+            >
+                <GripVertical size={16} strokeWidth={2} aria-hidden="true" />
+            </button>
+            <span className="text-sm font-medium">{column.name}</span>
+        </li>
+    )
+}
+
+export function ColumnOrderList({
     boardId,
-    columnId,
-    name,
-    index,
-    count,
+    columns,
 }: {
     boardId: string
-    columnId: string
-    name: string
-    index: number
-    count: number
+    columns: ColumnItem[]
 }) {
-    const [busy, setBusy] = useState(false)
+    const [items, setItems] = useState(columns)
     const [error, setError] = useState<string | null>(null)
     const router = useRouter()
 
-    async function move(destIndex: number) {
-        setBusy(true)
-        const result = await reorderColumnsAction(boardId, columnId, destIndex)
-        if (result?.error) setError(result.error)
-        else router.refresh()
-        setBusy(false)
+    useEffect(() => {
+        setItems(columns)
+    }, [columns])
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    )
+
+    function handleDragEnd(event: DragEndEvent) {
+        const { active, over } = event
+        if (!over || active.id === over.id) return
+
+        const from = items.findIndex((c) => c.id === active.id)
+        const to = items.findIndex((c) => c.id === over.id)
+        if (from === -1 || to === -1) return
+
+        const reordered = [...items]
+        const [moved] = reordered.splice(from, 1)
+        reordered.splice(to, 0, moved)
+        setItems(reordered)
+        setError(null)
+
+        reorderColumnsAction(boardId, String(active.id), to).then((result) => {
+            if (result?.error) {
+                setError(result.error)
+                setItems(columns)
+            } else {
+                router.refresh()
+            }
+        })
     }
 
     return (
-        <li className="flex items-center justify-between py-2 border-b border-[var(--color-mist)] last:border-0">
-            <span className="text-sm font-medium">{name}</span>
-            <div className="flex items-center gap-1">
-                {error ? (
-                    <span className="text-xs text-[var(--color-coral)]">
-                        {error}
-                    </span>
-                ) : null}
-                <Button
-                    variant="icon"
-                    size="sm"
-                    disabled={busy || index === 0}
-                    onClick={() => move(index - 1)}
-                    aria-label={`Move ${name} earlier`}
+        <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+        >
+            {error ? (
+                <p
+                    role="alert"
+                    className="text-xs text-[var(--color-coral)] mb-2"
                 >
-                    <ArrowUp size={14} strokeWidth={2} aria-hidden="true" />
-                </Button>
-                <Button
-                    variant="icon"
-                    size="sm"
-                    disabled={busy || index === count - 1}
-                    onClick={() => move(index + 1)}
-                    aria-label={`Move ${name} later`}
-                >
-                    <ArrowDown size={14} strokeWidth={2} aria-hidden="true" />
-                </Button>
-            </div>
-        </li>
+                    {error}
+                </p>
+            ) : null}
+            <SortableContext
+                items={items.map((c) => c.id)}
+                strategy={verticalListSortingStrategy}
+            >
+                <ul>
+                    {items.map((column) => (
+                        <SortableColumnRow key={column.id} column={column} />
+                    ))}
+                </ul>
+            </SortableContext>
+        </DndContext>
     )
 }
 
