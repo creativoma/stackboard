@@ -1,18 +1,18 @@
 import { z } from 'zod'
 import type { NormalizedImport } from './types'
 
-export const CREATIVODECK_EXPORT_FORMAT = 'creativodeck-board-export'
+export const STACKBOARD_EXPORT_FORMAT = 'stackboard-board-export'
 
-export function isCreativodeckExport(raw: unknown): boolean {
+export function isStackboardExport(raw: unknown): boolean {
     return (
         typeof raw === 'object' &&
         raw !== null &&
-        (raw as Record<string, unknown>).format === CREATIVODECK_EXPORT_FORMAT
+        (raw as Record<string, unknown>).format === STACKBOARD_EXPORT_FORMAT
     )
 }
 
 const schema = z.object({
-    format: z.literal(CREATIVODECK_EXPORT_FORMAT),
+    format: z.literal(STACKBOARD_EXPORT_FORMAT),
     board: z.object({ name: z.string().trim().min(1).max(100) }),
     columns: z.array(
         z.object({
@@ -42,10 +42,10 @@ const schema = z.object({
     ),
 })
 
-export function parseCreativodeckExport(raw: unknown): NormalizedImport {
+export function parseStackboardExport(raw: unknown): NormalizedImport {
     const parsed = schema.safeParse(raw)
     if (!parsed.success) {
-        throw new Error('This file is not a valid creativodeck board export.')
+        throw new Error('This file is not a valid stackboard board export.')
     }
     const { board, columns, labels, cards } = parsed.data
 

@@ -5,10 +5,11 @@ import { revalidatePath } from 'next/cache'
 import { db, schema } from '@/db'
 import { requireUser } from '@/lib/auth/session'
 import {
-    isCreativodeckExport,
-    parseCreativodeckExport,
-} from '@/lib/import/creativodeck'
+    isStackboardExport,
+    parseStackboardExport,
+} from '@/lib/import/stackboard'
 import { parseTrelloExport } from '@/lib/import/trello'
+import { parseCsvImport } from '@/lib/import/csv'
 import type { NormalizedImport } from '@/lib/import/types'
 
 export type ImportBoardState = { error?: string } | undefined
@@ -29,22 +30,39 @@ export async function importBoardAction(
         return { error: 'File is too large (max 20MB)' }
     }
 
-    let raw: unknown
-    try {
-        raw = JSON.parse(await file.text())
-    } catch {
-        return { error: 'That file is not valid JSON' }
-    }
+    const text = await file.text()
+    const looksLikeJson = /^[[{]/.test(text.trimStart())
 
     let parsed: NormalizedImport
-    try {
-        parsed = isCreativodeckExport(raw)
-            ? parseCreativodeckExport(raw)
-            : parseTrelloExport(raw)
-    } catch (err) {
-        return {
-            error:
-                err instanceof Error ? err.message : 'Could not read that file',
+    if (looksLikeJson) {
+        let raw: unknown
+        try {
+            raw = JSON.parse(text)
+        } catch {
+            return { error: 'That file is not valid JSON' }
+        }
+        try {
+            parsed = isStackboardExport(raw)
+                ? parseStackboardExport(raw)
+                : parseTrelloExport(raw)
+        } catch (err) {
+            return {
+                error:
+                    err instanceof Error
+                        ? err.message
+                        : 'Could not read that file',
+            }
+        }
+    } else {
+        try {
+            parsed = parseCsvImport(text)
+        } catch (err) {
+            return {
+                error:
+                    err instanceof Error
+                        ? err.message
+                        : 'Could not read that file',
+            }
         }
     }
 

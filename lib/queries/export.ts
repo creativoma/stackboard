@@ -2,7 +2,7 @@ import 'server-only'
 import { asc, eq, inArray } from 'drizzle-orm'
 import { db, schema } from '@/db'
 import { getBoard, getBoardLabels } from './board'
-import { CREATIVODECK_EXPORT_FORMAT } from '@/lib/import/creativodeck'
+import { STACKBOARD_EXPORT_FORMAT } from '@/lib/import/stackboard'
 
 export async function getBoardExportData(boardId: string) {
     const board = await getBoard(boardId)
@@ -65,7 +65,7 @@ export async function getBoardExportData(boardId: string) {
     }
 
     return {
-        format: CREATIVODECK_EXPORT_FORMAT,
+        format: STACKBOARD_EXPORT_FORMAT,
         version: 1,
         board: { name: board.name },
         columns: columns.map((c) => ({ name: c.name, status: c.status })),

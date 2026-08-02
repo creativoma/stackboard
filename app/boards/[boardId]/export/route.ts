@@ -4,12 +4,17 @@ import { getMembership } from '@/lib/auth/membership'
 import { isActiveMember } from '@/lib/domain/authorization'
 import { getBoard } from '@/lib/queries/board'
 import { getBoardExportData } from '@/lib/queries/export'
+import { boardExportToCsv } from '@/lib/import/csv'
 
 export async function GET(
-    _request: Request,
+    request: Request,
     { params }: { params: Promise<{ boardId: string }> }
 ) {
     const { boardId } = await params
+    const format =
+        new URL(request.url).searchParams.get('format') === 'csv'
+            ? 'csv'
+            : 'json'
 
     let userId: string
     try {
@@ -30,12 +35,24 @@ export async function GET(
     }
 
     const data = await getBoardExportData(boardId)
-    const filename = `${board.name.replace(/[^a-z0-9-_]+/gi, '-').toLowerCase()}-export.json`
+    if (!data) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+    const basename = board.name.replace(/[^a-z0-9-_]+/gi, '-').toLowerCase()
+
+    if (format === 'csv') {
+        return new NextResponse(boardExportToCsv(data), {
+            headers: {
+                'Content-Type': 'text/csv',
+                'Content-Disposition': `attachment; filename="${basename}-export.csv"`,
+            },
+        })
+    }
 
     return new NextResponse(JSON.stringify(data, null, 2), {
         headers: {
             'Content-Type': 'application/json',
-            'Content-Disposition': `attachment; filename="${filename}"`,
+            'Content-Disposition': `attachment; filename="${basename}-export.json"`,
         },
     })
 }

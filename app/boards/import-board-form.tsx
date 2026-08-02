@@ -22,8 +22,8 @@ export function ImportBoardForm() {
             >
                 <h2 className="text-lg font-semibold mb-1">Import a board</h2>
                 <p className="text-sm text-[var(--color-smoke)] mb-4">
-                    Upload a Trello board export or a creativodeck board export
-                    (JSON). This creates a new board.
+                    Upload a Trello board export (JSON), a stackboard board
+                    export (JSON or CSV). This creates a new board.
                 </p>
                 <form
                     action={formAction}
@@ -35,13 +35,13 @@ export function ImportBoardForm() {
                             htmlFor="import-file"
                             className="text-sm font-medium"
                         >
-                            JSON file
+                            JSON or CSV file
                         </label>
                         <input
                             id="import-file"
                             name="file"
                             type="file"
-                            accept="application/json,.json"
+                            accept="application/json,.json,text/csv,.csv"
                             required
                             className="input"
                         />
