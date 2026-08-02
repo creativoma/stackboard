@@ -28,6 +28,15 @@ describe('renderMarkdownLite', () => {
         expect(unsafe).not.toContain('<a href')
     })
 
+    it('links URLs that carry an optional title, e.g. Trello-exported links', () => {
+        const html = renderMarkdownLite(
+            '[click me](https://example.com "some title")'
+        )
+        expect(html).toBe(
+            '<a href="https://example.com" target="_blank" rel="noopener noreferrer nofollow">click me</a>'
+        )
+    })
+
     it('converts newlines to line breaks', () => {
         expect(renderMarkdownLite('line one\nline two')).toBe(
             'line one<br />line two'
