@@ -20,7 +20,7 @@ export function renderMarkdownLite(source: string): string {
     let html = escapeHtml(source)
 
     html = html.replace(
-        /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+        /\[([^\]]+)\]\((https?:\/\/[^\s)]+)(?:\s+&quot;[^)]*&quot;)?\)/g,
         (_m, text, url) => {
             return `<a href="${url}" target="_blank" rel="noopener noreferrer nofollow">${text}</a>`
         }
