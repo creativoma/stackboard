@@ -25,9 +25,12 @@ test('a card created by one member appears for another member without any intera
         const cardTitle = `Realtime proof ${Date.now()}`
 
         // Alice adds a card; Bob does NOT interact with his page at all.
+        // Target "To do" by name, not position — journey-column-reorder.spec.ts
+        // permanently reorders this board's columns, and "In progress" (the
+        // other candidate) has a WIP limit already met by seed data.
         await alice
+            .locator('[data-column-name="To do"]')
             .getByRole('button', { name: '+ Add a card' })
-            .first()
             .click()
         await alice.getByPlaceholder('Card title').fill(cardTitle)
         await alice.getByRole('button', { name: 'Add card' }).click()
