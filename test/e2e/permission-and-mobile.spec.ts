@@ -11,14 +11,16 @@ test('a user with no board membership is denied access, even via a direct URL', 
     const boardLink = page.getByRole('link', { name: 'Product Launch' })
     await expect(boardLink).toHaveCount(0)
 
-    // Discover the board id via an active member's account, then try it as Dave.
-    const aliceContext = await page.context().browser()!.newContext()
-    const alicePage = await aliceContext.newPage()
-    await login(alicePage, 'alice@example.com')
-    await alicePage.getByRole('link', { name: 'Product Launch' }).click()
-    await alicePage.waitForURL('**/boards/*')
-    const boardUrl = alicePage.url()
-    await aliceContext.close()
+    // Discover the board id via an active member's account, then try it as
+    // Dave. Bob is a member of only the seeded "Product Launch" — earlier
+    // specs (CSV import) may have given Alice a second board with that name.
+    const memberContext = await page.context().browser()!.newContext()
+    const memberPage = await memberContext.newPage()
+    await login(memberPage, 'bob@example.com')
+    await memberPage.getByRole('link', { name: 'Product Launch' }).click()
+    await memberPage.waitForURL('**/boards/*')
+    const boardUrl = memberPage.url()
+    await memberContext.close()
 
     await page.goto(boardUrl)
     await expect(

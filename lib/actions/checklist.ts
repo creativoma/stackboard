@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { and, eq, count } from 'drizzle-orm'
 import { db, schema } from '@/db'
 import {
-    requireMembership,
+    requireContentEditor,
     logActivity,
     actionErrorMessage,
     ActionError,
@@ -34,7 +34,7 @@ export async function addChecklistItemAction(
     formData: FormData
 ): Promise<ChecklistActionState> {
     try {
-        const { user } = await requireMembership(boardId)
+        const { user } = await requireContentEditor(boardId)
         const parsed = textSchema.safeParse(formData.get('text'))
         if (!parsed.success)
             return { error: parsed.error.issues[0]?.message ?? 'Invalid input' }
@@ -75,7 +75,7 @@ export async function toggleChecklistItemAction(
     done: boolean
 ): Promise<ChecklistActionState> {
     try {
-        const { user } = await requireMembership(boardId)
+        const { user } = await requireContentEditor(boardId)
         const card = await getCard(boardId, cardId)
         if (!card) throw new ActionError('Card not found')
 

@@ -3,12 +3,14 @@ export type FilterableCard = {
     description: string
     assigneeId: string | null
     dueDate: Date | null
+    priority: string | null
     labelIds: string[]
 }
 
 export type BoardFilters = {
     member?: string
     label?: string
+    priority?: string
     overdue?: boolean
     q?: string
 }
@@ -27,6 +29,7 @@ export function matchesFilters<T extends FilterableCard>(
 ): boolean {
     if (filters.member && card.assigneeId !== filters.member) return false
     if (filters.label && !card.labelIds.includes(filters.label)) return false
+    if (filters.priority && card.priority !== filters.priority) return false
     if (filters.overdue && !isOverdue(card.dueDate, now)) return false
     if (filters.q) {
         const q = filters.q.trim().toLowerCase()

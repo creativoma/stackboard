@@ -38,7 +38,7 @@ export function ProgressBar({
             >
                 <div
                     className={[
-                        'h-full bg-[var(--color-success)] transition-[width] duration-200',
+                        'h-full bg-[var(--color-electric-blue)] transition-[width] duration-200',
                         fillClassName,
                     ]
                         .filter(Boolean)
@@ -46,7 +46,7 @@ export function ProgressBar({
                     style={{ width: `${pct}%` }}
                 />
             </div>
-            <span className="text-xs font-semibold text-[var(--color-fog)] shrink-0 tabular-nums">
+            <span className="tabular text-xs font-medium text-[var(--color-fog)] shrink-0">
                 {pct}%
             </span>
         </div>

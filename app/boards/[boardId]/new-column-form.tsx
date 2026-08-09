@@ -29,7 +29,7 @@ export function NewColumnForm({ boardId }: { boardId: string }) {
                 formAction(formData)
                 formRef.current?.reset()
             }}
-            className="flex items-center gap-2 w-fit bg-[var(--color-snow)] rounded-[var(--radius-largecards)] p-2"
+            className="flex items-center gap-2 w-fit bg-[var(--color-sunken)] rounded-[var(--radius-largecards)] p-2"
         >
             <input
                 name="name"

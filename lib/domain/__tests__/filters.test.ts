@@ -6,6 +6,7 @@ const baseCard = {
     description: 'Users cannot log in on Safari',
     assigneeId: 'user-1',
     dueDate: null as Date | null,
+    priority: null as string | null,
     labelIds: ['label-1'],
 }
 
@@ -40,6 +41,13 @@ describe('matchesFilters', () => {
     it('filters by label', () => {
         expect(matchesFilters(baseCard, { label: 'label-1' })).toBe(true)
         expect(matchesFilters(baseCard, { label: 'label-9' })).toBe(false)
+    })
+
+    it('filters by priority; cards without one never match a priority filter', () => {
+        const highCard = { ...baseCard, priority: 'high' }
+        expect(matchesFilters(highCard, { priority: 'high' })).toBe(true)
+        expect(matchesFilters(highCard, { priority: 'low' })).toBe(false)
+        expect(matchesFilters(baseCard, { priority: 'high' })).toBe(false)
     })
 
     it('filters by overdue using the supplied now', () => {

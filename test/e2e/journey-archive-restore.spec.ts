@@ -20,19 +20,21 @@ test('owner archives a card and an empty column, reviews activity, then restores
     await page.goto(page.url().replace(/\/cards\/.*/, ''))
 
     // Archive the pre-seeded empty "Blocked" column from the board.
-    const blockedColumn = page
-        .locator('div', { hasText: 'Blocked (0)' })
-        .first()
+    const blockedColumn = page.locator('[data-column-name="Blocked"]')
+    await blockedColumn.hover() // the archive button reveals on hover
     await blockedColumn
         .getByRole('button', { name: /Archive column Blocked/ })
         .click()
-    await expect(page.getByText('Blocked (0)')).toHaveCount(0)
+    await expect(page.locator('[data-column-name="Blocked"]')).toHaveCount(0)
 
     // Restore the archived card into an active column from board settings.
+    // Archived columns/cards live inside the "View archive" drawer.
     await page.getByRole('link', { name: 'Settings' }).click()
-    await expect(page.getByText('Blocked')).toBeVisible() // shows under Archived columns
+    await page.getByRole('button', { name: 'View archive' }).click()
+    const drawer = page.getByRole('dialog', { name: 'Archive' })
+    await expect(drawer.getByText('Blocked')).toBeVisible() // archived column
 
-    const archivedCardRow = page.locator('li', {
+    const archivedCardRow = drawer.locator('li', {
         hasText: 'Finalize pricing page copy',
     })
     await archivedCardRow
@@ -40,10 +42,9 @@ test('owner archives a card and an empty column, reviews activity, then restores
         .selectOption({ label: 'To do' })
     await archivedCardRow.getByRole('button', { name: 'Restore' }).click()
 
-    // Once restored, the card leaves the "Archived cards" list in settings.
-    await expect(
-        page.getByRole('link', { name: 'Finalize pricing page copy' })
-    ).toHaveCount(0)
+    // Once restored, the card leaves the archived-cards list in the drawer.
+    await expect(drawer.getByText('Finalize pricing page copy')).toHaveCount(0)
+    await page.keyboard.press('Escape') // close the drawer before navigating
 
     // And it reappears as an active card on the board, in the chosen column.
     await page

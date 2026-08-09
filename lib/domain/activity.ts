@@ -6,11 +6,14 @@ export type ActivityType =
     | 'column.created'
     | 'column.archived'
     | 'column.restored'
+    | 'column.wip_limit_changed'
     | 'card.created'
     | 'card.moved'
     | 'card.field_changed'
     | 'card.archived'
     | 'card.restored'
+    | 'card.attachment_added'
+    | 'card.attachment_removed'
     | 'checklist.item_added'
     | 'checklist.item_toggled'
     | 'comment.added'
@@ -47,16 +50,31 @@ export function describeActivity(event: {
             return `archived column "${event.oldValue}"`
         case 'column.restored':
             return `restored column "${event.newValue}"`
+        case 'column.wip_limit_changed':
+            return event.newValue
+                ? `set the WIP limit on "${event.field}" to ${event.newValue}`
+                : `removed the WIP limit on "${event.field}"`
         case 'card.created':
             return 'created this card'
         case 'card.moved':
             return `moved this card from "${event.oldValue}" to "${event.newValue}"`
-        case 'card.field_changed':
-            return `changed ${event.field} ${event.oldValue ? `from "${event.oldValue}" ` : ''}to "${event.newValue}"`
+        case 'card.field_changed': {
+            // Description bodies aren't logged; assignee/due-date removals
+            // have no newValue and read as "removed the …".
+            if (event.field === 'description') return 'updated the description'
+            if (!event.newValue) return `removed the ${event.field}`
+            if (!event.oldValue)
+                return `set the ${event.field} to "${event.newValue}"`
+            return `changed the ${event.field} from "${event.oldValue}" to "${event.newValue}"`
+        }
         case 'card.archived':
             return 'archived this card'
         case 'card.restored':
             return `restored this card to "${event.newValue}"`
+        case 'card.attachment_added':
+            return `attached "${event.newValue}"`
+        case 'card.attachment_removed':
+            return `removed attachment "${event.oldValue}"`
         case 'checklist.item_added':
             return `added checklist item "${event.newValue}"`
         case 'checklist.item_toggled':

@@ -9,10 +9,14 @@ export default function PrivacyPage() {
             <header className="border-b border-mist">
                 <div className="max-w-[720px] mx-auto px-6 py-4">
                     <Link href="/" className="flex items-center w-fit">
+                        {/* next/image doesn't optimize SVG (it needs
+                            dangerouslyAllowSVG), so a plain img is correct
+                            for the logo. */}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src="/logos/logo-color.svg"
                             alt="Stackboard"
-                            className="h-7 w-auto"
+                            className="h-5 w-auto"
                         />
                     </Link>
                 </div>
@@ -26,7 +30,7 @@ export default function PrivacyPage() {
                     >
                         &larr; Back to Stackboard
                     </Link>
-                    <h1 className="text-[24px] font-semibold tracking-[-0.02em] mt-2">
+                    <h1 className="text-[16px] font-medium tracking-[-0.2px] mt-2">
                         Privacy Policy
                     </h1>
                     <p className="text-sm text-fog mt-1">

@@ -1,10 +1,10 @@
 'use client'
 
 import { useActionState } from 'react'
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { signupAction } from '../actions'
 import { SubmitButton } from '../submit-button'
-import { Button } from '@/app/_components/button'
 
 export default function SignupPage() {
     const [state, formAction] = useActionState(signupAction, undefined)
@@ -12,8 +12,8 @@ export default function SignupPage() {
 
     return (
         <main className="flex-1 flex items-center justify-center px-4 py-16">
-            <div className="w-full max-w-sm elevated-surface p-8">
-                <h1 className="text-[24px] font-semibold tracking-[-0.02em] mb-1">
+            <div className="w-full max-w-sm elevated-surface p-6">
+                <h1 className="text-[15px] font-medium tracking-[-0.1px] mb-1">
                     Create your account
                 </h1>
                 <p className="text-sm text-[var(--color-smoke)] mb-6">
@@ -82,20 +82,22 @@ export default function SignupPage() {
                         </p>
                     ) : null}
 
-                    <SubmitButton pendingText="Creating account…">
+                    <SubmitButton
+                        pendingText="Creating account…"
+                        className="w-full"
+                    >
                         Sign up for free
                     </SubmitButton>
                 </form>
 
                 <p className="text-sm text-[var(--color-smoke)] mt-6">
                     Already have an account?{' '}
-                    <Button
+                    <Link
                         href="/login"
-                        variant="ghost"
-                        className="!inline-flex !p-0 !min-h-0 font-medium"
+                        className="font-medium text-[var(--color-electric-blue)] hover:text-[var(--color-midnight-pressed)] transition-colors"
                     >
                         Log in
-                    </Button>
+                    </Link>
                 </p>
             </div>
         </main>

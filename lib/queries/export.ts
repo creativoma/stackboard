@@ -3,6 +3,7 @@ import { asc, eq, inArray } from 'drizzle-orm'
 import { db, schema } from '@/db'
 import { getBoard, getBoardLabels } from './board'
 import { STACKBOARD_EXPORT_FORMAT } from '@/lib/import/stackboard'
+import { dueDateToIso } from '@/lib/domain/due'
 
 export async function getBoardExportData(boardId: string) {
     const board = await getBoard(boardId)
@@ -75,7 +76,7 @@ export async function getBoardExportData(boardId: string) {
             title: card.title,
             description: card.description,
             status: card.status,
-            dueDate: card.dueDate ? card.dueDate.toISOString() : null,
+            dueDate: dueDateToIso(card.dueDate),
             labelIndexes: (labelsByCard.get(card.id) ?? [])
                 .map((labelId) => labelIndexById.get(labelId))
                 .filter((i): i is number => i !== undefined),

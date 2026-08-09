@@ -8,5 +8,5 @@ export default async function AuthLayout({
 }) {
     const user = await getCurrentUser()
     if (user) redirect('/boards')
-    return children
+    return <div className="flex-1 flex flex-col bg-snow">{children}</div>
 }

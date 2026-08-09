@@ -1,4 +1,16 @@
-type Person = { id: string; name: string }
+import Link from 'next/link'
+import { formatDate } from '@/lib/format'
+
+type Person = {
+    id: string
+    name: string
+    // Optional context shown in the hover tooltip. Only ever populated from a
+    // board the viewer is an active member of, so this never crosses the
+    // tenant boundary.
+    email?: string
+    role?: string
+    joinedAt?: Date | string
+}
 
 const sizeClass = {
     sm: 'w-6 h-6 text-[11px]',
@@ -6,33 +18,66 @@ const sizeClass = {
     lg: 'w-8 h-8 text-[12px]',
 } as const
 
+const baseClass =
+    'inline-flex items-center justify-center shrink-0 rounded-full font-semibold'
+
+function skinClass(onBoard: boolean) {
+    return onBoard
+        ? 'bg-[var(--color-midnight)] text-white ring-2 ring-[var(--color-paper)]'
+        : 'bg-[var(--color-electric-blue-tint)] text-[var(--color-electric-blue)] ring-2 ring-[var(--color-paper)]'
+}
+
+// Native `title` renders each line separately, so the tooltip doubles as the
+// "who is this" card without needing a popover.
+function describe(person: Person) {
+    const lines = [person.name]
+    if (person.email) lines.push(person.email)
+    if (person.role) lines.push(`Role: ${person.role}`)
+    if (person.joinedAt)
+        lines.push(`Member since ${formatDate(person.joinedAt)}`)
+    return lines.join('\n')
+}
+
 export function Avatar({
     person,
     size = 'md',
     onBoard = false,
+    boardId,
     className,
 }: {
     person: Person
     size?: keyof typeof sizeClass
     onBoard?: boolean
+    /**
+     * When set, the avatar becomes a link that filters the board down to this
+     * person's cards. Omit it inside anchors (the board cards on /boards) —
+     * nested links are invalid HTML.
+     */
+    boardId?: string
     className?: string
 }) {
+    const classes = [baseClass, sizeClass[size], skinClass(onBoard), className]
+        .filter(Boolean)
+        .join(' ')
+    const initial = person.name.slice(0, 1).toUpperCase()
+
+    if (!boardId) {
+        return (
+            <span className={classes} title={describe(person)}>
+                {initial}
+            </span>
+        )
+    }
+
     return (
-        <span
-            className={[
-                'inline-flex items-center justify-center shrink-0 rounded-full font-semibold',
-                sizeClass[size],
-                onBoard
-                    ? 'bg-[#1c7fc4] text-white ring-2 ring-white/70 shadow-[0_1px_3px_rgba(0,0,0,0.25)]'
-                    : 'bg-[var(--color-lavender)] text-[var(--color-ink)]',
-                className,
-            ]
-                .filter(Boolean)
-                .join(' ')}
-            title={person.name}
+        <Link
+            href={`/boards/${boardId}?member=${person.id}`}
+            title={describe(person)}
+            aria-label={`Show cards assigned to ${person.name}`}
+            className={`${classes} hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--color-electric-blue)] transition-[filter] duration-150`}
         >
-            {person.name.slice(0, 1).toUpperCase()}
-        </span>
+            {initial}
+        </Link>
     )
 }
 
@@ -41,12 +86,14 @@ export function AvatarStack({
     max = 5,
     size = 'md',
     onBoard = false,
+    boardId,
     className,
 }: {
     people: Person[]
     max?: number
     size?: keyof typeof sizeClass
     onBoard?: boolean
+    boardId?: string
     className?: string
 }) {
     if (people.length === 0) return null
@@ -66,17 +113,20 @@ export function AvatarStack({
                     person={person}
                     size={size}
                     onBoard={onBoard}
+                    boardId={boardId}
                 />
             ))}
             {overflow > 0 ? (
                 <span
                     className={[
-                        'inline-flex items-center justify-center shrink-0 rounded-full font-semibold',
+                        baseClass,
                         sizeClass[size],
-                        onBoard
-                            ? 'bg-[#1c7fc4] text-white ring-2 ring-white/70 shadow-[0_1px_3px_rgba(0,0,0,0.25)]'
-                            : 'bg-[var(--color-lavender)] text-[var(--color-ink)]',
+                        skinClass(onBoard),
                     ].join(' ')}
+                    title={people
+                        .slice(max)
+                        .map((p) => p.name)
+                        .join('\n')}
                 >
                     +{overflow}
                 </span>

@@ -12,7 +12,11 @@ import { AvatarStack } from '@/app/_components/avatar-stack'
 import { ProgressBar } from '@/app/_components/progress-bar'
 import { requireUser } from '@/lib/auth/session'
 import { getMembership } from '@/lib/auth/membership'
-import { isActiveMember, isBoardOwner } from '@/lib/domain/authorization'
+import {
+    canMutateBoardContent,
+    isActiveMember,
+    isBoardOwner,
+} from '@/lib/domain/authorization'
 import {
     getActiveColumnsWithCards,
     getBoard,
@@ -20,8 +24,10 @@ import {
     getBoardMembers,
 } from '@/lib/queries/board'
 import { matchesFilters } from '@/lib/domain/filters'
+import { dueDateToIso } from '@/lib/domain/due'
 import { FilterBar } from './filter-bar'
 import { BoardBoard } from './board-board'
+import { BoardLive } from './board-live'
 import { NewColumnForm } from './new-column-form'
 import type { CardSummary } from './board-types'
 
@@ -43,6 +49,7 @@ export default async function BoardPage({
     searchParams: Promise<{
         member?: string
         label?: string
+        priority?: string
         overdue?: string
         q?: string
     }>
@@ -59,7 +66,7 @@ export default async function BoardPage({
     if (!isActiveMember(membership)) {
         return (
             <div className="card-surface text-center py-16">
-                <h1 className="text-xl font-semibold mb-2">
+                <h1 className="text-[15px] font-normal tracking-[-0.1px] mb-2">
                     You don&apos;t have access to this board
                 </h1>
                 <p className="text-[var(--color-smoke)]">
@@ -72,18 +79,14 @@ export default async function BoardPage({
     if (board.status === 'closed') {
         return (
             <div className="card-surface text-center py-16">
-                <h1 className="text-xl font-semibold mb-2">
+                <h1 className="text-[15px] font-normal tracking-[-0.1px] mb-2">
                     {board.name} is closed
                 </h1>
                 <p className="text-[var(--color-smoke)]">
                     This board was permanently closed and can no longer be
                     edited.
                 </p>
-                <Button
-                    href="/boards"
-                    variant="ghost"
-                    className="!p-0 !min-h-0 mt-3 !inline-flex"
-                >
+                <Button href="/boards" variant="ghost" className="mt-3">
                     Back to your boards
                 </Button>
             </div>
@@ -96,9 +99,18 @@ export default async function BoardPage({
         getBoardLabels(boardId),
     ])
 
+    // Flattened once so every avatar on the page carries the same tooltip
+    // context (role, joined date) without re-mapping at each call site.
+    const people = members.map((m) => ({
+        ...m.user,
+        role: m.role,
+        joinedAt: m.joinedAt,
+    }))
+
     const filters = {
         member: sp.member,
         label: sp.label,
+        priority: sp.priority,
         overdue: sp.overdue === '1',
         q: sp.q,
     }
@@ -118,7 +130,8 @@ export default async function BoardPage({
                 title: c.title,
                 description: c.description,
                 assigneeId: c.assigneeId,
-                dueDate: c.dueDate ? c.dueDate.toISOString() : null,
+                dueDate: dueDateToIso(c.dueDate),
+                priority: c.priority,
                 position: c.position,
                 labelIds: c.labelIds,
                 checklist: c.checklist,
@@ -126,33 +139,24 @@ export default async function BoardPage({
     }
 
     const canManage = isBoardOwner(membership)
+    const canEdit = canMutateBoardContent(membership)
 
     return (
-        <div
-            className="relative flex flex-col gap-4 h-full rounded-[var(--radius-largecards)] p-4 sm:p-6 overflow-hidden"
-            style={{
-                background:
-                    'radial-gradient(140% 120% at 100% 0%, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0) 40%), linear-gradient(155deg, #1090df 0%, var(--color-board-blue) 45%, #005a94 100%)',
-            }}
-        >
-            <div
-                className="pointer-events-none absolute inset-0"
-                style={{ background: 'rgba(0,0,0,0.10)' }}
-                aria-hidden="true"
-            />
+        <div className="relative flex flex-col gap-4 h-full">
+            <BoardLive boardId={boardId} />
             <div className="relative flex items-start justify-between gap-4 flex-wrap">
                 <div className="flex items-start gap-3 min-w-0">
                     <span
-                        className="w-11 h-11 rounded-[var(--radius-cards)] flex items-center justify-center shrink-0 bg-white/16 text-white ring-1 ring-white/25"
+                        className="w-9 h-9 rounded-[var(--radius-inputs)] flex items-center justify-center shrink-0 bg-[var(--color-electric-blue-tint)] text-[var(--color-electric-blue)]"
                         aria-hidden="true"
                     >
-                        <LayoutGrid size={20} strokeWidth={2} />
+                        <LayoutGrid size={18} strokeWidth={2} />
                     </span>
                     <div className="min-w-0">
-                        <h1 className="text-[26px] font-bold tracking-[-0.02em] text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.2)] truncate">
+                        <h1 className="text-[16px] font-medium tracking-[-0.2px] text-[var(--color-ink)] truncate">
                             {board.name}
                         </h1>
-                        <p className="text-sm text-white/80 font-medium mb-1.5">
+                        <p className="tabular text-[13px] text-[var(--color-smoke)] mb-1.5">
                             {columns.length} column
                             {columns.length === 1 ? '' : 's'} · {cards.length}{' '}
                             card{cards.length === 1 ? '' : 's'}
@@ -162,14 +166,14 @@ export default async function BoardPage({
                                 value={checklistDone}
                                 max={checklistTotal}
                                 label={`${checklistDone} of ${checklistTotal} checklist items complete`}
-                                trackClassName="bg-white/25"
-                                className="w-56 max-w-full [&>span]:text-white/85"
+                                trackClassName="bg-[var(--color-sunken)]"
+                                className="w-56 max-w-full"
                             />
                         ) : null}
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <AvatarStack people={members.map((m) => m.user)} onBoard />
+                    <AvatarStack people={people} onBoard boardId={boardId} />
                     <Button
                         href={`/boards/${boardId}/settings#invite-email`}
                         variant="onBoard"
@@ -206,10 +210,10 @@ export default async function BoardPage({
                 </div>
             </div>
 
-            <div className="relative bg-[var(--color-paper)] rounded-[var(--radius-cards)] p-3 shadow-[var(--shadow-elevated)]">
+            <div className="relative bg-[var(--color-paper)] border border-[var(--color-mist)] rounded-[var(--radius-cards)] p-2">
                 <FilterBar
                     boardId={boardId}
-                    members={members.map((m) => m.user)}
+                    members={people}
                     labels={labels}
                     filters={{ ...sp }}
                 />
@@ -220,7 +224,7 @@ export default async function BoardPage({
                     <p className="text-[var(--color-smoke)] mb-3">
                         No active columns yet.
                     </p>
-                    <NewColumnForm boardId={boardId} />
+                    {canEdit ? <NewColumnForm boardId={boardId} /> : null}
                 </div>
             ) : (
                 <>
@@ -228,11 +232,12 @@ export default async function BoardPage({
                         boardId={boardId}
                         columns={columns}
                         cardsByColumn={cardsByColumn}
-                        members={members.map((m) => m.user)}
+                        members={people}
                         labels={labels}
                         canManage={canManage}
+                        canEdit={canEdit}
                     />
-                    <NewColumnForm boardId={boardId} />
+                    {canEdit ? <NewColumnForm boardId={boardId} /> : null}
                 </>
             )}
         </div>

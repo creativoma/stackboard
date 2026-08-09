@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useEffect, useState } from 'react'
+import { useActionState, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { GripVertical } from 'lucide-react'
 import {
@@ -24,7 +24,10 @@ import {
     closeBoardAction,
     type SettingsActionState,
 } from '@/lib/actions/boards'
-import { reorderColumnsAction } from '@/lib/actions/columns'
+import {
+    reorderColumnsAction,
+    setColumnWipLimitAction,
+} from '@/lib/actions/columns'
 import {
     inviteMemberAction,
     revokeInvitationAction,
@@ -91,6 +94,20 @@ export function InviteMemberForm({ boardId }: { boardId: string }) {
                     className="input w-[280px]"
                     placeholder="teammate@example.com"
                 />
+            </div>
+            <div className="flex flex-col gap-1.5">
+                <label htmlFor="invite-role" className="text-sm font-medium">
+                    Role
+                </label>
+                <select
+                    id="invite-role"
+                    name="role"
+                    defaultValue="member"
+                    className="input w-[160px]"
+                >
+                    <option value="member">Member</option>
+                    <option value="observer">Observer (read-only)</option>
+                </select>
             </div>
             <SubmitButton pendingText="Sending…">Send invite</SubmitButton>
             {state?.error ? (
@@ -197,9 +214,72 @@ export function RemoveMemberButton({
     )
 }
 
-type ColumnItem = { id: string; name: string }
+type ColumnItem = { id: string; name: string; wipLimit: number | null }
 
-function SortableColumnRow({ column }: { column: ColumnItem }) {
+function WipLimitInput({
+    boardId,
+    column,
+}: {
+    boardId: string
+    column: ColumnItem
+}) {
+    const [error, setError] = useState<string | null>(null)
+    const router = useRouter()
+
+    async function save(raw: string) {
+        const current = column.wipLimit === null ? '' : String(column.wipLimit)
+        if (raw.trim() === current) return
+        const result = await setColumnWipLimitAction(boardId, column.id, raw)
+        if (result?.error) {
+            setError(result.error)
+        } else {
+            setError(null)
+            router.refresh()
+        }
+    }
+
+    return (
+        <span className="ml-auto flex items-center gap-1.5">
+            <label
+                htmlFor={`wip-${column.id}`}
+                className="text-xs text-[var(--color-fog)]"
+            >
+                WIP limit
+            </label>
+            <input
+                id={`wip-${column.id}`}
+                type="number"
+                min={1}
+                max={1000}
+                defaultValue={column.wipLimit ?? ''}
+                placeholder="—"
+                onBlur={(e) => save(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') e.currentTarget.blur()
+                }}
+                className="input !w-[72px] !py-1 !px-2 text-sm tabular"
+            />
+            {error ? (
+                <span
+                    role="alert"
+                    className="text-xs text-[var(--color-coral)]"
+                >
+                    {error}
+                </span>
+            ) : null}
+        </span>
+    )
+}
+
+function SortableColumnRow({
+    column,
+    boardId,
+    canSetWip,
+}: {
+    column: ColumnItem
+    boardId: string
+    canSetWip: boolean
+}) {
     const {
         attributes,
         listeners,
@@ -228,7 +308,16 @@ function SortableColumnRow({ column }: { column: ColumnItem }) {
             >
                 <GripVertical size={16} strokeWidth={2} aria-hidden="true" />
             </button>
-            <span className="text-sm font-medium">{column.name}</span>
+            <span data-testid="column-row-name" className="text-sm font-medium">
+                {column.name}
+            </span>
+            {canSetWip ? (
+                <WipLimitInput boardId={boardId} column={column} />
+            ) : column.wipLimit ? (
+                <span className="ml-auto text-xs text-[var(--color-fog)] tabular">
+                    WIP limit {column.wipLimit}
+                </span>
+            ) : null}
         </li>
     )
 }
@@ -236,17 +325,23 @@ function SortableColumnRow({ column }: { column: ColumnItem }) {
 export function ColumnOrderList({
     boardId,
     columns,
+    canSetWip = false,
 }: {
     boardId: string
     columns: ColumnItem[]
+    canSetWip?: boolean
 }) {
     const [items, setItems] = useState(columns)
     const [error, setError] = useState<string | null>(null)
     const router = useRouter()
 
-    useEffect(() => {
+    // Adopt a fresh server list (revalidate after a reorder/rename) while
+    // rendering — an effect would leave one frame of stale columns on screen.
+    const [lastFromServer, setLastFromServer] = useState(columns)
+    if (lastFromServer !== columns) {
+        setLastFromServer(columns)
         setItems(columns)
-    }, [columns])
+    }
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -299,7 +394,12 @@ export function ColumnOrderList({
             >
                 <ul>
                     {items.map((column) => (
-                        <SortableColumnRow key={column.id} column={column} />
+                        <SortableColumnRow
+                            key={column.id}
+                            column={column}
+                            boardId={boardId}
+                            canSetWip={canSetWip}
+                        />
                     ))}
                 </ul>
             </SortableContext>

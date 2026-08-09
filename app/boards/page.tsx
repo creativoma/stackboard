@@ -28,10 +28,10 @@ export default async function BoardsDashboard() {
     ).size
 
     return (
-        <div className="flex flex-col gap-10">
+        <div className="flex flex-col gap-6">
             <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div>
-                    <h1 className="text-[32px] font-semibold tracking-[-0.02em] leading-tight">
+                    <h1 className="text-[16px] font-medium tracking-[-0.2px] leading-tight">
                         Your boards
                     </h1>
                     <p className="text-[var(--color-smoke)] mt-1">
@@ -46,12 +46,12 @@ export default async function BoardsDashboard() {
 
             {active.length > 0 ? (
                 <div className="elevated-surface flex flex-wrap divide-x divide-[var(--color-mist)]">
-                    <div className="flex items-center gap-3 px-6 py-4">
-                        <span className="w-9 h-9 rounded-full bg-[var(--color-electric-blue-tint)] text-[var(--color-electric-blue)] flex items-center justify-center shrink-0">
+                    <div className="flex items-center gap-3 px-4 py-3">
+                        <span className="w-8 h-8 rounded-[var(--radius-inputs)] bg-[var(--color-electric-blue-tint)] text-[var(--color-electric-blue)] flex items-center justify-center shrink-0">
                             <LayoutGrid size={17} strokeWidth={2} />
                         </span>
                         <div>
-                            <p className="text-lg font-semibold leading-tight text-[var(--color-ink)]">
+                            <p className="tabular text-[15px] font-medium leading-tight text-[var(--color-ink)]">
                                 {active.length}
                             </p>
                             <p className="text-xs text-[var(--color-fog)]">
@@ -59,12 +59,12 @@ export default async function BoardsDashboard() {
                             </p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3 px-6 py-4">
-                        <span className="w-9 h-9 rounded-full bg-[var(--color-label-green-subtle)] text-[var(--color-success)] flex items-center justify-center shrink-0">
+                    <div className="flex items-center gap-3 px-4 py-3">
+                        <span className="w-8 h-8 rounded-[var(--radius-inputs)] bg-[var(--color-label-purple-subtle)] text-[var(--color-label-purple)] flex items-center justify-center shrink-0">
                             <SquareCheck size={17} strokeWidth={2} />
                         </span>
                         <div>
-                            <p className="text-lg font-semibold leading-tight text-[var(--color-ink)]">
+                            <p className="tabular text-[15px] font-medium leading-tight text-[var(--color-ink)]">
                                 {totalCards}
                             </p>
                             <p className="text-xs text-[var(--color-fog)]">
@@ -72,12 +72,12 @@ export default async function BoardsDashboard() {
                             </p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3 px-6 py-4">
-                        <span className="w-9 h-9 rounded-full bg-[var(--color-lavender)] text-[var(--color-ink)] flex items-center justify-center shrink-0">
+                    <div className="flex items-center gap-3 px-4 py-3">
+                        <span className="w-8 h-8 rounded-[var(--radius-inputs)] bg-[var(--color-sunken)] text-[var(--color-ink-secondary)] flex items-center justify-center shrink-0">
                             <Users size={17} strokeWidth={2} />
                         </span>
                         <div>
-                            <p className="text-lg font-semibold leading-tight text-[var(--color-ink)]">
+                            <p className="tabular text-[15px] font-medium leading-tight text-[var(--color-ink)]">
                                 {totalMembers}
                             </p>
                             <p className="text-xs text-[var(--color-fog)]">
@@ -91,11 +91,11 @@ export default async function BoardsDashboard() {
             {pendingInvites.length > 0 ? (
                 <section
                     aria-labelledby="pending-invites-heading"
-                    className="card-surface !bg-[var(--color-electric-blue-tint)]"
+                    className="border border-[var(--color-mist)] rounded-[var(--radius-largecards)] p-4 bg-[var(--color-electric-blue-tint)]"
                 >
                     <h2
                         id="pending-invites-heading"
-                        className="eyebrow mb-2 !text-[var(--color-midnight)]"
+                        className="eyebrow mb-2 text-[var(--color-electric-blue)]"
                     >
                         Pending invitations
                     </h2>
@@ -139,7 +139,7 @@ export default async function BoardsDashboard() {
                         </p>
                     </div>
                 ) : (
-                    <StaggerIn className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                    <StaggerIn className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {active.map(
                             ({
                                 board,
@@ -151,32 +151,24 @@ export default async function BoardsDashboard() {
                                 <Link
                                     key={board.id}
                                     href={`/boards/${board.id}`}
-                                    className="group elevated-surface flex flex-col overflow-hidden hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(9,30,66,0.18)] transition-[transform,box-shadow] duration-150"
+                                    className="group elevated-surface flex flex-col overflow-hidden hover:-translate-y-0.5 hover:shadow-[var(--shadow-dragging)] transition-[transform,box-shadow] duration-150"
                                 >
                                     <div
-                                        className="relative h-20 shrink-0 flex items-end p-4"
+                                        className="relative h-16 shrink-0 flex items-end border-b border-[var(--color-mist)] p-3"
                                         style={{
                                             background: boardGradient(board.id),
                                         }}
                                     >
-                                        <div
-                                            className="pointer-events-none absolute inset-0"
-                                            style={{
-                                                background:
-                                                    'radial-gradient(140% 160% at 100% 0%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 45%)',
-                                            }}
-                                            aria-hidden="true"
-                                        />
-                                        <h3 className="relative font-semibold text-[17px] tracking-[-0.02em] text-white leading-tight [text-shadow:0_1px_3px_rgba(0,0,0,0.25)] line-clamp-2">
+                                        <h3 className="font-medium text-[14px] tracking-[-0.1px] text-[var(--color-carbon)] leading-tight line-clamp-2">
                                             {board.name}
                                         </h3>
                                         {role === 'owner' ? (
-                                            <span className="pill absolute top-3 right-3 bg-white/20 text-white">
+                                            <span className="pill absolute top-2.5 right-2.5 bg-[var(--color-paper)] border border-[var(--color-mist)] text-[var(--color-smoke)]">
                                                 Owner
                                             </span>
                                         ) : null}
                                     </div>
-                                    <div className="flex flex-col gap-3 p-4">
+                                    <div className="flex flex-col gap-2.5 p-3">
                                         <div className="flex items-center justify-between">
                                             <AvatarStack
                                                 people={members}
@@ -239,7 +231,7 @@ export default async function BoardsDashboard() {
                     >
                         Archived boards
                     </h2>
-                    <StaggerIn className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                    <StaggerIn className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {closed.map(({ board, memberCount }) => (
                             <div
                                 key={board.id}
@@ -255,11 +247,11 @@ export default async function BoardsDashboard() {
                                     <Lock
                                         size={14}
                                         strokeWidth={2}
-                                        className="text-white"
+                                        className="text-[var(--color-carbon)]"
                                     />
                                 </span>
                                 <div className="min-w-0">
-                                    <h3 className="font-semibold text-[15px] text-[var(--color-smoke)] truncate">
+                                    <h3 className="font-normal text-[14px] text-[var(--color-smoke)] truncate">
                                         {board.name}
                                     </h3>
                                     <p className="text-xs text-[var(--color-fog)]">

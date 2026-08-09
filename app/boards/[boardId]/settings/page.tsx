@@ -41,8 +41,8 @@ export default async function BoardSettingsPage({
     if (!board) notFound()
     if (!isActiveMember(membership)) {
         return (
-            <div className="card-surface text-center py-16">
-                <h1 className="text-xl font-semibold">
+            <div className="card-surface text-center py-10">
+                <h1 className="text-[15px] font-medium tracking-[-0.1px]">
                     You don&apos;t have access to this board
                 </h1>
             </div>
@@ -70,14 +70,10 @@ export default async function BoardSettingsPage({
     return (
         <div className="flex flex-col gap-8 max-w-[640px]">
             <div>
-                <Button
-                    href={`/boards/${boardId}`}
-                    variant="ghost"
-                    className="!p-0 !min-h-0"
-                >
+                <Button href={`/boards/${boardId}`} variant="ghost">
                     &larr; {board.name}
                 </Button>
-                <h1 className="text-[28px] font-semibold tracking-[-0.02em] mt-1">
+                <h1 className="text-[16px] font-medium tracking-[-0.2px] mt-1">
                     Board settings
                 </h1>
                 <p className="text-[var(--color-smoke)] mt-1 text-sm">
@@ -106,12 +102,16 @@ export default async function BoardSettingsPage({
                     Members
                 </h2>
                 <ul className="flex flex-col">
-                    {members.map(({ user: member, role }) => (
+                    {members.map(({ user: member, role, joinedAt }) => (
                         <li
                             key={member.id}
                             className="flex items-center gap-3 py-2.5 border-b border-[var(--color-mist)] last:border-0"
                         >
-                            <Avatar person={member} size="md" />
+                            <Avatar
+                                person={{ ...member, role, joinedAt }}
+                                size="md"
+                                boardId={boardId}
+                            />
                             <div className="min-w-0 flex-1">
                                 <p className="text-sm font-medium truncate">
                                     {member.name}
@@ -179,7 +179,9 @@ export default async function BoardSettingsPage({
                     columns={activeColumns.map((col) => ({
                         id: col.id,
                         name: col.name,
+                        wipLimit: col.wipLimit,
                     }))}
+                    canSetWip={owner}
                 />
             </section>
 

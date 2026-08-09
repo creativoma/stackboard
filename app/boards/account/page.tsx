@@ -9,16 +9,12 @@ export default async function AccountPage() {
     const user = await requireUser()
 
     return (
-        <div className="flex flex-col gap-10 max-w-[720px]">
+        <div className="flex flex-col gap-6 max-w-[720px]">
             <div>
-                <Button
-                    href="/boards"
-                    variant="ghost"
-                    className="!p-0 !min-h-0"
-                >
+                <Button href="/boards" variant="ghost">
                     &larr; Boards
                 </Button>
-                <h1 className="text-[24px] font-semibold tracking-[-0.02em] mt-1">
+                <h1 className="text-[16px] font-medium tracking-[-0.2px] mt-1">
                     Account settings
                 </h1>
             </div>

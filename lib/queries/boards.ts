@@ -1,6 +1,7 @@
 import 'server-only'
 import { and, count, desc, eq } from 'drizzle-orm'
 import { db, schema } from '@/db'
+import { humanizeActivityValues } from './activity'
 
 export async function listBoardsForUser(userId: string) {
     const memberships = await db
@@ -44,7 +45,7 @@ export async function listBoardsForUser(userId: string) {
                     )
                 )
 
-            const [latestActivity] = await db
+            const [rawLatestActivity] = await db
                 .select({
                     type: schema.activityEvents.type,
                     field: schema.activityEvents.field,
@@ -61,6 +62,9 @@ export async function listBoardsForUser(userId: string) {
                 .where(eq(schema.activityEvents.boardId, board.id))
                 .orderBy(desc(schema.activityEvents.createdAt))
                 .limit(1)
+            const [latestActivity] = await humanizeActivityValues(
+                rawLatestActivity ? [rawLatestActivity] : []
+            )
 
             return {
                 board,

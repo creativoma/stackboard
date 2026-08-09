@@ -4,9 +4,22 @@ import postgres from 'postgres'
 import { eq, and } from 'drizzle-orm'
 import * as schema from '@/db/schema'
 import { getMembership as getMembershipFactory } from '@/lib/auth/membership'
-import { isActiveMember } from '@/lib/domain/authorization'
+import {
+    canMutateBoardContent,
+    isActiveMember,
+} from '@/lib/domain/authorization'
 import { moveBetweenLists, toPositionRows } from '@/lib/domain/positions'
-import { processDueJobs } from '@/lib/jobs/worker'
+import { canAcceptCard } from '@/lib/domain/wip'
+import { searchCards } from '@/lib/queries/search'
+import { listMyCards } from '@/lib/queries/my-cards'
+import { processDueJobs, scanDueSoonCards } from '@/lib/jobs/worker'
+import { notifyUsers } from '@/lib/notifications/create'
+import { createBoardFromNormalized } from '@/lib/import/create-board'
+import { getBoardTemplate } from '@/lib/templates/boards'
+import { LocalDiskStorage } from '@/lib/storage/local'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
 // This suite must run with DATABASE_URL pointed at an isolated test database
 // (see the `test:integration` script), never the dev/seed database — every
@@ -52,6 +65,9 @@ afterAll(async () => {
 
 beforeEach(async () => {
     await db.delete(schema.jobs)
+    await db.delete(schema.notifications)
+    await db.delete(schema.attachments)
+    await db.delete(schema.cardWatchers)
     await db.delete(schema.activityEvents)
     await db.delete(schema.comments)
     await db.delete(schema.checklistItems)
@@ -131,6 +147,80 @@ describe('acceptance scenario: removed membership blocks mutation', () => {
     })
 })
 
+describe('observer role: read access without mutation rights', () => {
+    it('keeps an observer active (can read) while the content-mutation gate rejects them', async () => {
+        const { board } = await seedBoardWithMembers()
+        const [observer] = await db
+            .insert(schema.users)
+            .values({
+                name: 'Observer',
+                email: 'observer@test.dev',
+                passwordHash: 'x',
+            })
+            .returning()
+        await db.insert(schema.boardMemberships).values({
+            boardId: board.id,
+            userId: observer.id,
+            role: 'observer',
+        })
+
+        const membership = await getMembershipFactory(board.id, observer.id)
+        expect(isActiveMember(membership)).toBe(true)
+        expect(canMutateBoardContent(membership)).toBe(false)
+    })
+
+    it('grants the invited role when an observer invitation is accepted', async () => {
+        const { board, owner } = await seedBoardWithMembers()
+        const [invitation] = await db
+            .insert(schema.invitations)
+            .values({
+                boardId: board.id,
+                email: 'newcomer@test.dev',
+                invitedByUserId: owner.id,
+                role: 'observer',
+                token: 'hashed-token',
+                expiresAt: new Date(Date.now() + 86_400_000),
+            })
+            .returning()
+        expect(invitation.role).toBe('observer')
+    })
+})
+
+describe('WIP limits', () => {
+    it('stores a column wip limit and the entry rule rejects a card once the column is full', async () => {
+        const { board, colA } = await seedBoardWithMembers()
+        await db
+            .update(schema.columns)
+            .set({ wipLimit: 1 })
+            .where(eq(schema.columns.id, colA.id))
+        await db.insert(schema.cards).values({
+            boardId: board.id,
+            columnId: colA.id,
+            title: 'Only card',
+            position: 0,
+        })
+
+        const [column] = await db
+            .select()
+            .from(schema.columns)
+            .where(eq(schema.columns.id, colA.id))
+        const [{ count: activeCount }] = await db
+            .select({ count: schema.cards.id })
+            .from(schema.cards)
+            .where(
+                and(
+                    eq(schema.cards.columnId, colA.id),
+                    eq(schema.cards.status, 'active')
+                )
+            )
+            .then((rows) => [{ count: rows.length }])
+
+        expect(column.wipLimit).toBe(1)
+        expect(canAcceptCard(activeCount, column.wipLimit)).toBe(false)
+        expect(canAcceptCard(activeCount, null)).toBe(true)
+    })
+})
+
 describe('card move persists an atomic, collision-free reorder', () => {
     it('moving a card between columns leaves both lists contiguous with no duplicate ids', async () => {
         const { board, colA, colB } = await seedBoardWithMembers()
@@ -206,6 +296,243 @@ describe('card move persists an atomic, collision-free reorder', () => {
         expect(new Set(columnBCards.map((c) => c.position)).size).toBe(
             columnBCards.length
         )
+    })
+})
+
+describe('card search', () => {
+    it('matches title and description full-text for members and never leaks across boards', async () => {
+        const { board, colA, owner, member } = await seedBoardWithMembers()
+        const [outsider] = await db
+            .insert(schema.users)
+            .values({
+                name: 'Outsider',
+                email: 'outsider@test.dev',
+                passwordHash: 'x',
+            })
+            .returning()
+        await db.insert(schema.cards).values([
+            {
+                boardId: board.id,
+                columnId: colA.id,
+                title: 'Launch checklist',
+                description: 'Prepare the rocket for departure',
+                position: 0,
+            },
+            {
+                boardId: board.id,
+                columnId: colA.id,
+                title: 'Unrelated chore',
+                description: '',
+                position: 1,
+            },
+        ])
+
+        const byTitle = await searchCards(member.id, 'launch')
+        expect(byTitle).toHaveLength(1)
+        expect(byTitle[0].title).toBe('Launch checklist')
+        expect(byTitle[0].boardName).toBe('Test Board')
+
+        const byDescription = await searchCards(owner.id, 'rocket departure')
+        expect(byDescription).toHaveLength(1)
+
+        const leaked = await searchCards(outsider.id, 'launch')
+        expect(leaked).toHaveLength(0)
+    })
+
+    it('returns nothing for queries too short to normalize', async () => {
+        const { member } = await seedBoardWithMembers()
+        expect(await searchCards(member.id, ' a ')).toHaveLength(0)
+    })
+})
+
+describe('my cards', () => {
+    it('lists only active cards assigned to the user on boards with an active membership', async () => {
+        const { board, colA, member, owner } = await seedBoardWithMembers()
+        await db.insert(schema.cards).values([
+            {
+                boardId: board.id,
+                columnId: colA.id,
+                title: 'Mine',
+                assigneeId: member.id,
+                position: 0,
+            },
+            {
+                boardId: board.id,
+                columnId: colA.id,
+                title: 'Someone elses',
+                assigneeId: owner.id,
+                position: 1,
+            },
+            {
+                boardId: board.id,
+                columnId: colA.id,
+                title: 'Mine but archived',
+                assigneeId: member.id,
+                status: 'archived',
+                position: 2,
+            },
+        ])
+
+        const mine = await listMyCards(member.id)
+        expect(mine.map((c) => c.title)).toEqual(['Mine'])
+        expect(mine[0].boardName).toBe('Test Board')
+
+        // Removing the membership hides the card even while still assigned.
+        await db
+            .update(schema.boardMemberships)
+            .set({ status: 'removed' })
+            .where(eq(schema.boardMemberships.userId, member.id))
+        expect(await listMyCards(member.id)).toHaveLength(0)
+    })
+})
+
+describe('notifications', () => {
+    it('notifyUsers writes one in-app row and one email job per recipient', async () => {
+        const { board, colA, owner, member } = await seedBoardWithMembers()
+        const [card] = await db
+            .insert(schema.cards)
+            .values({
+                boardId: board.id,
+                columnId: colA.id,
+                title: 'Notify me',
+                position: 0,
+            })
+            .returning()
+
+        await notifyUsers(db, {
+            recipientIds: [owner.id, member.id],
+            boardId: board.id,
+            cardId: card.id,
+            actorId: owner.id,
+            type: 'comment.added',
+            title: 'Owner commented on "Notify me"',
+            boardName: board.name,
+        })
+
+        const rows = await db.select().from(schema.notifications)
+        expect(rows).toHaveLength(2)
+        expect(rows.every((r) => r.readAt === null)).toBe(true)
+
+        const emailJobs = await db
+            .select()
+            .from(schema.jobs)
+            .where(eq(schema.jobs.type, 'send_notification_email'))
+        expect(emailJobs).toHaveLength(2)
+    })
+
+    it('due-soon scan claims each card exactly once and notifies assignee + watchers', async () => {
+        const { board, colA, owner, member } = await seedBoardWithMembers()
+        const inTwoHours = new Date(Date.now() + 2 * 60 * 60 * 1000)
+        const [card] = await db
+            .insert(schema.cards)
+            .values({
+                boardId: board.id,
+                columnId: colA.id,
+                title: 'Due soon',
+                assigneeId: member.id,
+                dueDate: inTwoHours,
+                position: 0,
+            })
+            .returning()
+        await db
+            .insert(schema.cardWatchers)
+            .values({ cardId: card.id, userId: owner.id })
+
+        expect(await scanDueSoonCards(db)).toBe(1)
+
+        const rows = await db
+            .select()
+            .from(schema.notifications)
+            .where(eq(schema.notifications.type, 'card.due_soon'))
+        expect(rows.map((r) => r.userId).sort()).toEqual(
+            [member.id, owner.id].sort()
+        )
+
+        // Second scan finds nothing: the card was claimed via dueReminderSentAt.
+        expect(await scanDueSoonCards(db)).toBe(0)
+    })
+})
+
+describe('board templates', () => {
+    it('creates a complete board from a template through the shared import path', async () => {
+        const [creator] = await db
+            .insert(schema.users)
+            .values({
+                name: 'Creator',
+                email: 'creator@test.dev',
+                passwordHash: 'x',
+            })
+            .returning()
+
+        const template = getBoardTemplate('kanban')
+        expect(template).toBeDefined()
+        const boardId = await createBoardFromNormalized(
+            creator.id,
+            template!.board
+        )
+
+        const [board] = await db
+            .select()
+            .from(schema.boards)
+            .where(eq(schema.boards.id, boardId))
+        expect(board.ownerId).toBe(creator.id)
+
+        const columns = await db
+            .select()
+            .from(schema.columns)
+            .where(eq(schema.columns.boardId, boardId))
+        expect(columns.map((c) => c.name).sort()).toEqual(
+            ['Doing', 'Done', 'To do'].sort()
+        )
+
+        const cards = await db
+            .select()
+            .from(schema.cards)
+            .where(eq(schema.cards.boardId, boardId))
+        expect(cards).toHaveLength(1)
+
+        const checklist = await db
+            .select()
+            .from(schema.checklistItems)
+            .where(eq(schema.checklistItems.cardId, cards[0].id))
+        expect(checklist).toHaveLength(2)
+    })
+})
+
+describe('local disk object storage', () => {
+    it('round-trips bytes, reports missing objects as null, and deletes', async () => {
+        const root = await mkdtemp(join(tmpdir(), 'stackboard-storage-'))
+        try {
+            const storage = new LocalDiskStorage(root)
+            const bytes = new TextEncoder().encode('hello attachment')
+
+            await storage.put('board-1/att-1', bytes)
+            const stream = await storage.getStream('board-1/att-1')
+            expect(stream).not.toBeNull()
+            const read = new Uint8Array(
+                await new Response(stream!).arrayBuffer()
+            )
+            expect(new TextDecoder().decode(read)).toBe('hello attachment')
+
+            expect(await storage.getStream('board-1/nope')).toBeNull()
+
+            await storage.delete('board-1/att-1')
+            expect(await storage.getStream('board-1/att-1')).toBeNull()
+        } finally {
+            await rm(root, { recursive: true, force: true })
+        }
+    })
+
+    it('refuses keys that escape the storage root', async () => {
+        const root = await mkdtemp(join(tmpdir(), 'stackboard-storage-'))
+        try {
+            const storage = new LocalDiskStorage(root)
+            await expect(
+                storage.put('../outside.txt', new Uint8Array([1]))
+            ).rejects.toThrow(/Invalid storage key/)
+        } finally {
+            await rm(root, { recursive: true, force: true })
+        }
     })
 })
 

@@ -20,7 +20,7 @@ export default async function AcceptInvitePage({
         return (
             <main className="flex-1 flex items-center justify-center px-4 py-16">
                 <div className="w-full max-w-sm elevated-surface p-8 text-center">
-                    <h1 className="text-[20px] font-semibold mb-2">
+                    <h1 className="text-[15px] font-medium tracking-[-0.1px] mb-2">
                         You&apos;ve been invited to a board
                     </h1>
                     <p className="text-sm text-[var(--color-smoke)] mb-6">
@@ -54,7 +54,7 @@ export default async function AcceptInvitePage({
     return (
         <main className="flex-1 flex items-center justify-center px-4 py-16">
             <div className="w-full max-w-sm elevated-surface p-8 text-center">
-                <h1 className="text-[20px] font-semibold mb-2">
+                <h1 className="text-[15px] font-medium tracking-[-0.1px] mb-2">
                     Couldn&apos;t accept this invitation
                 </h1>
                 <p className="text-sm text-[var(--color-coral)] mb-6">

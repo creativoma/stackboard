@@ -31,9 +31,12 @@ export function ArchiveDrawer({
                 <Archive size={13} strokeWidth={2} aria-hidden="true" />
                 View archive
             </Button>
-            <Drawer open={open} onClose={() => setOpen(false)} title="Archive">
-                <h2 className="text-lg font-semibold mb-4">Archive</h2>
-
+            <Drawer
+                open={open}
+                onClose={() => setOpen(false)}
+                title="Archive"
+                description="Restore archived columns and cards back onto the board."
+            >
                 {archivedColumns.length > 0 ? (
                     <div className="mb-6">
                         <h3 className="eyebrow mb-2">Columns</h3>

@@ -1,4 +1,5 @@
-// Trello's fixed six-color functional label palette (see DESIGN.md §2).
+// Fixed six-color functional label palette, harmonized to the brand
+// family (see DESIGN.md, "Stackboard adaptations").
 export const LABEL_COLOR_VAR: Record<string, string> = {
     green: 'var(--color-label-green)',
     yellow: 'var(--color-label-yellow)',

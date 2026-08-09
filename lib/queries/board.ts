@@ -12,8 +12,19 @@ export async function getBoard(boardId: string) {
 }
 
 export async function getBoardMembers(boardId: string) {
+    // Columns are listed explicitly: selecting `schema.users` wholesale pulls
+    // passwordHash into the row, and these rows are handed to client
+    // components, which would serialize it into the RSC payload.
     return db
-        .select({ user: schema.users, role: schema.boardMemberships.role })
+        .select({
+            user: {
+                id: schema.users.id,
+                name: schema.users.name,
+                email: schema.users.email,
+            },
+            role: schema.boardMemberships.role,
+            joinedAt: schema.boardMemberships.createdAt,
+        })
         .from(schema.boardMemberships)
         .innerJoin(
             schema.users,

@@ -48,7 +48,7 @@ test('owner reorders board columns via drag-and-drop in Settings', async ({
     await page.reload()
 
     // Order persists after reload: "In progress" now comes before "To do".
-    const rowNames = columnsSection.locator('li span')
+    const rowNames = columnsSection.getByTestId('column-row-name')
     await expect(rowNames.first()).toHaveText('In progress')
     await expect(rowNames.nth(1)).toHaveText('To do')
 

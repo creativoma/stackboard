@@ -3,7 +3,11 @@
 import { revalidatePath } from 'next/cache'
 import { and, eq } from 'drizzle-orm'
 import { db, schema } from '@/db'
-import { requireMembership, actionErrorMessage, ActionError } from './helpers'
+import {
+    requireContentEditor,
+    actionErrorMessage,
+    ActionError,
+} from './helpers'
 
 export type LabelActionState = { error?: string; ok?: boolean } | undefined
 
@@ -14,7 +18,7 @@ export async function toggleCardLabelAction(
     on: boolean
 ): Promise<LabelActionState> {
     try {
-        await requireMembership(boardId)
+        await requireContentEditor(boardId)
 
         const [card] = await db
             .select()
