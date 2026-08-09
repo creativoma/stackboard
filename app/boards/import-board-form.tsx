@@ -19,12 +19,8 @@ export function ImportBoardForm() {
                 open={open}
                 onClose={() => setOpen(false)}
                 title="Import a board"
+                description="Upload a Trello export (JSON) or a Stackboard export (JSON or CSV). This creates a new board."
             >
-                <h2 className="text-lg font-semibold mb-1">Import a board</h2>
-                <p className="text-sm text-[var(--color-smoke)] mb-4">
-                    Upload a Trello board export (JSON), a stackboard board
-                    export (JSON or CSV). This creates a new board.
-                </p>
                 <form
                     action={formAction}
                     className="flex flex-col gap-4"
@@ -56,7 +52,7 @@ export function ImportBoardForm() {
                         </p>
                     ) : null}
 
-                    <div className="flex gap-2 justify-end">
+                    <div className="flex gap-2 justify-end pt-4 mt-1 border-t border-[var(--color-mist)]">
                         <Button
                             variant="outline"
                             onClick={() => setOpen(false)}

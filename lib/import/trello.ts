@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import type { NormalizedImport } from './types'
+import { coerceDueDate } from '@/lib/domain/due'
 
 const trelloExportSchema = z
     .object({
@@ -164,7 +165,7 @@ export function parseTrelloExport(raw: unknown): NormalizedImport {
                 title: card.name,
                 description: card.desc ?? '',
                 status: card.closed ? 'archived' : 'active',
-                dueDate: card.due ? new Date(card.due) : null,
+                dueDate: coerceDueDate(card.due),
                 labelIndexes: (card.idLabels ?? [])
                     .map((id) => labelIndexById.get(id))
                     .filter((i): i is number => i !== undefined),

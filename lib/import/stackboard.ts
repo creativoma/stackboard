@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import type { NormalizedImport } from './types'
+import { coerceDueDate } from '@/lib/domain/due'
 
 export const STACKBOARD_EXPORT_FORMAT = 'stackboard-board-export'
 
@@ -64,7 +65,7 @@ export function parseStackboardExport(raw: unknown): NormalizedImport {
                 title: card.title,
                 description: card.description,
                 status: card.status,
-                dueDate: card.dueDate ? new Date(card.dueDate) : null,
+                dueDate: coerceDueDate(card.dueDate),
                 labelIndexes: card.labelIndexes,
                 checklist: card.checklist,
                 comments: card.comments,

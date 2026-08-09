@@ -1,4 +1,5 @@
 import type { NormalizedImport } from './types'
+import { coerceDueDate } from '@/lib/domain/due'
 
 const CSV_HEADER = [
     'Type',
@@ -293,7 +294,7 @@ export function parseCsvImport(text: string): NormalizedImport {
             title: raw.title,
             description: raw.description,
             status: raw.status,
-            dueDate: raw.dueDate ? new Date(raw.dueDate) : null,
+            dueDate: coerceDueDate(raw.dueDate),
             labelIndexes: raw.labelNames
                 .map((name) => labelIndexByName.get(name))
                 .filter((i): i is number => i !== undefined),
