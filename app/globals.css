@@ -1,71 +1,90 @@
 @import 'tailwindcss';
 
 :root {
-    /* Mapped from the Trello-iOS design system in DESIGN.md. Token *names*
-       are kept stable across the reskin so component code doesn't need to
-       change — only the values moved to the new palette. */
+    /* "Blueprint" design system (DESIGN.md): one blue — #1868db — plus a
+       neutral gray scale from white to near-black. Token *names* are kept
+       stable across reskins so component code doesn't change — only the
+       values move. */
     --font-open-runde:
-        -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto,
-        Helvetica, Arial, sans-serif;
+        var(--font-inter), 'SF Pro Display', -apple-system, BlinkMacSystemFont,
+        'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
-    --color-ink: #172b4d; /* Text Primary (navy-charcoal) */
-    --color-carbon: #172b4d;
-    --color-midnight: #0c66e4; /* Action Blue — primary CTA */
-    --color-midnight-pressed: #0055cc;
-    --color-smoke: #5e6c84; /* Text Secondary */
-    --color-fog: #8993a4; /* Text Tertiary */
-    --color-ash: #8993a4;
-    --color-mist: #dfe1e6; /* Divider */
-    --color-border-strong: #c1c7d0;
-    --color-paper: #ffffff; /* Card / canvas white */
-    --color-snow: #f1f2f4; /* List surface */
-    --color-sunken: #ebecf0; /* Pressed list area, filled inputs */
-    --color-concrete: #c1c7d0;
-    --color-electric-blue: #0c66e4; /* Action Blue */
-    --color-electric-blue-tint: #e9f2ff;
-    --color-board-blue: #0079bf; /* Default board backdrop */
+    --color-ink: #171717; /* primary text — near-black */
+    --color-carbon: #171717;
+    --color-ink-secondary: #404040;
+    --color-midnight: #1868db; /* the single brand blue */
+    --color-midnight-hover: #1259c4;
+    --color-midnight-pressed: #0f4aa3;
+    --color-primary-soft: #4c8fe8;
+    --color-smoke: #666666; /* secondary text */
+    --color-fog: #8a8a8a; /* helper text, captions */
+    --color-ash: #8a8a8a;
+    --color-mist: #e5e5e5; /* hairline borders */
+    --color-border-strong: #d4d4d4; /* form input borders */
+    --color-paper: #ffffff; /* raised surface */
+    --color-snow: #fafafa; /* page background */
+    --color-cream: #f5f5f5; /* neutral band (former warm interlude) */
+    --color-sunken: #f2f2f2;
+    --color-concrete: #d4d4d4;
+    --color-electric-blue: #1868db; /* brand blue (alias) */
+    --color-electric-blue-tint: #e8f0fc; /* pale blue wash */
+    --color-primary-subdued: #d0e0f7; /* soft tag fill */
+    --color-brand-dark: #111111;
+    --color-ruby: #0f4aa3; /* former pink accents fold into the blue family */
+    --color-brand-magenta: #4c8fe8;
+    --color-board-blue: #4c8fe8; /* legacy alias */
 
-    /* Fixed six-color functional label palette */
-    --color-label-green: #4bce97;
-    --color-label-green-subtle: #baf3db;
-    --color-label-yellow: #f5cd47;
-    --color-label-yellow-subtle: #f8e6a0;
-    --color-label-orange: #fea362;
-    --color-label-orange-subtle: #fedec8;
-    --color-label-red: #f87168;
-    --color-label-red-subtle: #ffd5d2;
-    --color-label-purple: #9f8fef;
-    --color-label-purple-subtle: #dfd8fd;
-    --color-label-blue: #579dff;
-    --color-label-blue-subtle: #cce0ff;
+    /* Label palette — labels are the ONE decorative color surface in the
+       app, and they live strictly in the blue gamut: six distinguishable
+       blues from navy to sky. Names keep their historical hue words. */
+    --color-label-blue: #1868db; /* core blue */
+    --color-label-blue-subtle: #e8f0fc;
+    --color-label-purple: #0b2e63; /* navy */
+    --color-label-purple-subtle: #d6e2f5;
+    --color-label-green: #4c8fe8; /* sky */
+    --color-label-green-subtle: #eef5fd;
+    --color-label-red: #0d3f8f; /* indigo */
+    --color-label-red-subtle: #dbe7f9;
+    --color-label-yellow: #3b82e0; /* bright */
+    --color-label-yellow-subtle: #e3eefb;
+    --color-label-orange: #1259c4; /* cobalt */
+    --color-label-orange-subtle: #dfe9f8;
 
-    /* Existing accent aliases repointed at the closest label/semantic color */
+    /* Accent aliases repointed at the tonal family */
     --color-iris: var(--color-label-purple);
-    --color-magenta: var(--color-label-red);
-    --color-leaf: var(--color-label-green);
-    --color-coral: #c9372c; /* Overdue Red — errors, destructive actions */
-    --color-due-soon: #b65c02;
-    --color-success: #1f845a;
+    --color-magenta: var(--color-label-orange);
+    --color-leaf: #16a34a; /* success — functional state only */
+    --color-coral: #dc2626; /* errors, destructive actions — state only */
+    --color-due-soon: #525252; /* approaching due dates stay neutral */
+    --color-success: #16a34a;
     --color-ice: var(--color-electric-blue-tint);
     --color-lavender: var(--color-label-purple-subtle);
-    --color-blush: var(--color-label-red-subtle);
+    --color-blush: #fdecec; /* error wash */
 
-    --background: var(--color-paper);
+    --background: var(--color-snow);
     --foreground: var(--color-ink);
 
-    --radius-tags: 4px; /* label bars/chips */
-    --radius-cards: 8px; /* cards, buttons, inputs */
-    --radius-buttons: 8px; /* Trello buttons are rounded rects, not pills */
-    --radius-largecards: 12px; /* lists/columns */
-    --radius-sheet: 16px; /* card detail sheet top corners */
+    /* Subtle radius scale — no pills */
+    --radius-tags: 4px;
+    --radius-inputs: 6px;
+    --radius-cards: 8px;
+    --radius-buttons: 6px;
+    --radius-largecards: 10px;
+    --radius-sheet: 12px;
 
-    --shadow-subtle: rgba(9, 30, 66, 0.08) 0px 1px 2px 0px; /* list level */
+    /* Depth comes from hairline borders; shadows stay minimal and neutral */
+    --shadow-subtle: rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
     --shadow-elevated:
-        rgba(9, 30, 66, 0.13) 0px 1px 1px 0px,
-        rgba(9, 30, 66, 0.06) 0px 0px 1px 0px; /* card at rest */
-    --shadow-dragging: rgba(9, 30, 66, 0.25) 0px 12px 24px 0px;
-    --shadow-sheet: rgba(9, 30, 66, 0.31) 0px 16px 40px 0px;
+        rgba(0, 0, 0, 0.05) 0px 1px 2px 0px, rgba(0, 0, 0, 0.03) 0px 0px 1px 0px;
+    --shadow-dragging:
+        rgba(0, 0, 0, 0.12) 0px 8px 24px 0px,
+        rgba(0, 0, 0, 0.06) 0px 2px 6px 0px;
+    --shadow-sheet: rgba(0, 0, 0, 0.16) 0px 16px 40px 0px;
     --shadow-button: none;
+
+    /* Shared control geometry — buttons and inputs are the same box */
+    --control-h: 36px;
+    --control-h-sm: 28px;
 }
 
 @theme inline {
@@ -78,6 +97,7 @@
     --color-mist: var(--color-mist);
     --color-paper: var(--color-paper);
     --color-snow: var(--color-snow);
+    --color-cream: var(--color-cream);
     --color-concrete: var(--color-concrete);
     --color-electric-blue: var(--color-electric-blue);
     --color-iris: var(--color-iris);
@@ -99,17 +119,56 @@
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --background: #1d2125;
-        --foreground: #b6c2cf;
-        --color-paper: #2c333a;
-        --color-snow: #22272b;
-        --color-sunken: #1d2125;
-        --color-mist: #3a4148;
-        --color-smoke: #9fadbc;
-        --color-fog: #8993a4;
-        --color-ink: #b6c2cf;
-        --color-electric-blue: #579dff;
-        --color-midnight: #579dff;
+        /* Neutral dark track — grays, never navy. Every light token has its
+           dark value here and only here (no dark: variants in components). */
+        --background: #0f0f0f;
+        --foreground: #ededed;
+        --color-paper: #161616;
+        --color-snow: #121212;
+        --color-cream: #1a1a1a;
+        --color-sunken: #1d1d1d;
+        --color-mist: #262626;
+        --color-border-strong: #333333;
+        --color-smoke: #a3a3a3;
+        --color-fog: #8a8a8a;
+        --color-ink: #ededed;
+        --color-ink-secondary: #c7c7c7;
+        --color-electric-blue: #4c8fe8;
+        --color-electric-blue-tint: rgba(24, 104, 219, 0.16);
+        --color-midnight: #3b82e0;
+        --color-midnight-hover: #4c8fe8;
+        --color-midnight-pressed: #1868db;
+        --color-concrete: #333333;
+        --color-primary-subdued: #16335c;
+
+        /* Subtle label fills flip to deep blue tints so chips stay
+           readable; solids lighten to keep contrast on the dark canvas */
+        --color-label-blue-subtle: #142d52;
+        --color-label-purple-subtle: #0e1c33;
+        --color-label-green-subtle: #16304d;
+        --color-label-red-subtle: #102340;
+        --color-label-yellow-subtle: #152b49;
+        --color-label-orange-subtle: #122645;
+        --color-label-purple: #8ab5ee;
+        --color-label-green: #7db2ef;
+        --color-label-red: #6da3ec;
+        --color-label-yellow: #5b9aea;
+        --color-label-orange: #4c8fe8;
+
+        /* Functional states brighten for contrast on dark */
+        --color-coral: #f87171;
+        --color-blush: #3a1414;
+        --color-due-soon: #b9b9b9;
+        --color-success: #4ade80;
+
+        --shadow-subtle: rgba(0, 0, 0, 0.45) 0px 1px 2px 0px;
+        --shadow-elevated:
+            rgba(0, 0, 0, 0.45) 0px 1px 2px 0px,
+            rgba(0, 0, 0, 0.3) 0px 0px 1px 0px;
+        --shadow-dragging:
+            rgba(0, 0, 0, 0.6) 0px 8px 24px 0px,
+            rgba(0, 0, 0, 0.35) 0px 2px 6px 0px;
+        --shadow-sheet: rgba(0, 0, 0, 0.65) 0px 16px 40px 0px;
     }
 }
 
@@ -121,6 +180,17 @@ body {
     background: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
+    /* Compact type is a hard product requirement — 14px body, 16px ceiling.
+       Weight 400 keeps small text crisp; hierarchy comes from 500 titles. */
+    font-size: 14px;
+    font-weight: 400;
+}
+
+/* Every numeric cell (counts, dates, progress) uses tabular figures */
+.tabular {
+    font-feature-settings: 'tnum';
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -139,179 +209,273 @@ body {
     outline-offset: 2px;
 }
 
-.btn-primary,
-.btn-secondary,
-.btn-outline,
-.btn-destructive {
-    border-radius: var(--radius-buttons);
-    padding: 0 16px;
-    font-weight: 600;
-    font-size: 14px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    min-height: 44px;
-    border: 1px solid transparent;
-    transition: background-color 120ms ease;
-}
+/* Component classes live in the `components` layer so Tailwind utilities
+   (the `utilities` layer, which cascades after it) can override them
+   without `!important` hacks. */
+@layer components {
+    /* Buttons and inputs share one control box: 36px tall, 6px radius,
+       13px label. Buttons are fit-content — they NEVER stretch inside
+       flex/grid parents; pass `w-full` explicitly for the rare
+       full-width case (auth). */
+    .btn-primary,
+    .btn-secondary,
+    .btn-outline,
+    .btn-destructive {
+        border-radius: var(--radius-buttons);
+        padding: 0 14px;
+        font-weight: 500;
+        font-size: 13px;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        width: fit-content;
+        min-height: var(--control-h);
+        border: 1px solid transparent;
+        transition:
+            background-color 120ms ease,
+            border-color 120ms ease;
+    }
 
-.btn-primary {
-    background: var(--color-midnight);
-    color: #fff;
-    box-shadow: var(--shadow-button);
-}
-.btn-primary:hover {
-    background: var(--color-midnight-pressed);
-}
-.btn-primary:disabled {
-    background: rgba(9, 30, 66, 0.06);
-    color: var(--color-fog);
-    cursor: not-allowed;
-}
+    .btn-primary {
+        background: var(--color-midnight);
+        color: #fff;
+        box-shadow: var(--shadow-button);
+    }
+    .btn-primary:hover {
+        background: var(--color-midnight-hover);
+    }
+    .btn-primary:active {
+        background: var(--color-midnight-pressed);
+    }
+    .btn-primary:disabled {
+        background: var(--color-sunken);
+        color: var(--color-fog);
+        cursor: not-allowed;
+    }
 
-.btn-secondary {
-    background: rgba(9, 30, 66, 0.06);
-    color: var(--color-ink);
-}
-.btn-secondary:hover {
-    background: rgba(9, 30, 66, 0.14);
-}
+    /* Neutral secondary: white surface, hairline border, ink text */
+    .btn-secondary,
+    .btn-outline {
+        background: var(--color-paper);
+        color: var(--color-ink);
+        border-color: var(--color-border-strong);
+    }
+    .btn-secondary:hover,
+    .btn-outline:hover {
+        background: var(--color-sunken);
+    }
 
-.btn-outline {
-    background: var(--color-paper);
-    color: var(--color-ink);
-    border-color: var(--color-border-strong);
-}
-.btn-outline:hover {
-    background: var(--color-snow);
-}
+    .btn-destructive {
+        background: var(--color-paper);
+        color: var(--color-coral);
+        border-color: var(--color-coral);
+    }
+    .btn-destructive:hover {
+        background: var(--color-blush);
+    }
 
-.btn-destructive {
-    background: var(--color-paper);
-    color: var(--color-coral);
-    border-color: var(--color-coral);
-}
-.btn-destructive:hover {
-    background: rgba(201, 55, 44, 0.08);
-}
+    .btn-ghost {
+        background: transparent;
+        color: var(--color-smoke);
+        border-radius: var(--radius-buttons);
+        padding: 6px 8px;
+        font-weight: 500;
+        font-size: 13px;
+        width: fit-content;
+        min-height: auto;
+        text-decoration: none;
+        transition: color 120ms ease;
+    }
+    .btn-ghost:hover {
+        color: var(--color-ink);
+    }
 
-.btn-ghost {
-    background: transparent;
-    color: var(--color-electric-blue);
-    border-radius: var(--radius-buttons);
-    padding: 6px 8px;
-    font-weight: 600;
-    font-size: 15px;
-    min-height: auto;
-    text-decoration: none;
-    transition: color 120ms ease;
-}
-.btn-ghost:hover {
-    color: var(--color-midnight-pressed);
-}
+    /* Board-surface buttons — neutral now that surfaces are flat */
+    .btn-onboard {
+        background: var(--color-paper);
+        color: var(--color-ink);
+        border: 1px solid var(--color-mist);
+        border-radius: var(--radius-buttons);
+        padding: 0 12px;
+        font-weight: 500;
+        font-size: 13px;
+        min-height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        width: fit-content;
+        box-shadow: var(--shadow-subtle);
+        transition:
+            background-color 120ms ease,
+            border-color 120ms ease;
+    }
+    .btn-onboard:hover {
+        background: var(--color-sunken);
+        border-color: var(--color-border-strong);
+    }
+    .btn-onboard--dashed {
+        background: transparent;
+        border: 1px dashed var(--color-border-strong);
+        color: var(--color-smoke);
+        box-shadow: none;
+    }
+    .btn-onboard--dashed:hover {
+        background: var(--color-paper);
+        border-color: var(--color-fog);
+        color: var(--color-ink);
+    }
 
-.btn-onboard {
-    background: rgba(255, 255, 255, 0.16);
-    color: #fff;
-    border-radius: var(--radius-buttons);
-    padding: 8px 14px;
-    font-weight: 600;
-    font-size: 14px;
-    min-height: 32px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    transition: background-color 120ms ease;
-}
-.btn-onboard:hover {
-    background: rgba(255, 255, 255, 0.28);
-}
-.btn-onboard--dashed {
-    background: transparent;
-    border: 2px dashed rgba(255, 255, 255, 0.3);
-    color: rgba(255, 255, 255, 0.9);
-}
-.btn-onboard--dashed:hover {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(255, 255, 255, 0.5);
-}
+    .btn-icon {
+        background: transparent;
+        color: var(--color-fog);
+        border-radius: var(--radius-buttons);
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+            background-color 120ms ease,
+            color 120ms ease;
+    }
+    .btn-icon:hover {
+        background: var(--color-sunken);
+        color: var(--color-ink);
+    }
+    .btn-icon[data-active='true'] {
+        color: var(--color-electric-blue);
+    }
 
-.btn-icon {
-    background: transparent;
-    color: var(--color-fog);
-    border-radius: var(--radius-cards);
-    width: 44px;
-    height: 44px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition:
-        background-color 120ms ease,
-        color 120ms ease;
-}
-.btn-icon:hover {
-    background: var(--color-sunken);
-    color: var(--color-coral);
-}
-.btn-icon[data-active='true'] {
-    color: var(--color-electric-blue);
-}
+    .btn--sm {
+        padding: 0 10px;
+        font-size: 12px;
+        min-height: var(--control-h-sm);
+    }
+    .btn-icon.btn--sm {
+        width: 28px;
+        height: 28px;
+    }
 
-.btn--sm {
-    padding: 4px 10px;
-    font-size: 12px;
-    min-height: 28px;
-}
-.btn-icon.btn--sm {
-    width: 32px;
-    height: 32px;
-}
+    /* Grouping band — flat, quiet */
+    .card-surface {
+        background: var(--color-paper);
+        border: 1px solid var(--color-mist);
+        border-radius: var(--radius-largecards);
+        padding: 16px;
+    }
 
-.card-surface {
-    background: var(--color-snow);
-    border-radius: var(--radius-largecards);
-    padding: 24px;
-}
+    /* Former warm interlude — now a neutral band */
+    .card-cream {
+        background: var(--color-cream);
+        color: var(--color-ink);
+        border-radius: var(--radius-largecards);
+        padding: 16px;
+    }
 
-.elevated-surface {
-    background: var(--color-paper);
-    border-radius: var(--radius-cards);
-    box-shadow: var(--shadow-elevated);
-}
+    /* Raised card: white, hairline border, whisper of shadow */
+    .elevated-surface {
+        background: var(--color-paper);
+        border: 1px solid var(--color-mist);
+        border-radius: var(--radius-cards);
+        box-shadow: var(--shadow-elevated);
+    }
 
-.pill {
-    border-radius: var(--radius-tags);
-    padding: 3px 10px;
-    font-size: 12px;
-    font-weight: 700;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
+    /* Tag chip — subtle 4px radius, no pills */
+    .pill {
+        border-radius: var(--radius-tags);
+        padding: 2px 8px;
+        font-size: 11px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
 
-.input {
-    border: 1px solid var(--color-border-strong);
-    border-radius: var(--radius-cards);
-    padding: 9px 12px;
-    font-size: 15px;
-    background: var(--color-paper);
-    color: var(--color-ink);
-    width: 100%;
-}
-.input:focus {
-    outline: 2px solid var(--color-electric-blue);
-    outline-offset: 1px;
-}
-.input--icon-left {
-    padding-left: 36px;
-}
+    .input {
+        border: 1px solid var(--color-border-strong);
+        border-radius: var(--radius-inputs);
+        padding: 7px 12px;
+        font-size: 13px;
+        line-height: 20px;
+        min-height: var(--control-h);
+        background: var(--color-paper);
+        color: var(--color-ink);
+        width: 100%;
+    }
+    .input:focus {
+        outline: 2px solid var(--color-electric-blue);
+        outline-offset: 0;
+        border-color: var(--color-electric-blue);
+    }
+    .input--icon-left {
+        padding-left: 36px;
+    }
 
-.eyebrow {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--color-smoke);
+    /* Dropdown entrance — one of the micro-animations the product keeps */
+    .menu-pop {
+        transform-origin: top right;
+        animation: menu-pop 120ms ease-out;
+    }
+    @keyframes menu-pop {
+        from {
+            opacity: 0;
+            transform: translateY(-4px) scale(0.98);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    /* Round icon action in the top bar, sized to sit beside the avatar */
+    .header-icon {
+        position: relative;
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9999px;
+        color: var(--color-smoke);
+        transition:
+            color 120ms ease,
+            background-color 120ms ease;
+    }
+    .header-icon:hover {
+        color: var(--color-ink);
+        background: var(--color-sunken);
+    }
+    .header-icon[aria-current='page'] {
+        color: var(--color-electric-blue);
+        background: var(--color-electric-blue-tint);
+    }
+
+    /* Unread count — pops on change so live arrivals get noticed */
+    .badge-pop {
+        animation: badge-pop 240ms ease-out;
+    }
+    @keyframes badge-pop {
+        from {
+            opacity: 0;
+            transform: scale(0.4);
+        }
+        60% {
+            transform: scale(1.15);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    .eyebrow {
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--color-smoke);
+    }
 }

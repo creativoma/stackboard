@@ -17,7 +17,7 @@ export default function OpengraphImage() {
                 flexDirection: 'column',
                 justifyContent: 'center',
                 padding: '80px',
-                background: '#0079BF',
+                background: 'linear-gradient(105deg, #1868db 0%, #0f4aa3 100%)',
                 fontFamily: 'sans-serif',
             }}
         >
@@ -49,19 +49,26 @@ export default function OpengraphImage() {
                             y2="-108.858"
                             gradientUnits="userSpaceOnUse"
                         >
-                            <stop stopColor="#1E88C7" />
-                            <stop offset="1" stopColor="#87D2FF" />
+                            <stop stopColor="#1868db" />
+                            <stop offset="1" stopColor="#0f4aa3" />
                         </linearGradient>
                     </defs>
                 </svg>
-                <div style={{ fontSize: 40, fontWeight: 700, color: '#fff' }}>
+                <div
+                    style={{
+                        fontSize: 40,
+                        fontWeight: 400,
+                        letterSpacing: '-1px',
+                        color: '#171717',
+                    }}
+                >
                     Stackboard
                 </div>
             </div>
             <div
                 style={{
                     fontSize: 30,
-                    color: 'rgba(255,255,255,0.92)',
+                    color: 'rgba(23,23,23,0.8)',
                     maxWidth: 900,
                 }}
             >

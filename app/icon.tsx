@@ -28,8 +28,8 @@ export default function Icon() {
                     y2="-108.858"
                     gradientUnits="userSpaceOnUse"
                 >
-                    <stop stopColor="#1E88C7" />
-                    <stop offset="1" stopColor="#87D2FF" />
+                    <stop stopColor="#1868db" />
+                    <stop offset="1" stopColor="#0f4aa3" />
                 </linearGradient>
             </defs>
         </svg>,
