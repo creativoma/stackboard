@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-09
+
 ### Added
 
+- **Custom board labels**: create, recolor, and delete labels from Settings (`lib/actions/labels.ts`), each change recorded in the card/board activity trail.
+- **Board background colors**: pick one of six palette colors per board from Settings → Appearance (`db/schema.ts#boards.color`); boards without a choice keep the previous stable per-id tint (`lib/board-colors.ts`).
+- **Board list view**: a compact, non-drag alternative to the kanban board (`app/boards/:boardId/board-list.tsx`), toggled per-board via a header control and the `?view=list` query param.
+- **Public marketing website** (`website/`, Vite + React): hero, features, board preview, and repo links for the open-source release. Deployed separately from the app, so it needs no DB or session infrastructure.
 - **Real-time board sync** over Server-Sent Events: `/boards/:boardId/events` watermark-polls the activity trail and connected members' boards refresh automatically — no reload needed to see a teammate's move.
 - **Notifications**: in-app notification center (`/boards/notifications`, unread badge in the sidebar) plus emails via the existing job queue (`send_notification_email`). Covers card assignment, comments on watched/assigned cards, @mentions, and due-soon reminders (hourly worker scan, deduplicated per card via `due_reminder_sent_at`).
 - **@mentions in comments**: `@name` (first name or email local part, active members only) highlights in the comment and notifies the mentioned member.
@@ -29,6 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Label palette reworked** from a blue-only gamut to six real, distinguishable hues (blue/purple/green/yellow/red/orange) — the one sanctioned decorative exception to the blue/gray design system (see DESIGN.md). Board tiles and kanban column accent dots now derive from the same palette.
+- `PriorityIcon` default size increased 14px → 20px for legibility on the card detail header.
+- Seed data expanded with more users and a second board to exercise labels and board colors alongside the existing scenarios.
+- Footer version number now reads from `package.json` instead of being hardcoded, and the static "All systems operational" status line was removed.
 - **App shell rebuilt around the new sections**: sidebar navigation (Boards, My cards, Search, Notifications) with an active-route state, a header notification bell and settings shortcut, and an account dropdown menu replacing the inline avatar/logout row. The sidebar is hidden below `md`, where the header icons, the account menu, and a new footer nav carry navigation instead.
 - The unread notification count is shared through one per-user SSE subscription (`notifications-live.tsx`), so the header bell and sidebar badge update live without polling from several components.
 - **Toolchain**: TypeScript is installed side by side — `typescript` 6.x for the API JS tools import, TypeScript 7 as `@typescript/native` providing the `tsc` used by `bun run typecheck` — and ESLint is pinned to 9.x. `bun run lint` works again and is now a CI gate. See Known limitations in the README.
@@ -60,5 +70,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   against an isolated Postgres database, and Playwright end-to-end tests
   covering all three user journeys plus a mobile viewport check.
 
-[Unreleased]: https://github.com/creativoma/stackboard/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/creativoma/stackboard/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/creativoma/stackboard/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/creativoma/stackboard/releases/tag/v0.1.0

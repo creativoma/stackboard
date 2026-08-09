@@ -1,27 +1,34 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { Archive, ListOrdered, ShieldAlert, Users } from 'lucide-react'
+import { Archive, ListOrdered, ShieldAlert, Tag, Users } from 'lucide-react'
 import { Button } from '@/app/_components/button'
 import { Avatar } from '@/app/_components/avatar-stack'
 import { requireUser } from '@/lib/auth/session'
 import { getMembership } from '@/lib/auth/membership'
-import { isActiveMember, isBoardOwner } from '@/lib/domain/authorization'
+import {
+    canMutateBoardContent,
+    isActiveMember,
+    isBoardOwner,
+} from '@/lib/domain/authorization'
 import {
     getActiveColumns,
     getArchivedCards,
     getArchivedColumns,
     getBoard,
+    getBoardLabels,
     getBoardMembers,
 } from '@/lib/queries/board'
 import { getPendingInvitationsForBoard } from '@/lib/queries/invitations'
 import {
     RenameBoardForm,
+    BoardColorForm,
     InviteMemberForm,
     RevokeInvitationButton,
     RemoveMemberButton,
     ColumnOrderList,
     CloseBoardButton,
 } from './settings-forms'
+import { LabelsManager } from './labels-forms'
 import { ArchiveDrawer } from './archive-drawer'
 
 export const metadata: Metadata = { title: 'Board settings' }
@@ -50,6 +57,7 @@ export default async function BoardSettingsPage({
     }
 
     const owner = isBoardOwner(membership)
+    const canEdit = canMutateBoardContent(membership)
 
     const [
         members,
@@ -57,12 +65,14 @@ export default async function BoardSettingsPage({
         archivedColumns,
         archivedCards,
         pendingInvites,
+        labels,
     ] = await Promise.all([
         getBoardMembers(boardId),
         getActiveColumns(boardId),
         getArchivedColumns(boardId),
         getArchivedCards(boardId),
         owner ? getPendingInvitationsForBoard(boardId) : Promise.resolve([]),
+        getBoardLabels(boardId),
     ])
 
     const archivedCount = archivedColumns.length + archivedCards.length
@@ -90,6 +100,18 @@ export default async function BoardSettingsPage({
                         Board name
                     </h2>
                     <RenameBoardForm boardId={boardId} name={board.name} />
+                </section>
+            ) : null}
+
+            {owner ? (
+                <section
+                    aria-labelledby="appearance-heading"
+                    className="card-surface"
+                >
+                    <h2 id="appearance-heading" className="eyebrow mb-3">
+                        Appearance
+                    </h2>
+                    <BoardColorForm boardId={boardId} color={board.color} />
                 </section>
             ) : null}
 
@@ -182,6 +204,21 @@ export default async function BoardSettingsPage({
                         wipLimit: col.wipLimit,
                     }))}
                     canSetWip={owner}
+                />
+            </section>
+
+            <section aria-labelledby="labels-heading" className="card-surface">
+                <h2
+                    id="labels-heading"
+                    className="eyebrow mb-3 flex items-center gap-1.5"
+                >
+                    <Tag size={13} strokeWidth={2.5} aria-hidden="true" />
+                    Labels
+                </h2>
+                <LabelsManager
+                    boardId={boardId}
+                    labels={labels}
+                    canEdit={canEdit}
                 />
             </section>
 

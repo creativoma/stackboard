@@ -49,6 +49,16 @@ export const sessions = pgTable(
 export const boardStatusValues = ['active', 'closed'] as const
 export type BoardStatus = (typeof boardStatusValues)[number]
 
+export const boardColorValues = [
+    'blue',
+    'purple',
+    'green',
+    'yellow',
+    'red',
+    'orange',
+] as const
+export type BoardColor = (typeof boardColorValues)[number]
+
 export const boards = pgTable('boards', {
     id: uuid('id').primaryKey().defaultRandom(),
     name: text('name').notNull(),
@@ -58,6 +68,7 @@ export const boards = pgTable('boards', {
     status: text('status', { enum: boardStatusValues })
         .notNull()
         .default('active'),
+    color: text('color', { enum: boardColorValues }),
     createdAt: timestamp('created_at', { withTimezone: true })
         .notNull()
         .defaultNow(),

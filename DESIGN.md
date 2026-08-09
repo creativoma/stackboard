@@ -2,7 +2,7 @@
 
 ## Overview
 
-Blueprint is a single-accent, neutral-scale product design system. One blue — **`#1868db`** — carries every call to action, link, focus ring, and selected state. Everything else is black and white in their tones: a gray scale from `#ffffff` to `#171717`. There are no gradients, no pastel washes, no decorative color. Depth comes from **1px hairline borders** on white surfaces over a faintly gray page; shadows are minimal, neutral, and reserved for lifted states (drag, sheets).
+Blueprint is a single-accent, neutral-scale product design system. One blue — **`#1868db`** — carries every call to action, link, focus ring, and selected state. Everything else is black and white in their tones: a gray scale from `#ffffff` to `#171717`, plus one deliberate exception: the six-hue label palette. There are no gradients, no pastel washes, no decorative color outside that palette. Depth comes from **1px hairline borders** on white surfaces over a faintly gray page; shadows are minimal, neutral, and reserved for lifted states (drag, sheets).
 
 Information density is the point. Type is compact (14px body, 16px ceiling), controls share one geometry (36px tall, 6px radius), spacing is tight, and related content lives inside a single bordered surface divided by hairlines — never scattered in floating bands.
 
@@ -14,7 +14,7 @@ Information density is the point. Type is compact (14px body, 16px ceiling), con
 - Subtle radii: 4–12px. **No pill shapes.**
 - One control box: buttons and inputs are both 36px tall, 6px radius, 13px label — they always line up.
 - Compact type: 14px/400 body, 500-weight titles, 16px hard ceiling, tabular numerics.
-- Functional red/green exist **only** as states (error/destructive, success) — never as palette.
+- Functional red/green exist **only** as states (error/destructive, success) outside the label palette — never as decoration elsewhere.
 - Micro-animations stay: 120–150ms transitions, GSAP stagger/drawer/drag choreography.
 
 ## Colors
@@ -43,20 +43,22 @@ Every color enters as a token in `app/globals.css` with a light and a dark value
 
 These appear only on states (alerts, destructive buttons, overdue badges, success dots, priority chevrons) — never as decoration, backgrounds, or label colors.
 
-### Label palette — the blue gamut
+### Label palette — real, distinguishable hues
 
-Card labels are **the one decorative color surface in the app**, and they stay strictly inside the blue gamut: six distinguishable blues from navy to sky. Token names keep their historical hue words (`label-green`, `label-red`, …); values are blues:
+Card labels are **the one decorative color surface in the app** — the single deliberate exception to the "blue and gray only" rule. Six real hues, chosen for contrast against each other rather than brand harmony, each with a solid (chip border/dot) and a subtle fill (chip background):
 
-| Token          | Solid            | Subtle fill |
-| -------------- | ---------------- | ----------- |
-| `label-purple` | `#0b2e63` navy   | `#d6e2f5`   |
-| `label-red`    | `#0d3f8f` indigo | `#dbe7f9`   |
-| `label-orange` | `#1259c4` cobalt | `#dfe9f8`   |
-| `label-blue`   | `#1868db` blue   | `#e8f0fc`   |
-| `label-yellow` | `#3b82e0` bright | `#e3eefb`   |
-| `label-green`  | `#4c8fe8` sky    | `#eef5fd`   |
+| Token          | Solid     | Subtle fill |
+| -------------- | --------- | ----------- |
+| `label-blue`   | `#1868db` | `#e8f0fc`   |
+| `label-purple` | `#7c3aed` | `#ede9fe`   |
+| `label-green`  | `#16a34a` | `#dcfce7`   |
+| `label-red`    | `#e11d48` | `#ffe4e6`   |
+| `label-yellow` | `#ca8a04` | `#fef9c3`   |
+| `label-orange` | `#ea580c` | `#ffedd5`   |
 
-Board tiles derive a stable tint from the board id (`lib/board-colors.ts`) using these subtle fills — flat, theme-aware, ink text on top.
+Board tiles (`lib/board-colors.ts`) and kanban column accent dots (`lib/labels.ts#columnAccentColor`) also cycle through these subtle/solid fills for a stable, theme-aware tint — flat, ink text on top in light and dark.
+
+Because labels use real red and green, the "red/green mean error/success only" rule below applies everywhere **except** label swatches, chips, and anything deriving from them (column dots, board tiles).
 
 ## Typography
 
@@ -177,11 +179,11 @@ The brand maps onto a neutral dark track — grays, never navy or blue-tinted su
 
 ### Don't
 
-- Don't introduce any color beyond blue tones, gray tones, and the two functional states.
+- Don't introduce any color beyond blue tones, gray tones, and the two functional states — except the six-hue label palette above, which is the one sanctioned decorative exception.
 - Don't use gradients, pastel washes, or mesh backgrounds — they are gone.
 - Don't use pill radii on buttons, inputs, or chips.
 - Don't override control geometry (`!p-0`, `h-9`, `min-h-0`) from callers — extend the Button/`.input` system instead.
-- Don't use red/green decoratively; they mean error/success only.
+- Don't use red/green decoratively outside the label palette; elsewhere they mean error/success only.
 - Don't float content in disconnected bands with 40px gaps — surfaces and hairlines hold layouts together.
 - Don't render numeric cells without `tnum`.
 

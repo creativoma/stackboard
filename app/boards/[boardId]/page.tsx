@@ -27,6 +27,8 @@ import { matchesFilters } from '@/lib/domain/filters'
 import { dueDateToIso } from '@/lib/domain/due'
 import { FilterBar } from './filter-bar'
 import { BoardBoard } from './board-board'
+import { BoardList } from './board-list'
+import { ViewToggle } from './view-toggle'
 import { BoardLive } from './board-live'
 import { NewColumnForm } from './new-column-form'
 import type { CardSummary } from './board-types'
@@ -52,10 +54,12 @@ export default async function BoardPage({
         priority?: string
         overdue?: string
         q?: string
+        view?: string
     }>
 }) {
     const { boardId } = await params
     const sp = await searchParams
+    const view = sp.view === 'list' ? 'list' : 'board'
     const user = await requireUser()
 
     const [board, membership] = await Promise.all([
@@ -210,13 +214,16 @@ export default async function BoardPage({
                 </div>
             </div>
 
-            <div className="relative bg-[var(--color-paper)] border border-[var(--color-mist)] rounded-[var(--radius-cards)] p-2">
-                <FilterBar
-                    boardId={boardId}
-                    members={people}
-                    labels={labels}
-                    filters={{ ...sp }}
-                />
+            <div className="relative bg-[var(--color-paper)] border border-[var(--color-mist)] rounded-[var(--radius-cards)] p-2 flex items-center gap-2">
+                <div className="flex-1 min-w-0">
+                    <FilterBar
+                        boardId={boardId}
+                        members={people}
+                        labels={labels}
+                        filters={{ ...sp }}
+                    />
+                </div>
+                <ViewToggle boardId={boardId} view={view} searchParams={sp} />
             </div>
 
             {columns.length === 0 ? (
@@ -226,6 +233,18 @@ export default async function BoardPage({
                     </p>
                     {canEdit ? <NewColumnForm boardId={boardId} /> : null}
                 </div>
+            ) : view === 'list' ? (
+                <>
+                    <BoardList
+                        boardId={boardId}
+                        columns={columns}
+                        cardsByColumn={cardsByColumn}
+                        members={people}
+                        labels={labels}
+                        canEdit={canEdit}
+                    />
+                    {canEdit ? <NewColumnForm boardId={boardId} /> : null}
+                </>
             ) : (
                 <>
                     <BoardBoard

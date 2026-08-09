@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
         'out/**',
         'build/**',
         'next-env.d.ts',
+        // website/ is a separate Vite project with its own build output.
+        'website/dist/**',
     ]),
 ])
 

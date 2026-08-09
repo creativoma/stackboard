@@ -59,6 +59,29 @@ describe('describeActivity', () => {
         ).toBe('removed the due date')
     })
 
+    it('describes creating a label', () => {
+        expect(
+            describeActivity({ type: 'label.created', newValue: 'Bug' })
+        ).toBe('created label "Bug"')
+    })
+
+    it('describes recoloring a label by name', () => {
+        expect(
+            describeActivity({
+                type: 'label.updated',
+                field: 'Bug',
+                oldValue: 'red',
+                newValue: 'blue',
+            })
+        ).toBe('changed the color of "Bug" to blue')
+    })
+
+    it('describes deleting a label', () => {
+        expect(
+            describeActivity({ type: 'label.deleted', oldValue: 'Bug' })
+        ).toBe('deleted label "Bug"')
+    })
+
     it('never leaks description bodies into the timeline', () => {
         expect(
             describeActivity({

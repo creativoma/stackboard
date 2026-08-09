@@ -1,5 +1,14 @@
 // Fixed six-color functional label palette, harmonized to the brand
 // family (see DESIGN.md, "Stackboard adaptations").
+export const LABEL_COLORS = [
+    { value: 'blue', label: 'Blue' },
+    { value: 'green', label: 'Green' },
+    { value: 'yellow', label: 'Yellow' },
+    { value: 'purple', label: 'Purple' },
+    { value: 'orange', label: 'Orange' },
+    { value: 'red', label: 'Red' },
+] as const
+
 export const LABEL_COLOR_VAR: Record<string, string> = {
     green: 'var(--color-label-green)',
     yellow: 'var(--color-label-yellow)',

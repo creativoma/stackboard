@@ -219,7 +219,6 @@ export function PriorityField({
                 {priority ? (
                     <PriorityIcon
                         priority={priority}
-                        size={14}
                         className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2"
                     />
                 ) : null}

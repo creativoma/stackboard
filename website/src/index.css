@@ -1,0 +1,436 @@
+@import 'tailwindcss';
+
+/*
+ * Tokens mirrored from ../../DESIGN.md ("Blueprint") and app/globals.css.
+ * This site is a standalone deploy (see README) and intentionally does not
+ * share a build with the Next.js app, so the token subset is copied rather
+ * than imported. Keep values in sync by hand if the palette changes.
+ */
+:root {
+    --font-sans:
+        'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont,
+        'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --color-ink: #171717;
+    --color-ink-secondary: #404040;
+    --color-midnight: #1868db;
+    --color-midnight-hover: #1259c4;
+    --color-midnight-pressed: #0f4aa3;
+    --color-smoke: #666666;
+    --color-fog: #8a8a8a;
+    --color-mist: #e5e5e5;
+    --color-border-strong: #d4d4d4;
+    --color-paper: #ffffff;
+    --color-snow: #fafafa;
+    --color-sunken: #f2f2f2;
+    --color-electric-blue: #1868db;
+    --color-electric-blue-tint: #e8f0fc;
+    --color-success: #16a34a;
+    --color-coral: #dc2626;
+
+    --color-label-blue: #1868db;
+    --color-label-purple: #7c3aed;
+    --color-label-green: #16a34a;
+    --color-label-yellow: #ca8a04;
+    --color-label-orange: #ea580c;
+
+    --background: var(--color-snow);
+    --foreground: var(--color-ink);
+
+    --radius-tags: 4px;
+    --radius-inputs: 6px;
+    --radius-cards: 8px;
+    --radius-buttons: 6px;
+    --radius-largecards: 10px;
+
+    --shadow-elevated:
+        rgba(0, 0, 0, 0.05) 0px 1px 2px 0px, rgba(0, 0, 0, 0.03) 0px 0px 1px 0px;
+
+    --control-h: 36px;
+}
+
+@theme inline {
+    --color-ink: var(--color-ink);
+    --color-ink-secondary: var(--color-ink-secondary);
+    --color-midnight: var(--color-midnight);
+    --color-smoke: var(--color-smoke);
+    --color-fog: var(--color-fog);
+    --color-mist: var(--color-mist);
+    --color-border-strong: var(--color-border-strong);
+    --color-paper: var(--color-paper);
+    --color-snow: var(--color-snow);
+    --color-sunken: var(--color-sunken);
+    --color-electric-blue: var(--color-electric-blue);
+    --color-electric-blue-tint: var(--color-electric-blue-tint);
+    --color-success: var(--color-success);
+    --color-coral: var(--color-coral);
+    --color-label-blue: var(--color-label-blue);
+    --color-label-purple: var(--color-label-purple);
+    --color-label-green: var(--color-label-green);
+    --color-label-yellow: var(--color-label-yellow);
+    --color-label-orange: var(--color-label-orange);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --font-sans: var(--font-sans);
+    --font-display: var(--font-display);
+    --font-mono: var(--font-mono);
+    --radius-tags: var(--radius-tags);
+    --radius-inputs: var(--radius-inputs);
+    --radius-cards: var(--radius-cards);
+    --radius-buttons: var(--radius-buttons);
+    --radius-largecards: var(--radius-largecards);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background: #0f0f0f;
+        --foreground: #ededed;
+        --color-paper: #161616;
+        --color-snow: #121212;
+        --color-sunken: #1d1d1d;
+        --color-mist: #262626;
+        --color-border-strong: #333333;
+        --color-smoke: #a3a3a3;
+        --color-fog: #8a8a8a;
+        --color-ink: #ededed;
+        --color-ink-secondary: #c7c7c7;
+        --color-electric-blue: #4c8fe8;
+        --color-electric-blue-tint: rgba(24, 104, 219, 0.16);
+        --color-midnight: #3b82e0;
+        --color-midnight-hover: #4c8fe8;
+        --color-midnight-pressed: #1868db;
+        --color-label-purple: #a78bfa;
+        --color-label-green: #4ade80;
+        --color-label-yellow: #facc15;
+        --color-label-orange: #fb923c;
+        --color-coral: #f87171;
+        --color-success: #4ade80;
+        --shadow-elevated:
+            rgba(0, 0, 0, 0.45) 0px 1px 2px 0px,
+            rgba(0, 0, 0, 0.3) 0px 0px 1px 0px;
+    }
+}
+
+* {
+    border-color: var(--color-mist);
+}
+
+body {
+    position: relative;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+}
+
+/* Faint grain, layered over everything so flat surfaces don't look sterile. */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    pointer-events: none;
+    opacity: 0.035;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+:focus-visible {
+    outline: 2px solid var(--color-electric-blue);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/*
+ * Blueprint grid: a faint graph-paper texture that nods to the design
+ * system's name. Radial-masked so it fades toward the edges instead of
+ * tiling flatly across the whole viewport.
+ */
+.bp-grid {
+    background-image:
+        linear-gradient(
+            to right,
+            color-mix(in srgb, var(--color-electric-blue) 7%, transparent) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            to bottom,
+            color-mix(in srgb, var(--color-electric-blue) 7%, transparent) 1px,
+            transparent 1px
+        );
+    background-size: 32px 32px;
+    -webkit-mask-image: radial-gradient(
+        ellipse 70% 60% at 50% 0%,
+        black 0%,
+        transparent 75%
+    );
+    mask-image: radial-gradient(
+        ellipse 70% 60% at 50% 0%,
+        black 0%,
+        transparent 75%
+    );
+}
+
+.bp-crosshair {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    pointer-events: none;
+}
+.bp-crosshair::before,
+.bp-crosshair::after {
+    content: '';
+    position: absolute;
+    background: var(--color-border-strong);
+}
+.bp-crosshair::before {
+    left: 50%;
+    top: 0;
+    width: 1px;
+    height: 100%;
+    transform: translateX(-50%);
+}
+.bp-crosshair::after {
+    top: 50%;
+    left: 0;
+    height: 1px;
+    width: 100%;
+    transform: translateY(-50%);
+}
+
+@keyframes fade-up-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.reveal-onload {
+    animation: fade-up-in 640ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+        opacity 600ms cubic-bezier(0.16, 1, 0.3, 1),
+        transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+@keyframes pulse-live {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0
+            color-mix(in srgb, var(--color-success) 45%, transparent);
+    }
+    50% {
+        box-shadow: 0 0 0 4px transparent;
+    }
+}
+.pulse-dot {
+    animation: pulse-live 2.2s ease-out infinite;
+}
+
+@keyframes shine-sweep {
+    from {
+        transform: translateX(-120%) skewX(-15deg);
+    }
+    to {
+        transform: translateX(220%) skewX(-15deg);
+    }
+}
+
+@layer components {
+    /* Same control box as the product (DESIGN.md): 36px tall, 6px radius,
+       13px/500 label — kept identical so screenshots/CTAs feel native. */
+    .btn-primary,
+    .btn-outline {
+        border-radius: var(--radius-buttons);
+        padding: 0 16px;
+        font-weight: 500;
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        width: fit-content;
+        min-height: var(--control-h);
+        border: 1px solid transparent;
+        transition:
+            background-color 120ms ease,
+            border-color 120ms ease,
+            transform 120ms ease;
+    }
+    .btn-primary {
+        position: relative;
+        overflow: hidden;
+        background: var(--color-midnight);
+        color: #fff;
+    }
+    .btn-primary::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        width: 40%;
+        background: linear-gradient(
+            to right,
+            transparent,
+            rgba(255, 255, 255, 0.22),
+            transparent
+        );
+        transform: translateX(-120%) skewX(-15deg);
+    }
+    .btn-primary:hover::before {
+        animation: shine-sweep 900ms ease;
+    }
+    .btn-primary:hover {
+        background: var(--color-midnight-hover);
+        transform: translateY(-1px);
+    }
+    .btn-primary:active {
+        background: var(--color-midnight-pressed);
+        transform: translateY(0);
+    }
+    .btn-outline {
+        background: var(--color-paper);
+        color: var(--color-ink);
+        border-color: var(--color-border-strong);
+    }
+    .btn-outline:hover {
+        background: var(--color-sunken);
+        transform: translateY(-1px);
+    }
+    .btn-outline:active {
+        transform: translateY(0);
+    }
+    .btn-ghost {
+        position: relative;
+        background: transparent;
+        color: var(--color-smoke);
+        border-radius: var(--radius-buttons);
+        padding: 6px 8px;
+        font-weight: 500;
+        font-size: 13px;
+        width: fit-content;
+        text-decoration: none;
+        transition: color 120ms ease;
+    }
+    .btn-ghost:hover {
+        color: var(--color-ink);
+    }
+    .btn-ghost::after {
+        content: '';
+        position: absolute;
+        left: 8px;
+        right: 8px;
+        bottom: 2px;
+        height: 1px;
+        background: var(--color-electric-blue);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .btn-ghost:hover::after {
+        transform: scaleX(1);
+    }
+
+    .card-surface {
+        background: var(--color-paper);
+        border: 1px solid var(--color-mist);
+        border-radius: var(--radius-largecards);
+        padding: 16px;
+        transition:
+            border-color 180ms ease,
+            transform 180ms ease,
+            box-shadow 180ms ease;
+    }
+    .elevated-surface {
+        background: var(--color-paper);
+        border: 1px solid var(--color-mist);
+        border-radius: var(--radius-cards);
+        box-shadow: var(--shadow-elevated);
+    }
+    .eyebrow {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        color: var(--color-smoke);
+    }
+    .eyebrow::before {
+        content: '// ';
+        color: var(--color-electric-blue);
+    }
+
+    /* Datasheet-style section index, e.g. "01 / 04" — mono, faint. */
+    .spec-index {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--color-fog);
+        letter-spacing: 0.02em;
+    }
+
+    /* A hairline ruler with tick marks, echoing an architectural
+       dimension line. Purely decorative. */
+    .dimension-line {
+        position: relative;
+        height: 1px;
+        background: var(--color-mist);
+    }
+    .dimension-line::before,
+    .dimension-line::after {
+        content: '';
+        position: absolute;
+        top: -3px;
+        width: 1px;
+        height: 7px;
+        background: var(--color-border-strong);
+    }
+    .dimension-line::before {
+        left: 0;
+    }
+    .dimension-line::after {
+        right: 0;
+    }
+
+    .arrow-link {
+        display: inline-flex;
+        align-items: center;
+        align-self: flex-start;
+        width: fit-content;
+        gap: 5px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--color-ink);
+        text-decoration: none;
+        transition: color 150ms ease;
+    }
+    .arrow-link svg {
+        transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .arrow-link:hover {
+        color: var(--color-electric-blue);
+    }
+    .arrow-link:hover svg {
+        transform: translateX(3px);
+    }
+}

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getCurrentUser } from '@/lib/auth/session'
 import { countUnreadNotifications } from '@/lib/queries/notifications'
+import packageJson from '@/package.json'
 import { NavLinks } from './nav-links'
 import { UserMenu } from './user-menu'
 import { HeaderActions } from './header-actions'
@@ -50,7 +51,7 @@ export default async function BoardsLayout({
                         </div>
                     </header>
 
-                    <main className="flex-1 min-h-0 w-full mx-auto px-6 py-6 overflow-y-auto">
+                    <main className="flex-1 min-h-0 w-full mx-auto px-6 py-6 overflow-y-auto overscroll-y-contain">
                         {children}
                     </main>
                     <footer className="border-t border-mist">
@@ -87,13 +88,10 @@ export default async function BoardsLayout({
                                     rel="noopener noreferrer"
                                     className="hover:text-ink transition-colors"
                                 >
-                                    Made by creativoma
+                                    built by creativoma
                                 </a>
                             </nav>
-                            <span className="inline-flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-(--color-success)" />
-                                All systems operational · v0.1.0
-                            </span>
+                            <span>v{packageJson.version}</span>
                         </div>
                     </footer>
                 </div>

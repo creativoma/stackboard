@@ -136,59 +136,67 @@ function CardChip({
             card.checklist.total > 0 ||
             assignee ||
             card.priority ? (
-                <div className="flex items-center justify-between text-xs text-[var(--color-fog)]">
-                    <span className="flex items-center gap-2.5">
-                        {card.priority ? (
-                            <PriorityIcon
-                                priority={card.priority}
-                                size={13}
-                                className="shrink-0"
-                            />
-                        ) : null}
-                        {card.dueDate ? (
-                            <span
-                                className={
-                                    overdue
-                                        ? 'inline-flex items-center gap-1 rounded-[var(--radius-tags)] px-1.5 py-0.5 bg-[var(--color-blush)] text-[var(--color-coral)] font-semibold'
-                                        : 'inline-flex items-center gap-1'
-                                }
-                            >
-                                <Calendar
-                                    size={12}
-                                    strokeWidth={2}
+                <div className="flex flex-col gap-1.5 text-xs text-[var(--color-fog)]">
+                    {card.priority || card.dueDate ? (
+                        <span className="flex items-center gap-2">
+                            {card.priority ? (
+                                <PriorityIcon
+                                    priority={card.priority}
+                                    size={13}
                                     className="shrink-0"
-                                    aria-hidden="true"
                                 />
-                                {overdue ? 'Overdue: ' : ''}
-                                {formatDate(card.dueDate)}
-                            </span>
-                        ) : null}
-                        {card.checklist.total > 0 ? (
-                            <span className="tabular inline-flex items-center gap-1">
-                                <CheckSquare
-                                    size={12}
-                                    strokeWidth={2}
-                                    className="shrink-0"
-                                    aria-hidden="true"
-                                />
-                                {card.checklist.done}/{card.checklist.total}
-                            </span>
-                        ) : null}
-                    </span>
-                    {assignee ? (
-                        // The card is a drag handle, so keep the avatar's click
-                        // from bubbling into that gesture — same guard the
-                        // title link above uses.
-                        <span
-                            className="contents"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <Avatar
-                                person={assignee}
-                                size="sm"
-                                boardId={card.boardId}
-                            />
+                            ) : null}
+                            {card.dueDate ? (
+                                <span
+                                    className={
+                                        overdue
+                                            ? 'inline-flex items-center gap-1 rounded-[var(--radius-tags)] px-1.5 py-0.5 bg-[var(--color-blush)] text-[var(--color-coral)] font-semibold'
+                                            : 'inline-flex items-center gap-1'
+                                    }
+                                >
+                                    <Calendar
+                                        size={12}
+                                        strokeWidth={2}
+                                        className="shrink-0"
+                                        aria-hidden="true"
+                                    />
+                                    {overdue ? 'Overdue: ' : ''}
+                                    {formatDate(card.dueDate)}
+                                </span>
+                            ) : null}
                         </span>
+                    ) : null}
+                    {card.checklist.total > 0 || assignee ? (
+                        <div className="flex items-center justify-between">
+                            {card.checklist.total > 0 ? (
+                                <span className="tabular inline-flex items-center gap-1">
+                                    <CheckSquare
+                                        size={12}
+                                        strokeWidth={2}
+                                        className="shrink-0"
+                                        aria-hidden="true"
+                                    />
+                                    {card.checklist.done}/{card.checklist.total}
+                                </span>
+                            ) : (
+                                <span />
+                            )}
+                            {assignee ? (
+                                // The card is a drag handle, so keep the avatar's click
+                                // from bubbling into that gesture — same guard the
+                                // title link above uses.
+                                <span
+                                    className="contents"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <Avatar
+                                        person={assignee}
+                                        size="sm"
+                                        boardId={card.boardId}
+                                    />
+                                </span>
+                            ) : null}
+                        </div>
                     ) : null}
                 </div>
             ) : null}
@@ -282,7 +290,7 @@ function Column({
                 {canManage ? (
                     <Button
                         variant="icon"
-                        size="sm"
+                        size="default"
                         onClick={handleArchive}
                         className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
                         aria-label={`Archive column ${column.name}`}

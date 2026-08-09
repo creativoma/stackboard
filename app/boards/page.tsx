@@ -156,7 +156,10 @@ export default async function BoardsDashboard() {
                                     <div
                                         className="relative h-16 shrink-0 flex items-end border-b border-[var(--color-mist)] p-3"
                                         style={{
-                                            background: boardGradient(board.id),
+                                            background: boardGradient(
+                                                board.id,
+                                                board.color
+                                            ),
                                         }}
                                     >
                                         <h3 className="font-medium text-[14px] tracking-[-0.1px] text-[var(--color-carbon)] leading-tight line-clamp-2">

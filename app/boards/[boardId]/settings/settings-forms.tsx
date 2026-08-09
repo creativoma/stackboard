@@ -3,6 +3,8 @@
 import { useActionState, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { GripVertical } from 'lucide-react'
+import { BOARD_COLORS } from '@/lib/board-colors'
+import type { BoardColor } from '@/db/schema'
 import {
     DndContext,
     KeyboardSensor,
@@ -21,6 +23,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import {
     renameBoardAction,
+    setBoardColorAction,
     closeBoardAction,
     type SettingsActionState,
 } from '@/lib/actions/boards'
@@ -72,6 +75,83 @@ export function RenameBoardForm({
                 </p>
             ) : null}
         </form>
+    )
+}
+
+const BOARD_COLOR_SWATCH: Record<BoardColor, string> = {
+    blue: 'var(--color-label-blue)',
+    purple: 'var(--color-label-purple)',
+    green: 'var(--color-label-green)',
+    yellow: 'var(--color-label-yellow)',
+    red: 'var(--color-label-red)',
+    orange: 'var(--color-label-orange)',
+}
+
+export function BoardColorForm({
+    boardId,
+    color,
+}: {
+    boardId: string
+    color: BoardColor | null
+}) {
+    const [selected, setSelected] = useState<BoardColor | null>(color)
+    const [busy, setBusy] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+    const router = useRouter()
+
+    async function handleChange(next: BoardColor) {
+        if (next === selected) return
+        const prev = selected
+        setSelected(next)
+        setBusy(true)
+        const result = await setBoardColorAction(boardId, next)
+        setBusy(false)
+        if (result?.error) {
+            setSelected(prev)
+            setError(result.error)
+        } else {
+            setError(null)
+            router.refresh()
+        }
+    }
+
+    return (
+        <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium">Board background</span>
+            <div
+                role="radiogroup"
+                aria-label="Board background color"
+                className="flex items-center gap-1.5"
+            >
+                {BOARD_COLORS.map((c) => {
+                    const active = selected === c.value
+                    return (
+                        <button
+                            key={c.value}
+                            type="button"
+                            role="radio"
+                            aria-checked={active}
+                            aria-label={c.label}
+                            title={c.label}
+                            disabled={busy}
+                            onClick={() => handleChange(c.value)}
+                            className="w-6 h-6 rounded-full shrink-0 transition-transform hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-electric-blue)]"
+                            style={{
+                                background: BOARD_COLOR_SWATCH[c.value],
+                                boxShadow: active
+                                    ? '0 0 0 2px var(--color-paper), 0 0 0 4px var(--color-electric-blue)'
+                                    : 'inset 0 0 0 1px rgba(0,0,0,0.08)',
+                            }}
+                        />
+                    )
+                })}
+            </div>
+            {error ? (
+                <p role="alert" className="text-xs text-[var(--color-coral)]">
+                    {error}
+                </p>
+            ) : null}
+        </div>
     )
 }
 

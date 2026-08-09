@@ -68,16 +68,16 @@ bun run db:studio     # optional: browse the DB with Drizzle Studio
 
 ## Seed data
 
-`bun run db:seed` **wipes all tables** in whatever database `DATABASE_URL` points at and reloads a fixed dataset. It exercises:
+`bun run db:seed` **wipes all tables** in whatever database `DATABASE_URL` points at and reloads a fixed dataset across five boards with distinct board colors. It exercises:
 
-- the happy path (an active board, columns, labeled/assigned/due cards, checklists, comments)
-- an **observer** member (`grace@example.com`), a **WIP limit** on "In progress", a **card watcher**, and an **unread notification** for `bob@example.com`
-- an **empty** column (`Blocked`)
-- an **overdue** card
-- an **archived** card
-- an **archived board** ("Q1 Retro (closed)")
+- the happy path ("Product Launch": an active board, columns, labeled/assigned/due cards, checklists, comments)
+- an **observer** member (`grace@example.com`, on "Product Launch" and "Mobile App v2"), a **WIP limit** on "Marketing Website Redesign" → Development, **card watchers**, and **unread notifications**
+- an **empty** column (`Blocked` on "Product Launch")
+- **overdue** cards, an **archived** card, and two **archived boards** ("Q1 Retro (closed)", "2025 Roadmap (closed)")
 - a **pending** invitation and an **expired** invitation
-- a **permission-restricted** state (`dave@example.com` is a real user but not a board member)
+- a **permission-restricted** state (`dave@example.com` is only a member of "Support Triage")
+- a **fully empty board** ("New Team Onboarding" — no columns) and a **near-empty** board ("Support Triage")
+- extra users `henry@example.com` / `ivy@example.com` spread across the newer boards
 
 Never point `db:seed` at a database you care about — it deletes everything first.
 

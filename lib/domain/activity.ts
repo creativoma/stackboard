@@ -7,6 +7,9 @@ export type ActivityType =
     | 'column.archived'
     | 'column.restored'
     | 'column.wip_limit_changed'
+    | 'label.created'
+    | 'label.updated'
+    | 'label.deleted'
     | 'card.created'
     | 'card.moved'
     | 'card.field_changed'
@@ -54,6 +57,12 @@ export function describeActivity(event: {
             return event.newValue
                 ? `set the WIP limit on "${event.field}" to ${event.newValue}`
                 : `removed the WIP limit on "${event.field}"`
+        case 'label.created':
+            return `created label "${event.newValue}"`
+        case 'label.updated':
+            return `changed the color of "${event.field}" to ${event.newValue}`
+        case 'label.deleted':
+            return `deleted label "${event.oldValue}"`
         case 'card.created':
             return 'created this card'
         case 'card.moved':

@@ -28,7 +28,7 @@ const PATHS: Record<CardPriority, React.ReactNode> = {
 
 export function PriorityIcon({
     priority,
-    size = 14,
+    size = 20,
     className,
 }: {
     priority: string | null | undefined
@@ -44,7 +44,7 @@ export function PriorityIcon({
             viewBox="0 0 16 16"
             fill="none"
             stroke={meta.color}
-            strokeWidth={2}
+            strokeWidth={1.75}
             strokeLinecap="round"
             strokeLinejoin="round"
             className={className}

@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { eq } from 'drizzle-orm'
 import { db, schema } from '@/db'
+import { boardColorValues } from '@/db/schema'
 import { requireUser } from '@/lib/auth/session'
 import { requireOwner, logActivity, actionErrorMessage } from './helpers'
 import { createBoardFromNormalized } from '@/lib/import/create-board'
@@ -134,6 +135,32 @@ export async function renameBoardAction(
         })
 
         revalidatePath(`/boards/${boardId}`)
+        revalidatePath(`/boards/${boardId}/settings`)
+        return { ok: true }
+    } catch (err) {
+        return { error: actionErrorMessage(err) }
+    }
+}
+
+const setBoardColorSchema = z.object({
+    color: z.enum(boardColorValues),
+})
+
+export async function setBoardColorAction(
+    boardId: string,
+    color: string
+): Promise<SettingsActionState> {
+    try {
+        await requireOwner(boardId)
+        const parsed = setBoardColorSchema.safeParse({ color })
+        if (!parsed.success) return { error: 'Invalid color' }
+
+        await db
+            .update(schema.boards)
+            .set({ color: parsed.data.color, updatedAt: new Date() })
+            .where(eq(schema.boards.id, boardId))
+
+        revalidatePath('/boards')
         revalidatePath(`/boards/${boardId}/settings`)
         return { ok: true }
     } catch (err) {

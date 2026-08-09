@@ -35,20 +35,20 @@
     --color-board-blue: #4c8fe8; /* legacy alias */
 
     /* Label palette — labels are the ONE decorative color surface in the
-       app, and they live strictly in the blue gamut: six distinguishable
-       blues from navy to sky. Names keep their historical hue words. */
-    --color-label-blue: #1868db; /* core blue */
+       app: six real, distinguishable hues (not the neutral/blue-only rule
+       that governs the rest of the UI). Names match their actual color. */
+    --color-label-blue: #1868db;
     --color-label-blue-subtle: #e8f0fc;
-    --color-label-purple: #0b2e63; /* navy */
-    --color-label-purple-subtle: #d6e2f5;
-    --color-label-green: #4c8fe8; /* sky */
-    --color-label-green-subtle: #eef5fd;
-    --color-label-red: #0d3f8f; /* indigo */
-    --color-label-red-subtle: #dbe7f9;
-    --color-label-yellow: #3b82e0; /* bright */
-    --color-label-yellow-subtle: #e3eefb;
-    --color-label-orange: #1259c4; /* cobalt */
-    --color-label-orange-subtle: #dfe9f8;
+    --color-label-purple: #7c3aed;
+    --color-label-purple-subtle: #ede9fe;
+    --color-label-green: #16a34a;
+    --color-label-green-subtle: #dcfce7;
+    --color-label-red: #e11d48;
+    --color-label-red-subtle: #ffe4e6;
+    --color-label-yellow: #ca8a04;
+    --color-label-yellow-subtle: #fef9c3;
+    --color-label-orange: #ea580c;
+    --color-label-orange-subtle: #ffedd5;
 
     /* Accent aliases repointed at the tonal family */
     --color-iris: var(--color-label-purple);
@@ -141,19 +141,19 @@
         --color-concrete: #333333;
         --color-primary-subdued: #16335c;
 
-        /* Subtle label fills flip to deep blue tints so chips stay
-           readable; solids lighten to keep contrast on the dark canvas */
+        /* Subtle label fills flip to deep tints of the same hue so chips
+           stay readable; solids lighten to keep contrast on the dark canvas */
         --color-label-blue-subtle: #142d52;
-        --color-label-purple-subtle: #0e1c33;
-        --color-label-green-subtle: #16304d;
-        --color-label-red-subtle: #102340;
-        --color-label-yellow-subtle: #152b49;
-        --color-label-orange-subtle: #122645;
-        --color-label-purple: #8ab5ee;
-        --color-label-green: #7db2ef;
-        --color-label-red: #6da3ec;
-        --color-label-yellow: #5b9aea;
-        --color-label-orange: #4c8fe8;
+        --color-label-purple-subtle: #271145;
+        --color-label-green-subtle: #14321f;
+        --color-label-red-subtle: #3f0817;
+        --color-label-yellow-subtle: #3f2f05;
+        --color-label-orange-subtle: #431f07;
+        --color-label-purple: #a78bfa;
+        --color-label-green: #4ade80;
+        --color-label-red: #fb7185;
+        --color-label-yellow: #facc15;
+        --color-label-orange: #fb923c;
 
         /* Functional states brighten for contrast on dark */
         --color-coral: #f87171;
@@ -184,6 +184,10 @@ body {
        Weight 400 keeps small text crisp; hierarchy comes from 500 titles. */
     font-size: 14px;
     font-weight: 400;
+    /* Only the layout's <main> scrolls (app/boards/layout.tsx is h-screen).
+       Without this, trackpad momentum from that inner scroll chains to the
+       body and macOS's rubber-band overscroll reveals blank space below it. */
+    overscroll-behavior-y: none;
 }
 
 /* Every numeric cell (counts, dates, progress) uses tabular figures */
