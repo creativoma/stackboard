@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { and, eq, count } from 'drizzle-orm'
 import { db, schema } from '@/db'
 import {
-    requireMembership,
+    requireContentEditor,
     requireOwner,
     logActivity,
     actionErrorMessage,
@@ -16,6 +16,7 @@ import {
     reorderWithinList,
     toPositionRows,
 } from '@/lib/domain/positions'
+import { parseWipLimit } from '@/lib/domain/wip'
 
 export type ColumnActionState = { error?: string; ok?: boolean } | undefined
 
@@ -27,7 +28,7 @@ export async function createColumnAction(
     formData: FormData
 ): Promise<ColumnActionState> {
     try {
-        const { user } = await requireMembership(boardId)
+        const { user } = await requireContentEditor(boardId)
         const parsed = nameSchema.safeParse(formData.get('name'))
         if (!parsed.success)
             return { error: parsed.error.issues[0]?.message ?? 'Invalid name' }
@@ -69,7 +70,7 @@ export async function archiveColumnAction(
     columnId: string
 ): Promise<ColumnActionState> {
     try {
-        const { user } = await requireMembership(boardId)
+        const { user } = await requireContentEditor(boardId)
 
         const [column] = await db
             .select()
@@ -124,7 +125,7 @@ export async function restoreColumnAction(
     columnId: string
 ): Promise<ColumnActionState> {
     try {
-        const { user } = await requireMembership(boardId)
+        const { user } = await requireContentEditor(boardId)
 
         const [column] = await db
             .select()
@@ -162,6 +163,50 @@ export async function restoreColumnAction(
             actorId: user.id,
             type: 'column.restored',
             newValue: column.name,
+        })
+
+        revalidatePath(`/boards/${boardId}`)
+        revalidatePath(`/boards/${boardId}/settings`)
+        return { ok: true }
+    } catch (err) {
+        return { error: actionErrorMessage(err) }
+    }
+}
+
+export async function setColumnWipLimitAction(
+    boardId: string,
+    columnId: string,
+    rawLimit: string
+): Promise<ColumnActionState> {
+    try {
+        const { user } = await requireOwner(boardId)
+
+        const [column] = await db
+            .select()
+            .from(schema.columns)
+            .where(
+                and(
+                    eq(schema.columns.id, columnId),
+                    eq(schema.columns.boardId, boardId)
+                )
+            )
+            .limit(1)
+        if (!column) throw new ActionError('Column not found')
+
+        const wipLimit = parseWipLimit(rawLimit)
+        if (wipLimit === column.wipLimit) return { ok: true }
+
+        await db
+            .update(schema.columns)
+            .set({ wipLimit })
+            .where(eq(schema.columns.id, columnId))
+        await logActivity({
+            boardId,
+            actorId: user.id,
+            type: 'column.wip_limit_changed',
+            field: column.name,
+            oldValue: column.wipLimit === null ? null : String(column.wipLimit),
+            newValue: wipLimit === null ? null : String(wipLimit),
         })
 
         revalidatePath(`/boards/${boardId}`)

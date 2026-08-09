@@ -2,9 +2,12 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { and, eq, count } from 'drizzle-orm'
+import { and, eq, count, inArray } from 'drizzle-orm'
 import { db, schema } from '@/db'
+import { cardPriorityValues } from '@/db/schema'
+import { priorityMeta } from '@/lib/priority'
 import {
+    requireContentEditor,
     requireMembership,
     logActivity,
     actionErrorMessage,
@@ -18,6 +21,18 @@ import {
     reorderWithinList,
     toPositionRows,
 } from '@/lib/domain/positions'
+import { canAcceptCard } from '@/lib/domain/wip'
+import {
+    dueDateToIso,
+    parseDueDate,
+    MIN_DUE_YEAR,
+    MAX_DUE_YEAR,
+} from '@/lib/domain/due'
+import {
+    notificationTitle,
+    recipientsForEvent,
+} from '@/lib/domain/notifications'
+import { notifyUsers } from '@/lib/notifications/create'
 
 export type CardActionState =
     { error?: string; ok?: boolean; cardId?: string } | undefined
@@ -45,7 +60,7 @@ export async function createCardAction(
     formData: FormData
 ): Promise<CardActionState> {
     try {
-        const { user } = await requireMembership(boardId)
+        const { user } = await requireContentEditor(boardId)
         const parsed = titleSchema.safeParse(formData.get('title'))
         if (!parsed.success)
             return {
@@ -64,6 +79,11 @@ export async function createCardAction(
                     eq(schema.cards.columnId, columnId),
                     eq(schema.cards.status, 'active')
                 )
+            )
+
+        if (!canAcceptCard(activeCount, column.wipLimit))
+            throw new ActionError(
+                `"${column.name}" is at its WIP limit of ${column.wipLimit}`
             )
 
         const [card] = await db
@@ -94,6 +114,7 @@ const updateCardSchema = z.object({
     description: z.string().max(10000).optional(),
     assigneeId: z.union([z.string().uuid(), z.literal('')]).optional(),
     dueDate: z.union([z.string(), z.literal('')]).optional(),
+    priority: z.union([z.enum(cardPriorityValues), z.literal('')]).optional(),
 })
 
 export async function updateCardAction(
@@ -103,7 +124,7 @@ export async function updateCardAction(
     formData: FormData
 ): Promise<CardActionState> {
     try {
-        const { user } = await requireMembership(boardId)
+        const { user } = await requireContentEditor(boardId)
 
         const parsed = updateCardSchema.safeParse({
             title: formData.has('title')
@@ -117,6 +138,9 @@ export async function updateCardAction(
                 : undefined,
             dueDate: formData.has('dueDate')
                 ? String(formData.get('dueDate'))
+                : undefined,
+            priority: formData.has('priority')
+                ? String(formData.get('priority'))
                 : undefined,
         })
         if (!parsed.success)
@@ -179,25 +203,57 @@ export async function updateCardAction(
             const newAssignee = parsed.data.assigneeId || null
             if (newAssignee !== card.assigneeId) {
                 patch.assigneeId = newAssignee
+                // The activity log is read by humans — store member names,
+                // not user ids (legacy id rows are humanized at read time).
+                const changedIds = [card.assigneeId, newAssignee].filter(
+                    (v): v is string => v !== null
+                )
+                const changedUsers = changedIds.length
+                    ? await db
+                          .select({
+                              id: schema.users.id,
+                              name: schema.users.name,
+                          })
+                          .from(schema.users)
+                          .where(inArray(schema.users.id, changedIds))
+                    : []
+                const nameOf = (id: string | null) =>
+                    id
+                        ? (changedUsers.find((u) => u.id === id)?.name ?? null)
+                        : null
                 events.push({
                     field: 'assignee',
-                    oldValue: card.assigneeId,
-                    newValue: newAssignee,
+                    oldValue: nameOf(card.assigneeId),
+                    newValue: nameOf(newAssignee),
+                })
+            }
+        }
+        if (parsed.data.priority !== undefined) {
+            const newPriority = parsed.data.priority || null
+            if (newPriority !== card.priority) {
+                patch.priority = newPriority
+                events.push({
+                    field: 'priority',
+                    oldValue: priorityMeta(card.priority)?.label ?? null,
+                    newValue: priorityMeta(newPriority)?.label ?? null,
                 })
             }
         }
         if (parsed.data.dueDate !== undefined) {
-            const newDue = parsed.data.dueDate
-                ? new Date(parsed.data.dueDate)
-                : null
-            const oldDueIso = card.dueDate ? card.dueDate.toISOString() : null
+            const newDue = parseDueDate(parsed.data.dueDate)
+            if (newDue === undefined)
+                throw new ActionError(
+                    `Due date must be a real date between ${MIN_DUE_YEAR} and ${MAX_DUE_YEAR}`
+                )
+            const oldDueIso = dueDateToIso(card.dueDate)
             const newDueIso = newDue ? newDue.toISOString() : null
             if (newDueIso !== oldDueIso) {
                 patch.dueDate = newDue
+                // Log calendar dates, not full ISO timestamps.
                 events.push({
                     field: 'due date',
-                    oldValue: oldDueIso,
-                    newValue: newDueIso,
+                    oldValue: oldDueIso ? oldDueIso.slice(0, 10) : null,
+                    newValue: newDueIso ? newDueIso.slice(0, 10) : null,
                 })
             }
         }
@@ -214,6 +270,51 @@ export async function updateCardAction(
                     actorId: user.id,
                     type: 'card.field_changed',
                     ...event,
+                })
+            }
+
+            // A newly assigned member starts watching the card and gets told.
+            const newAssignee = patch.assigneeId
+            if (newAssignee) {
+                await db
+                    .insert(schema.cardWatchers)
+                    .values({ cardId, userId: newAssignee })
+                    .onConflictDoNothing()
+
+                const [board] = await db
+                    .select({ name: schema.boards.name })
+                    .from(schema.boards)
+                    .where(eq(schema.boards.id, boardId))
+                    .limit(1)
+                const activeMembers = await db
+                    .select({ userId: schema.boardMemberships.userId })
+                    .from(schema.boardMemberships)
+                    .where(
+                        and(
+                            eq(schema.boardMemberships.boardId, boardId),
+                            eq(schema.boardMemberships.status, 'active')
+                        )
+                    )
+                const recipients = recipientsForEvent({
+                    type: 'card.assigned',
+                    actorId: user.id,
+                    assigneeId: newAssignee,
+                    watcherIds: [],
+                    mentionedIds: [],
+                    activeMemberIds: activeMembers.map((m) => m.userId),
+                })
+                await notifyUsers(db, {
+                    recipientIds: recipients,
+                    boardId,
+                    cardId,
+                    actorId: user.id,
+                    type: 'card.assigned',
+                    title: notificationTitle(
+                        'card.assigned',
+                        user.name,
+                        patch.title ?? card.title
+                    ),
+                    boardName: board?.name ?? '',
                 })
             }
         }
@@ -234,7 +335,7 @@ export async function moveCardAction(
     destIndex: number
 ): Promise<CardActionState> {
     try {
-        const { user } = await requireMembership(boardId)
+        const { user } = await requireContentEditor(boardId)
 
         const [card] = await db
             .select()
@@ -289,6 +390,11 @@ export async function moveCardAction(
                 .orderBy(schema.cards.position)
             const destIds = destCards.map((c) => c.id)
 
+            if (!canAcceptCard(destIds.length, destColumn.wipLimit))
+                throw new ActionError(
+                    `"${destColumn.name}" is at its WIP limit of ${destColumn.wipLimit}`
+                )
+
             const { source, dest } = moveBetweenLists(
                 sourceIds,
                 destIds,
@@ -340,12 +446,59 @@ export async function moveCardAction(
     }
 }
 
+/**
+ * Watching is a personal subscription, not a content mutation — observers
+ * may watch too, so this uses requireMembership rather than
+ * requireContentEditor.
+ */
+export async function watchCardAction(
+    boardId: string,
+    cardId: string,
+    watch: boolean
+): Promise<CardActionState> {
+    try {
+        const { user } = await requireMembership(boardId)
+        const [card] = await db
+            .select({ id: schema.cards.id })
+            .from(schema.cards)
+            .where(
+                and(
+                    eq(schema.cards.id, cardId),
+                    eq(schema.cards.boardId, boardId)
+                )
+            )
+            .limit(1)
+        if (!card) throw new ActionError('Card not found')
+
+        if (watch) {
+            await db
+                .insert(schema.cardWatchers)
+                .values({ cardId, userId: user.id })
+                .onConflictDoNothing()
+        } else {
+            await db
+                .delete(schema.cardWatchers)
+                .where(
+                    and(
+                        eq(schema.cardWatchers.cardId, cardId),
+                        eq(schema.cardWatchers.userId, user.id)
+                    )
+                )
+        }
+
+        revalidatePath(`/boards/${boardId}/cards/${cardId}`)
+        return { ok: true }
+    } catch (err) {
+        return { error: actionErrorMessage(err) }
+    }
+}
+
 export async function archiveCardAction(
     boardId: string,
     cardId: string
 ): Promise<CardActionState> {
     try {
-        const { user } = await requireMembership(boardId)
+        const { user } = await requireContentEditor(boardId)
         const [card] = await db
             .select()
             .from(schema.cards)
@@ -385,7 +538,7 @@ export async function restoreCardAction(
     destColumnId: string
 ): Promise<CardActionState> {
     try {
-        const { user } = await requireMembership(boardId)
+        const { user } = await requireContentEditor(boardId)
         const [card] = await db
             .select()
             .from(schema.cards)
@@ -414,6 +567,11 @@ export async function restoreCardAction(
                     eq(schema.cards.columnId, destColumnId),
                     eq(schema.cards.status, 'active')
                 )
+            )
+
+        if (!canAcceptCard(activeCount, destColumn.wipLimit))
+            throw new ActionError(
+                `"${destColumn.name}" is at its WIP limit of ${destColumn.wipLimit}`
             )
 
         await db

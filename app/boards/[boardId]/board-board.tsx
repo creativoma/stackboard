@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { useMemo, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
@@ -30,6 +30,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { moveCardAction, type CardActionState } from '@/lib/actions/cards'
 import { archiveColumnAction } from '@/lib/actions/columns'
 import { isOverdue } from '@/lib/domain/filters'
+import { isOverLimit } from '@/lib/domain/wip'
 import type {
     CardSummary,
     ColumnSummary,
@@ -37,6 +38,7 @@ import type {
     MemberSummary,
 } from './board-types'
 import { AddCardInline } from './add-card-inline'
+import { PriorityIcon } from '@/app/_components/priority-icon'
 import {
     LABEL_COLOR_VAR,
     LABEL_COLOR_SUBTLE_VAR,
@@ -50,10 +52,12 @@ function CardChip({
     card,
     members,
     labels,
+    canEdit,
 }: {
     card: CardSummary
     members: MemberSummary[]
     labels: LabelSummary[]
+    canEdit: boolean
 }) {
     const {
         attributes,
@@ -65,6 +69,7 @@ function CardChip({
     } = useSortable({
         id: card.id,
         data: { columnId: card.columnId },
+        disabled: !canEdit,
     })
     const assignee = members.find((m) => m.id === card.assigneeId)
     const overdue = isOverdue(card.dueDate ? new Date(card.dueDate) : null)
@@ -80,7 +85,7 @@ function CardChip({
             }}
             {...attributes}
             {...listeners}
-            className="elevated-surface relative overflow-hidden p-3 pl-3.5 flex flex-col gap-2 cursor-grab active:cursor-grabbing transition-[transform,box-shadow] duration-150 hover:-translate-y-0.5 hover:shadow-[0_6px_14px_rgba(9,30,66,0.16)] focus-visible:outline-2 focus-visible:outline-[var(--color-electric-blue)]"
+            className={`elevated-surface relative overflow-hidden p-3 pl-3.5 flex flex-col gap-2 ${canEdit ? 'cursor-grab active:cursor-grabbing' : ''} transition-[transform,box-shadow] duration-150 hover:-translate-y-0.5 hover:shadow-[var(--shadow-dragging)] focus-visible:outline-2 focus-visible:outline-[var(--color-electric-blue)]`}
         >
             {cardLabels[0] ? (
                 <span
@@ -127,9 +132,19 @@ function CardChip({
                     label={`Checklist ${card.checklist.done} of ${card.checklist.total} complete`}
                 />
             ) : null}
-            {card.dueDate || card.checklist.total > 0 || assignee ? (
+            {card.dueDate ||
+            card.checklist.total > 0 ||
+            assignee ||
+            card.priority ? (
                 <div className="flex items-center justify-between text-xs text-[var(--color-fog)]">
                     <span className="flex items-center gap-2.5">
+                        {card.priority ? (
+                            <PriorityIcon
+                                priority={card.priority}
+                                size={13}
+                                className="shrink-0"
+                            />
+                        ) : null}
                         {card.dueDate ? (
                             <span
                                 className={
@@ -149,7 +164,7 @@ function CardChip({
                             </span>
                         ) : null}
                         {card.checklist.total > 0 ? (
-                            <span className="inline-flex items-center gap-1">
+                            <span className="tabular inline-flex items-center gap-1">
                                 <CheckSquare
                                     size={12}
                                     strokeWidth={2}
@@ -160,7 +175,21 @@ function CardChip({
                             </span>
                         ) : null}
                     </span>
-                    {assignee ? <Avatar person={assignee} size="sm" /> : null}
+                    {assignee ? (
+                        // The card is a drag handle, so keep the avatar's click
+                        // from bubbling into that gesture — same guard the
+                        // title link above uses.
+                        <span
+                            className="contents"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <Avatar
+                                person={assignee}
+                                size="sm"
+                                boardId={card.boardId}
+                            />
+                        </span>
+                    ) : null}
                 </div>
             ) : null}
         </li>
@@ -174,6 +203,7 @@ function Column({
     members,
     labels,
     canManage,
+    canEdit,
 }: {
     column: ColumnSummary
     index: number
@@ -181,6 +211,7 @@ function Column({
     members: MemberSummary[]
     labels: LabelSummary[]
     canManage: boolean
+    canEdit: boolean
 }) {
     const [, startTransition] = useTransition()
     const [error, setError] = useState<string | null>(null)
@@ -222,19 +253,30 @@ function Column({
         <div
             data-testid={`column-${column.id}`}
             data-column-name={column.name}
-            className="group flex flex-col w-[280px] shrink-0 bg-[var(--color-snow)] rounded-[var(--radius-largecards)] p-3 max-h-full min-h-0"
-            style={{ boxShadow: 'var(--shadow-subtle)' }}
+            className="group flex flex-col w-[280px] shrink-0 bg-[var(--color-sunken)] rounded-[var(--radius-largecards)] p-2.5 max-h-full min-h-0"
         >
             <div className="flex items-center justify-between mb-2 px-1">
-                <h3 className="font-semibold text-sm tracking-[-0.01em] text-[var(--color-ink)] flex items-center gap-1.5">
+                <h3 className="font-medium text-sm tracking-[-0.01em] text-[var(--color-ink)] flex items-center gap-1.5">
                     <span
                         className="w-2 h-2 rounded-full shrink-0"
                         style={{ background: columnAccentColor(index) }}
                         aria-hidden="true"
                     />
                     {column.name}
-                    <span className="text-[10px] font-semibold text-[var(--color-smoke)] bg-[var(--color-sunken)] rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center">
+                    <span
+                        className={`tabular text-[10px] font-medium rounded-[var(--radius-tags)] min-w-[18px] h-[18px] px-1 flex items-center justify-center ${
+                            isOverLimit(cards.length, column.wipLimit)
+                                ? 'text-[var(--color-coral)] bg-[var(--color-blush)]'
+                                : 'text-[var(--color-smoke)] bg-[var(--color-sunken)]'
+                        }`}
+                        title={
+                            column.wipLimit
+                                ? `WIP limit ${column.wipLimit}`
+                                : undefined
+                        }
+                    >
                         {cards.length}
+                        {column.wipLimit ? `/${column.wipLimit}` : ''}
                     </span>
                 </h3>
                 {canManage ? (
@@ -259,9 +301,14 @@ function Column({
                 </p>
             ) : null}
 
-            <div className="mb-2 shrink-0">
-                <AddCardInline boardId={column.boardId} columnId={column.id} />
-            </div>
+            {canEdit ? (
+                <div className="mb-2 shrink-0">
+                    <AddCardInline
+                        boardId={column.boardId}
+                        columnId={column.id}
+                    />
+                </div>
+            ) : null}
 
             <div className="flex-1 min-h-0 overflow-y-auto -mx-1 px-1">
                 <SortableContext
@@ -279,6 +326,7 @@ function Column({
                                     card={card}
                                     members={members}
                                     labels={labels}
+                                    canEdit={canEdit}
                                 />
                             ))}
                         </ul>
@@ -311,6 +359,7 @@ export function BoardBoard({
     members,
     labels,
     canManage,
+    canEdit,
 }: {
     boardId: string
     columns: ColumnSummary[]
@@ -318,9 +367,11 @@ export function BoardBoard({
     members: MemberSummary[]
     labels: LabelSummary[]
     canManage: boolean
+    canEdit: boolean
 }) {
     const [localCards, setLocalCards] = useState(cardsByColumn)
     const [activeCard, setActiveCard] = useState<CardSummary | null>(null)
+    const [moveError, setMoveError] = useState<string | null>(null)
     const columnsRef = useRef<HTMLDivElement>(null)
 
     useGSAP(
@@ -344,9 +395,12 @@ export function BoardBoard({
     // so newly created/edited/filtered cards show up without a hard reload —
     // this only overwrites local state when the *server* data actually changed,
     // never mid-drag, since a drag doesn't cause the parent to re-render.
-    useEffect(() => {
+    const [lastFromServer, setLastFromServer] = useState(cardsByColumn)
+    if (lastFromServer !== cardsByColumn) {
+        setLastFromServer(cardsByColumn)
         setLocalCards(cardsByColumn)
-    }, [cardsByColumn])
+    }
+
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
         useSensor(KeyboardSensor, {
@@ -407,11 +461,13 @@ export function BoardBoard({
             })
         }
 
+        setMoveError(null)
         moveCardAction(boardId, String(active.id), destColId, destIndex).then(
             (result: CardActionState) => {
                 if (result?.error) {
-                    // Reconcile: revert optimistic move on failure.
+                    // Reconcile: revert optimistic move on failure and say why.
                     setLocalCards(cardsByColumn)
+                    setMoveError(result.error)
                 }
             }
         )
@@ -425,6 +481,14 @@ export function BoardBoard({
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
         >
+            {moveError ? (
+                <p
+                    role="alert"
+                    className="text-xs text-[var(--color-coral)] bg-[var(--color-blush)] rounded-[var(--radius-cards)] px-3 py-2"
+                >
+                    {moveError}
+                </p>
+            ) : null}
             <div
                 ref={columnsRef}
                 className="flex flex-1 min-h-0 gap-4 overflow-x-auto pb-4 -mx-1 px-1"
@@ -438,6 +502,7 @@ export function BoardBoard({
                         members={members}
                         labels={labels}
                         canManage={canManage}
+                        canEdit={canEdit}
                     />
                 ))}
             </div>

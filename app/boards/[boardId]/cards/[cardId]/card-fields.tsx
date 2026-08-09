@@ -11,6 +11,9 @@ import {
 import { toggleCardLabelAction } from '@/lib/actions/labels'
 import { renderMarkdownLite } from '@/lib/markdown'
 import { LABEL_COLOR_VAR, LABEL_COLOR_SUBTLE_VAR } from '@/lib/labels'
+import { PRIORITIES } from '@/lib/priority'
+import { MIN_DUE_YEAR, MAX_DUE_YEAR } from '@/lib/domain/due'
+import { PriorityIcon } from '@/app/_components/priority-icon'
 import type { MemberSummary, LabelSummary } from '../../board-types'
 import { Button } from '../../../../_components/button'
 
@@ -45,7 +48,7 @@ export function TitleField({
                 onChange={(e) => setValue(e.target.value)}
                 maxLength={200}
                 rows={1}
-                className="text-[24px] font-semibold tracking-[-0.02em] w-full resize-none border-none outline-none bg-transparent focus-visible:outline-2 focus-visible:outline-[var(--color-electric-blue)] rounded"
+                className="text-[15px] font-medium tracking-[-0.1px] w-full resize-none border-none outline-none bg-transparent focus-visible:outline-2 focus-visible:outline-[var(--color-electric-blue)] rounded"
             />
             {state?.error ? (
                 <p
@@ -122,7 +125,7 @@ export function DescriptionField({
                 </p>
             ) : null}
             <div className="flex gap-2">
-                <Button type="submit" variant="secondary">
+                <Button type="submit" variant="primary">
                     Save
                 </Button>
                 <Button variant="outline" onClick={() => setEditing(false)}>
@@ -178,6 +181,58 @@ export function AssigneeField({
     )
 }
 
+export function PriorityField({
+    boardId,
+    cardId,
+    priority,
+}: {
+    boardId: string
+    cardId: string
+    priority: string | null
+}) {
+    const boundAction = updateCardAction.bind(null, boardId, cardId)
+    const [state, formAction] = useActionState(boundAction, undefined)
+
+    return (
+        <form action={formAction} className="flex flex-col gap-1">
+            <label
+                htmlFor="priority"
+                className="text-xs font-medium text-[var(--color-fog)] uppercase tracking-wide"
+            >
+                Priority
+            </label>
+            <div className="relative">
+                <select
+                    id="priority"
+                    name="priority"
+                    defaultValue={priority ?? ''}
+                    className={`input ${priority ? 'pl-8' : ''}`}
+                    onChange={(e) => e.currentTarget.form?.requestSubmit()}
+                >
+                    <option value="">No priority</option>
+                    {PRIORITIES.map((p) => (
+                        <option key={p.value} value={p.value}>
+                            {p.label}
+                        </option>
+                    ))}
+                </select>
+                {priority ? (
+                    <PriorityIcon
+                        priority={priority}
+                        size={14}
+                        className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2"
+                    />
+                ) : null}
+            </div>
+            {state?.error ? (
+                <p role="alert" className="text-xs text-[var(--color-coral)]">
+                    {state.error}
+                </p>
+            ) : null}
+        </form>
+    )
+}
+
 export function DueDateField({
     boardId,
     cardId,
@@ -204,6 +259,10 @@ export function DueDateField({
                 name="dueDate"
                 type="date"
                 defaultValue={initial}
+                // Mirrors the server-side range in lib/domain/due.ts — a date
+                // picker will happily emit year 0022 from a typo otherwise.
+                min={`${MIN_DUE_YEAR}-01-01`}
+                max={`${MAX_DUE_YEAR}-12-31`}
                 className="input"
                 onChange={(e) => e.currentTarget.form?.requestSubmit()}
             />

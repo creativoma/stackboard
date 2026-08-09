@@ -1,6 +1,7 @@
 import { ChevronDown, Search } from 'lucide-react'
 import type { MemberSummary, LabelSummary } from './board-types'
 import { Button } from '../../_components/button'
+import { PRIORITIES } from '@/lib/priority'
 
 export function FilterBar({
     boardId,
@@ -11,7 +12,13 @@ export function FilterBar({
     boardId: string
     members: MemberSummary[]
     labels: LabelSummary[]
-    filters: { member?: string; label?: string; overdue?: string; q?: string }
+    filters: {
+        member?: string
+        label?: string
+        priority?: string
+        overdue?: string
+        q?: string
+    }
 }) {
     return (
         <form
@@ -33,7 +40,7 @@ export function FilterBar({
                     name="q"
                     defaultValue={filters.q ?? ''}
                     placeholder="Search cards…"
-                    className="input input--icon-left h-10 box-border"
+                    className="input input--icon-left"
                     aria-label="Keyword search"
                 />
             </div>
@@ -41,7 +48,7 @@ export function FilterBar({
                 <select
                     name="member"
                     defaultValue={filters.member ?? ''}
-                    className="input h-10 box-border appearance-none pr-8"
+                    className="input appearance-none pr-8"
                     aria-label="Filter by member"
                 >
                     <option value="">Everyone</option>
@@ -62,7 +69,7 @@ export function FilterBar({
                 <select
                     name="label"
                     defaultValue={filters.label ?? ''}
-                    className="input h-10 box-border appearance-none pr-8"
+                    className="input appearance-none pr-8"
                     aria-label="Filter by label"
                 >
                     <option value="">All labels</option>
@@ -79,7 +86,28 @@ export function FilterBar({
                     aria-hidden="true"
                 />
             </div>
-            <label className="flex items-center gap-1.5 h-10 box-border text-sm px-2.5 rounded-[var(--radius-buttons)] bg-[var(--color-snow)] cursor-pointer select-none has-[:checked]:bg-[var(--color-electric-blue-tint)] has-[:checked]:text-[var(--color-electric-blue)] has-[:checked]:font-medium transition-colors">
+            <div className="relative max-w-[150px] w-full">
+                <select
+                    name="priority"
+                    defaultValue={filters.priority ?? ''}
+                    className="input appearance-none pr-8"
+                    aria-label="Filter by priority"
+                >
+                    <option value="">Any priority</option>
+                    {PRIORITIES.map((p) => (
+                        <option key={p.value} value={p.value}>
+                            {p.label}
+                        </option>
+                    ))}
+                </select>
+                <ChevronDown
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-fog"
+                    size={14}
+                    strokeWidth={2}
+                    aria-hidden="true"
+                />
+            </div>
+            <label className="flex items-center gap-1.5 h-9 box-border text-[13px] px-3 rounded-[var(--radius-inputs)] border border-[var(--color-border-strong)] bg-[var(--color-paper)] cursor-pointer select-none has-[:checked]:bg-[var(--color-electric-blue-tint)] has-[:checked]:border-[var(--color-electric-blue)] has-[:checked]:text-[var(--color-electric-blue)] transition-colors">
                 <input
                     type="checkbox"
                     name="overdue"
@@ -89,14 +117,14 @@ export function FilterBar({
                 />
                 Overdue only
             </label>
-            <Button
-                type="submit"
-                variant="primary"
-                className="h-10 min-h-0 box-border"
-            >
+            <Button type="submit" variant="primary">
                 Apply
             </Button>
-            {filters.member || filters.label || filters.overdue || filters.q ? (
+            {filters.member ||
+            filters.label ||
+            filters.priority ||
+            filters.overdue ||
+            filters.q ? (
                 <Button variant="ghost" href={`/boards/${boardId}`}>
                     Clear
                 </Button>

@@ -1,6 +1,7 @@
 import 'server-only'
 import { and, asc, desc, eq } from 'drizzle-orm'
 import { db, schema } from '@/db'
+import { humanizeActivityValues } from './activity'
 
 export async function getCardDetail(boardId: string, cardId: string) {
     const [card] = await db
@@ -48,12 +49,46 @@ export async function getCardDetail(boardId: string, cardId: string) {
                 .limit(1),
         ])
 
+    const humanizedEvents = await humanizeActivityValues(
+        activity.map((a) => a.event)
+    )
+
     return {
         card,
         column: column[0] ?? null,
         checklistItems,
         labelIds: cardLabelRows.map((r) => r.labelId),
         comments,
-        activity,
+        activity: activity.map((a, i) => ({
+            ...a,
+            event: humanizedEvents[i],
+        })),
     }
+}
+
+export async function getCardWatchers(cardId: string) {
+    return db
+        .select({ userId: schema.cardWatchers.userId })
+        .from(schema.cardWatchers)
+        .where(eq(schema.cardWatchers.cardId, cardId))
+}
+
+export async function getCardAttachments(cardId: string) {
+    return db
+        .select({
+            id: schema.attachments.id,
+            filename: schema.attachments.filename,
+            mimeType: schema.attachments.mimeType,
+            sizeBytes: schema.attachments.sizeBytes,
+            uploaderId: schema.attachments.uploaderId,
+            createdAt: schema.attachments.createdAt,
+            uploaderName: schema.users.name,
+        })
+        .from(schema.attachments)
+        .innerJoin(
+            schema.users,
+            eq(schema.users.id, schema.attachments.uploaderId)
+        )
+        .where(eq(schema.attachments.cardId, cardId))
+        .orderBy(desc(schema.attachments.createdAt))
 }
