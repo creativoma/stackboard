@@ -3,6 +3,9 @@
 import { useActionState, useRef } from 'react'
 import { addCommentAction } from '@/lib/actions/comments'
 import { SubmitButton } from '@/app/(auth)/submit-button'
+import { CommentBody } from '@/app/_components/comment-body'
+import { MentionTextarea } from '@/app/_components/mention-textarea'
+import type { MentionableMember } from '@/lib/domain/mentions'
 import { formatDateTime } from '@/lib/format'
 
 type Comment = {
@@ -14,10 +17,12 @@ export function CommentsSection({
     boardId,
     cardId,
     comments,
+    members,
 }: {
     boardId: string
     cardId: string
     comments: Comment[]
+    members: MentionableMember[]
 }) {
     const boundAction = addCommentAction.bind(null, boardId, cardId)
     const [state, formAction] = useActionState(boundAction, undefined)
@@ -40,9 +45,7 @@ export function CommentsSection({
                                 {formatDateTime(comment.createdAt)}
                             </time>
                         </div>
-                        <p className="text-sm whitespace-pre-wrap">
-                            {comment.body}
-                        </p>
+                        <CommentBody body={comment.body} members={members} />
                     </li>
                 ))}
                 {comments.length === 0 ? (
@@ -63,13 +66,14 @@ export function CommentsSection({
                 <label htmlFor="body" className="sr-only">
                     Add a comment
                 </label>
-                <textarea
+                <MentionTextarea
                     id="body"
                     name="body"
+                    members={members}
                     maxLength={4000}
                     rows={3}
                     required
-                    placeholder="Post an update…"
+                    placeholder="Post an update… (@name to mention a member)"
                     className="input"
                 />
                 {state?.error ? (

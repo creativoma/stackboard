@@ -5,11 +5,20 @@ import { z } from 'zod'
 import { and, eq } from 'drizzle-orm'
 import { db, schema } from '@/db'
 import {
-    requireMembership,
+    requireContentEditor,
     logActivity,
     actionErrorMessage,
     ActionError,
 } from './helpers'
+import {
+    extractMentionCandidates,
+    resolveMentions,
+} from '@/lib/domain/mentions'
+import {
+    notificationTitle,
+    splitCommentRecipients,
+} from '@/lib/domain/notifications'
+import { notifyUsers } from '@/lib/notifications/create'
 
 export type CommentActionState = { error?: string; ok?: boolean } | undefined
 
@@ -22,7 +31,7 @@ export async function addCommentAction(
     formData: FormData
 ): Promise<CommentActionState> {
     try {
-        const { user } = await requireMembership(boardId)
+        const { user } = await requireContentEditor(boardId)
         const parsed = bodySchema.safeParse(formData.get('body'))
         if (!parsed.success)
             return { error: parsed.error.issues[0]?.message ?? 'Invalid input' }
@@ -47,6 +56,70 @@ export async function addCommentAction(
             cardId,
             actorId: user.id,
             type: 'comment.added',
+        })
+
+        // Fan out notifications: mentioned members get the specific mention
+        // notification; remaining watchers + the assignee get the plain one.
+        const [board] = await db
+            .select({ name: schema.boards.name })
+            .from(schema.boards)
+            .where(eq(schema.boards.id, boardId))
+            .limit(1)
+        const activeMembers = await db
+            .select({
+                id: schema.users.id,
+                name: schema.users.name,
+                email: schema.users.email,
+            })
+            .from(schema.boardMemberships)
+            .innerJoin(
+                schema.users,
+                eq(schema.users.id, schema.boardMemberships.userId)
+            )
+            .where(
+                and(
+                    eq(schema.boardMemberships.boardId, boardId),
+                    eq(schema.boardMemberships.status, 'active')
+                )
+            )
+        const watchers = await db
+            .select({ userId: schema.cardWatchers.userId })
+            .from(schema.cardWatchers)
+            .where(eq(schema.cardWatchers.cardId, cardId))
+
+        const mentionedIds = resolveMentions(
+            extractMentionCandidates(parsed.data),
+            activeMembers
+        )
+        const { mentioned, others } = splitCommentRecipients({
+            actorId: user.id,
+            assigneeId: card.assigneeId,
+            watcherIds: watchers.map((w) => w.userId),
+            mentionedIds,
+            activeMemberIds: activeMembers.map((m) => m.id),
+        })
+
+        const common = {
+            boardId,
+            cardId,
+            actorId: user.id,
+            boardName: board?.name ?? '',
+        }
+        await notifyUsers(db, {
+            ...common,
+            recipientIds: mentioned,
+            type: 'comment.mentioned',
+            title: notificationTitle(
+                'comment.mentioned',
+                user.name,
+                card.title
+            ),
+        })
+        await notifyUsers(db, {
+            ...common,
+            recipientIds: others,
+            type: 'comment.added',
+            title: notificationTitle('comment.added', user.name, card.title),
         })
 
         revalidatePath(`/boards/${boardId}/cards/${cardId}`)
