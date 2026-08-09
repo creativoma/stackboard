@@ -10,6 +10,10 @@
 
 A focused, Trello-style board for one team managing one shared project. Boards with ordered columns, drag-and-drop cards, checklists, comments, an activity trail, filters, and reversible archiving — plus real-time sync (SSE), notifications with @mentions and due-date reminders, card watchers, a read-only observer role, WIP limits, Jira-style card priority, cross-board search, a "My cards" view, board templates, and file attachments. Built with Next.js App Router, Server Components, Server Actions, and Postgres via Drizzle ORM.
 
+<p align="center">
+  <img src="./screenshot.png" alt="Stackboard board view with columns, labeled cards, priorities, due dates, and checklist progress" width="900">
+</p>
+
 ## Prerequisites
 
 - Node.js 20+ and [Bun](https://bun.sh) (the project uses `bun` as the package manager/runner; `npm`/`pnpm` work too since there's no Bun-only API in use)

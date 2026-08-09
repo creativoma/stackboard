@@ -101,16 +101,28 @@ async function main() {
         .returning()
     void empty
 
-    const [urgentLabel, bugLabel] = await db
+    const [urgentLabel, bugLabel, featureLabel, designLabel] = await db
         .insert(schema.labels)
         .values([
             { boardId: board.id, name: 'Urgent', color: 'red' },
             { boardId: board.id, name: 'Bug', color: 'purple' },
+            { boardId: board.id, name: 'Feature', color: 'green' },
+            { boardId: board.id, name: 'Design', color: 'blue' },
         ])
         .returning()
 
     const now = Date.now()
-    const [overdueCard, activeCard, , archivedCard] = await db
+    const [
+        overdueCard,
+        activeCard,
+        ,
+        archivedCard,
+        onboardingEmailCard,
+        analyticsCard,
+        billingMigrationCard,
+        emptyStatesCard,
+        changelogCard,
+    ] = await db
         .insert(schema.cards)
         .values([
             {
@@ -120,6 +132,7 @@ async function main() {
                 description:
                     'Draft the **launch** post for the blog and socials.',
                 assigneeId: bob.id,
+                priority: 'high',
                 dueDate: new Date(now - 3 * 24 * 60 * 60 * 1000), // overdue state
                 position: 0,
             },
@@ -130,6 +143,7 @@ async function main() {
                 description:
                     'Checklist items sometimes fail to save on slow connections.',
                 assigneeId: carol.id,
+                priority: 'highest',
                 dueDate: new Date(now + 5 * 24 * 60 * 60 * 1000),
                 position: 0,
             },
@@ -150,12 +164,63 @@ async function main() {
                 status: 'archived',
                 archivedAt: new Date(now - 10 * 24 * 60 * 60 * 1000), // archived state
             },
+            {
+                boardId: board.id,
+                columnId: todo.id,
+                title: 'Design onboarding email sequence',
+                description: 'Three-part welcome series for new signups.',
+                assigneeId: carol.id,
+                priority: 'medium',
+                dueDate: new Date(now + 2 * 24 * 60 * 60 * 1000),
+                position: 1,
+            },
+            {
+                boardId: board.id,
+                columnId: todo.id,
+                title: 'Set up analytics dashboard',
+                description: 'Track signups, activation, and retention.',
+                assigneeId: bob.id,
+                priority: 'low',
+                position: 2,
+            },
+            {
+                boardId: board.id,
+                columnId: inProgress.id,
+                title: 'Migrate billing to new API',
+                description: 'Swap the legacy billing client before launch.',
+                assigneeId: alice.id,
+                priority: 'high',
+                dueDate: new Date(now + 24 * 60 * 60 * 1000),
+                position: 1,
+            },
+            {
+                boardId: board.id,
+                columnId: inProgress.id,
+                title: 'Polish empty states',
+                description: 'Illustrations and copy for every empty list.',
+                assigneeId: bob.id,
+                priority: 'medium',
+                position: 2,
+            },
+            {
+                boardId: board.id,
+                columnId: done.id,
+                title: 'Ship changelog page',
+                description: 'In-app changelog, linked from the user menu.',
+                assigneeId: carol.id,
+                position: 2,
+            },
         ])
         .returning()
 
     await db.insert(schema.cardLabels).values([
         { cardId: overdueCard.id, labelId: urgentLabel.id },
         { cardId: activeCard.id, labelId: bugLabel.id },
+        { cardId: onboardingEmailCard.id, labelId: designLabel.id },
+        { cardId: analyticsCard.id, labelId: featureLabel.id },
+        { cardId: billingMigrationCard.id, labelId: urgentLabel.id },
+        { cardId: emptyStatesCard.id, labelId: designLabel.id },
+        { cardId: changelogCard.id, labelId: featureLabel.id },
     ])
 
     await db.insert(schema.checklistItems).values([
@@ -171,6 +236,30 @@ async function main() {
             text: 'Add a regression test',
             done: false,
             position: 2,
+        },
+        {
+            cardId: billingMigrationCard.id,
+            text: 'Point staging at the new API',
+            done: true,
+            position: 0,
+        },
+        {
+            cardId: billingMigrationCard.id,
+            text: 'Backfill existing subscriptions',
+            done: true,
+            position: 1,
+        },
+        {
+            cardId: billingMigrationCard.id,
+            text: 'Update webhook handlers',
+            done: false,
+            position: 2,
+        },
+        {
+            cardId: billingMigrationCard.id,
+            text: 'Flip the flag in prod',
+            done: false,
+            position: 3,
         },
     ])
 
