@@ -55,3 +55,6 @@ next-env.d.ts
 
 # local personal exports/data dropped into public/ for reference — never ship these
 /public/*.json
+
+# local object storage for attachments (UPLOAD_DIR default)
+/var/

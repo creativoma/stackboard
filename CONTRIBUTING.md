@@ -9,14 +9,15 @@ Follow the [Local setup](./README.md#local-setup) section in the README to get a
 ## Before opening a PR
 
 ```bash
-bun run typecheck         # strict TypeScript pass, no `any` escape hatches
+bun run lint               # ESLint
+bun run typecheck          # strict TypeScript pass, no `any` escape hatches
 bun run test               # unit tests
 bun run test:integration   # requires a `stackboard_test` database (see README)
 bun run test:e2e           # Playwright, builds and boots the app
-bun run format              # prettier --write .
+bun run format             # prettier --write .
 ```
 
-`bun run lint` currently fails in this environment because `typescript-eslint` doesn't yet support the TypeScript 7.0 compiler this project ships with — `bun run typecheck` is the enforced type-safety gate instead.
+CI (`.github/workflows/ci.yml`) runs the same commands on every pull request — lint, typecheck, unit tests and build in one job, integration tests and Playwright e2e against Postgres service containers in two more — so a PR that passes locally should pass there.
 
 ## Coding conventions
 

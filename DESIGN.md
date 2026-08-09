@@ -1,390 +1,195 @@
-# Design System Inspiration of Trello (iOS)
+# Design System — "Blueprint"
 
-## 1. Visual Theme & Atmosphere
+## Overview
 
-Trello's iOS app is a tactile, board-first workspace where the content _is_ the layout. Unlike most apps, Trello has no single canvas color — the **board background** sets the mood. A board can be a solid Trello Blue (`#0079BF`), a gradient, or a photo, and the entire screen takes on that backdrop. On top of it float pale, near-white lists (`#F1F2F4`) holding white cards. The feeling is of physical index cards pinned to a colored corkboard: you scroll the board horizontally through columns, you drag cards between them, and everything has a slight lift. There is no bottom tab bar — navigation lives in a top bar and the board itself is the primary surface, scrolled left-to-right.
+Blueprint is a single-accent, neutral-scale product design system. One blue — **`#1868db`** — carries every call to action, link, focus ring, and selected state. Everything else is black and white in their tones: a gray scale from `#ffffff` to `#171717`. There are no gradients, no pastel washes, no decorative color. Depth comes from **1px hairline borders** on white surfaces over a faintly gray page; shadows are minimal, neutral, and reserved for lifted states (drag, sheets).
 
-The accent system is restrained against a backdrop that may be loud. Trello Blue for actions sits at `#0C66E4` (the modern Atlassian-era blue, distinct from the classic board blue `#0079BF`), used for the primary button, links, and the active state. Card label colors (a fixed palette of green/yellow/orange/red/purple/blue swatches) are the one place color runs free — they're functional tags, not decoration. Everything else is neutral ink (`#172B4D`) on white cards so cards stay readable regardless of how vivid the board behind them is.
+Information density is the point. Type is compact (14px body, 16px ceiling), controls share one geometry (36px tall, 6px radius), spacing is tight, and related content lives inside a single bordered surface divided by hairlines — never scattered in floating bands.
 
-Typography is the system font (SF Pro on iOS; Inter is a clean substitute) — Trello leans on platform type for legibility at small sizes, because a card title must be readable over any backdrop. The hierarchy is compact and weight-driven: 11–24pt at 400 / 600 / 700. The most expressive moment is a **card lifting on drag** — it scales up slightly, gains a strong shadow, and the list beneath shows a placeholder gap as you move it.
-
-**Key Characteristics:**
+**Key characteristics:**
 
-- No fixed canvas — the **board background** (solid `#0079BF`, gradient, or photo) sets the screen
-- Pale lists (`#F1F2F4`) of white cards floating on the board backdrop
-- Horizontal board scroll through columns — no bottom tab bar
-- Trello Blue (`#0C66E4`) for actions; the classic `#0079BF` is the default board color
-- Card label color row — a fixed functional swatch palette (the one place color is free)
-- Card lift on drag — scale up, strong shadow, placeholder gap in the list
-- Top navigation bar (board name + members + menu) — board is the primary surface
-- System font (SF Pro / Inter), weights 400 / 600 / 700
-- Card detail opens as a sheet over the dimmed board
+- One accent: `{colors.primary}` `#1868db` for CTAs, links, focus, selection. Never decoration.
+- Neutral everything else: white surfaces, gray hairlines, near-black ink.
+- Hairline-border depth: `1px {colors.mist}` borders define surfaces; shadows are a whisper.
+- Subtle radii: 4–12px. **No pill shapes.**
+- One control box: buttons and inputs are both 36px tall, 6px radius, 13px label — they always line up.
+- Compact type: 14px/400 body, 500-weight titles, 16px hard ceiling, tabular numerics.
+- Functional red/green exist **only** as states (error/destructive, success) — never as palette.
+- Micro-animations stay: 120–150ms transitions, GSAP stagger/drawer/drag choreography.
 
-## 2. Color Palette & Roles
+## Colors
 
-### Primary
+Every color enters as a token in `app/globals.css` with a light and a dark value. Token _names_ are stable across reskins — components reference names, values move.
 
-- **Trello Blue (Action)** (`#0C66E4`): Primary CTA, links, active tab/segment, focus ring, "Create" button. The modern Atlassian-era action blue.
-- **Action Blue Pressed** (`#0055CC`): Pressed/active state for blue actions.
-- **Action Blue Tint** (`#E9F2FF`): Selected-row wash, info banners, blue chip background (on white surfaces).
-- **Classic Board Blue** (`#0079BF`): The default board background color (the heritage Trello blue) — a backdrop, not an action color.
+### Brand
 
-### Board Backgrounds (Backdrop)
+- **Primary** (`--color-midnight` / alias `--color-electric-blue` — `#1868db`): the only CTA/link/focus color.
+- **Primary Hover** (`--color-midnight-hover` — `#1259c4`) · **Primary Pressed** (`--color-midnight-pressed` — `#0f4aa3`).
+- **Primary Soft** (`--color-primary-soft` — `#4c8fe8`): chart/accent tint inside product UI.
+- **Primary Tint** (`--color-electric-blue-tint` — `#e8f0fc`): pale blue wash for selected/insight surfaces.
 
-- **Board Blue** (`#0079BF`): Default solid backdrop.
-- **Board Surface Scrim** (`rgba(0,0,0,0.16)`): A subtle dark scrim laid over photo backgrounds so white lists/cards keep contrast.
-- **Board Header Tint** (`rgba(255,255,255,0.16)`): Translucent white used for header chips/buttons sitting directly on a colored board.
+### Neutrals
 
-### Surfaces & Text
+- **Ink** (`--color-ink` — `#171717`): primary text. **Ink Secondary** (`#404040`) · **Smoke** (`#666666`) · **Fog/Ash** (`#8a8a8a`).
+- **Paper** (`--color-paper` — `#ffffff`): raised surface. **Snow** (`#fafafa`): page background. **Sunken** (`#f2f2f2`): recessed wells (kanban columns, hovers). **Cream** (`#f5f5f5`): neutral band (legacy name).
+- **Mist** (`--color-mist` — `#e5e5e5`): hairline borders. **Border Strong** (`#d4d4d4`): input borders.
 
-- **Canvas White** (`#FFFFFF`): Card fill, sheet backgrounds, the readable surface on top of any board.
-- **List Surface** (`#F1F2F4`): The pale list/column container that floats on the board.
-- **Surface Sunken** (`#EBECF0`): Pressed list area, skeleton placeholders, card-composer field.
-- **Divider** (`#DFE1E6`): Hairline rules between card sections and within sheets.
-- **Border Strong** (`#C1C7D0`): Input outline at rest, checklist separators.
-- **Text Primary** (`#172B4D`): Card titles, list titles, primary ink (a deep navy-charcoal).
-- **Text Secondary** (`#5E6C84`): Metadata, badges, due dates, member counts, helper text.
-- **Text Tertiary** (`#8993A4`): Disabled labels, placeholders, low-emphasis captions.
-- **Text on Board** (`#FFFFFF`): The board name and header controls sitting directly on a colored backdrop.
+### Functional states (the only non-blue/gray colors)
 
-### Card Label Palette (Functional — the one free-color zone)
+- **Error / destructive** (`--color-coral` — `#dc2626`) with wash `--color-blush` (`#fdecec`).
+- **Success** (`--color-success` / `--color-leaf` — `#16a34a`).
+- **Due soon** (`--color-due-soon` — `#525252`): stays neutral; overdue uses coral.
+- **Priority chevrons** (`lib/priority.ts`, Jira-style): Highest `#dc2626` · High `#ea580c` · Medium `#d97706` · Low `#1868db` · Lowest `#4c8fe8`. Urgency is state, so hot levels burn red/orange and calm levels cool back into the brand blues. Rendered only by `PriorityIcon` (`app/_components/priority-icon.tsx`).
 
-- **Label Green** (`#4BCE97`) / subtle `#BAF3DB`
-- **Label Yellow** (`#F5CD47`) / subtle `#F8E6A0`
-- **Label Orange** (`#FEA362`) / subtle `#FEDEC8`
-- **Label Red** (`#F87168`) / subtle `#FFD5D2`
-- **Label Purple** (`#9F8FEF`) / subtle `#DFD8FD`
-- **Label Blue** (`#579DFF`) / subtle `#CCE0FF`
+These appear only on states (alerts, destructive buttons, overdue badges, success dots, priority chevrons) — never as decoration, backgrounds, or label colors.
 
-### Semantic
+### Label palette — the blue gamut
 
-- **Success Green** (`#1F845A`): Completed checklist, "done" badges.
-- **Due Soon Amber** (`#B65C02`): Due-date badge approaching.
-- **Overdue Red** (`#C9372C`): Overdue due-date badge.
-- **Info Blue** (`#0C66E4`): Informational emphasis (same as action blue).
+Card labels are **the one decorative color surface in the app**, and they stay strictly inside the blue gamut: six distinguishable blues from navy to sky. Token names keep their historical hue words (`label-green`, `label-red`, …); values are blues:
 
-### Dark Mode (Supported)
+| Token          | Solid            | Subtle fill |
+| -------------- | ---------------- | ----------- |
+| `label-purple` | `#0b2e63` navy   | `#d6e2f5`   |
+| `label-red`    | `#0d3f8f` indigo | `#dbe7f9`   |
+| `label-orange` | `#1259c4` cobalt | `#dfe9f8`   |
+| `label-blue`   | `#1868db` blue   | `#e8f0fc`   |
+| `label-yellow` | `#3b82e0` bright | `#e3eefb`   |
+| `label-green`  | `#4c8fe8` sky    | `#eef5fd`   |
 
-Trello has a real dark mode for the UI chrome; board backgrounds still drive the board area.
+Board tiles derive a stable tint from the board id (`lib/board-colors.ts`) using these subtle fills — flat, theme-aware, ink text on top.
 
-- **Dark Canvas / Sheet** (`#1D2125`)
-- **Dark List Surface** (`#22272B`)
-- **Dark Card** (`#2C333A`)
-- **Dark Text** (`#B6C2CF`)
-- **Action Blue (dark-adjusted)** (`#579DFF`)
+## Typography
 
-## 3. Typography Rules
+**Inter** (via `--font-inter`), falling back to SF Pro Display / system-ui. Body weight 400; titles weight 500. No stylistic sets; `tnum` (the `.tabular` class) on every numeric cell.
 
-### Font Family
+### App scale (IMPORTANT — compact type)
 
-- **Primary**: System font — `SF Pro Text` / `SF Pro Display` on iOS (Trello uses the platform font for maximum legibility on any backdrop)
-- **Fallback / Web Substitute**: `'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif`
-- **Numerals**: Proportional in most UI; tabular only where counts align (checklist progress)
-- **CJK/Non-Latin**: System stack handles all scripts — Trello ships globally
+Stackboard renders **small type everywhere** (explicit product decision — do not reintroduce large display sizes):
 
-### Hierarchy
+| App role                    | Size    | Weight | Letter Spacing | Notes                                  |
+| --------------------------- | ------- | ------ | -------------- | -------------------------------------- |
+| Page title (h1)             | 16px    | 500    | -0.2px         | The largest type in the app            |
+| Section title / sheet title | 15px    | 500    | -0.1px         | Card detail title, settings sections   |
+| Card / tile title           | 14px    | 500    | -0.1px         | Board tiles, kanban card titles        |
+| Body                        | 14px    | 400    | 0              | Default body (`body` element)          |
+| Control label               | 13px    | 500    | 0              | Buttons, inputs, filters               |
+| Caption / metadata          | 12px    | 400    | -0.2px         | Badges, due dates, helper text         |
+| Chip / counter              | 10–11px | 500    | 0              | Label chips, WIP counters              |
+| Numeric cells               | any     | —      | -0.2px         | Always `tnum` via the `.tabular` class |
+| Eyebrow                     | 10px    | 500    | +0.08em        | All-caps section labels                |
 
-| Role                 | Font           | Size | Weight | Line Height | Letter Spacing | Notes                                  |
-| -------------------- | -------------- | ---- | ------ | ----------- | -------------- | -------------------------------------- |
-| Screen / Sheet Title | SF Pro Display | 24pt | 700    | 1.2         | -0.3pt         | Card detail title, modal title         |
-| Board Name           | SF Pro Display | 20pt | 700    | 1.2         | -0.2pt         | In the top bar, on the board backdrop  |
-| Section Header       | SF Pro Text    | 17pt | 700    | 1.3         | -0.1pt         | "Checklist", "Activity" in card detail |
-| List Title           | SF Pro Text    | 15pt | 600    | 1.3         | 0pt            | Column header ("To Do", "Doing")       |
-| Card Title           | SF Pro Text    | 15pt | 600    | 1.35        | 0pt            | The text on a card, up to ~4 lines     |
-| Body                 | SF Pro Text    | 15pt | 400    | 1.45        | 0pt            | Card description, comments             |
-| Button (Primary)     | SF Pro Text    | 16pt | 600    | 1.0         | 0pt            | "Create", "Save" pill/button           |
-| Meta / Badge         | SF Pro Text    | 12pt | 600    | 1.2         | 0pt            | Due date, member count, checklist x/y  |
-| Subtitle             | SF Pro Text    | 13pt | 400    | 1.3         | 0pt            | "Updated 2h ago", list card count      |
-| Label (UPPER)        | SF Pro Text    | 11pt | 700    | 1.2         | 0.4pt          | "MEMBERS", section labels in detail    |
-| Card Composer        | SF Pro Text    | 15pt | 400    | 1.4         | 0pt            | The "Add a card" inline input          |
-| Caption              | SF Pro Text    | 11pt | 400    | 1.3         | 0pt            | Timestamps, low-emphasis legal         |
+**Never** exceed 16px for any text. Hierarchy comes from weight (400 body vs 500 titles), color (ink vs smoke vs fog), and spacing — not size. Never bump a title above weight 600.
 
-### Principles
+## Layout
 
-- **Legibility over personality**: System font is intentional — a card title must read over a photo or a vivid color
-- **Compact, weight-driven**: 11–24pt, hierarchy via 400/600/700, not big size jumps — boards pack many cards
-- **Navy-charcoal ink, not black**: Primary text is `#172B4D` on white cards
-- **Color is functional, not typographic**: Label colors carry meaning; type stays neutral ink
-- **On-board text is white with a scrim**: The board name and header controls use white plus the dark scrim for contrast
-- **Dynamic Type respected** on card titles, body, sheet content; badges and labels fixed
+- **Base unit**: 8px, with 2/4/12 sub-steps. Dense by default: section gaps 16–24px (`gap-4`/`gap-6`), card internal padding 12–16px.
+- **Surfaces hold content together**: related sections live inside one bordered surface separated by hairlines (`divide-y`), not as separate floating cards.
+- **Two-column detail views**: main content left, sticky properties sidebar (~280px) right (see card detail).
+- Full use of width: pages cap at `max-w-6xl`, not narrow centered columns with dead space.
 
-## 4. Component Stylings
+## Elevation & Depth
 
-### Buttons
+| Level | Treatment                                     | Use                       |
+| ----- | --------------------------------------------- | ------------------------- |
+| 0     | Flat `{colors.snow}` page                     | Background                |
+| 1     | `{colors.paper}` + 1px `{colors.mist}` border | Cards, panels, sidebars   |
+| 2     | Level 1 + `--shadow-subtle` (black 5%)        | Interactive cards at rest |
+| 3     | `--shadow-dragging` (black 12%, 24px blur)    | Drag overlays, hover lift |
+| 4     | `--shadow-sheet` (black 16%, 40px blur)       | Drawers / sheets          |
 
-**Primary CTA ("Create" / "Save")**
+Borders are the primary depth cue. Shadows are neutral black rgba — never colored, never navy.
 
-- Background: `#0C66E4`
-- Text: `#FFFFFF`, SF Pro Text 16pt weight 600
-- Height: 44pt; corner radius 8pt (rounded rect — Trello buttons are not full pills)
-- Pressed: background `#0055CC`, subtle scale 0.98
-- Disabled: background `#091E420F` (faint), text `#8993A4`
+## Shapes
 
-**Secondary / Subtle Button ("Cancel")**
+| Token                 | Value | Use                     |
+| --------------------- | ----- | ----------------------- |
+| `--radius-tags`       | 4px   | Chips, badges, counters |
+| `--radius-inputs`     | 6px   | Inputs, selects         |
+| `--radius-buttons`    | 6px   | All buttons             |
+| `--radius-cards`      | 8px   | Cards, alerts           |
+| `--radius-largecards` | 10px  | Feature cards, columns  |
+| `--radius-sheet`      | 12px  | Drawer / sheet chrome   |
 
-- Background: `#091E420F` (a faint neutral wash on white) or transparent on sheets
-- Text: `#172B4D`, weight 600
-- Height: 44pt, radius 8pt
-- Pressed: `#091E4224`
+Radii are subtle. **Nothing is pill-shaped** except things that are truly circular (avatars, status dots).
 
-**On-Board Button (header chips: Filter, Members)**
+## Components
 
-- Background: `rgba(255,255,255,0.16)` (translucent over the colored board)
-- Text/icon: `#FFFFFF`
-- Height: 32pt, radius 8pt
-- Pressed: `rgba(255,255,255,0.28)`
+### The control system
 
-**Text Link**
+Buttons and inputs share one geometry so they always align in toolbars and forms:
 
-- SF Pro Text 15pt weight 600, color `#0C66E4`, no underline; pressed `#0055CC`
+- **Height**: `--control-h` 36px (default), `--control-h-sm` 28px (`.btn--sm`), 32px for board-toolbar buttons (`.btn-onboard`) and icon buttons.
+- **Label**: 13px / 500. **Radius**: 6px. Callers never override geometry — pick a variant/size instead.
+- **Never stretch**: buttons are `width: fit-content`, so flex/grid parents cannot stretch them. The rare full-width case (auth submit) passes `w-full` explicitly.
+- Component classes live in `@layer components`, so Tailwind utilities override them cleanly — `!important` hacks are never needed.
 
-**Icon Button (card actions, overflow)**
+**`btn-primary`** — filled `{colors.primary}`, white text. Hover `{primary-hover}`, active `{primary-pressed}`. **One per view region.**
 
-- 20–24pt glyph, 44pt hit area
-- Default `#5E6C84` on white; `#FFFFFF` on board
-- Active `#0C66E4`
+**`btn-secondary` / `btn-outline`** — white surface, `{border-strong}` hairline, ink text; hover `{sunken}`. The workhorse neutral button.
 
-### Cards & Containers
+**`btn-destructive`** — white surface, coral text + border; hover `{blush}` wash. Destructive actions only.
 
-**Card (the core object)**
+**`btn-ghost`** — borderless, smoke text → ink on hover. Inline/tertiary actions.
 
-- Background: `#FFFFFF`, corner radius 8pt
-- Shadow at rest: `rgba(9,30,66,0.13) 0 1px 1px, rgba(9,30,66,0.06) 0 0 1px`
-- Structure (top→bottom): label color row (4pt-tall pills or full chips) → title (15pt w600 `#172B4D`, up to 4 lines) → badge row (due date, checklist x/y, comments, member avatars)
-- Pressed: background `#F1F2F4`
-- Dragging: scale 1.03, shadow `rgba(9,30,66,0.25) 0 12px 24px`, slight rotation optional; a placeholder gap (`#091E4224` dashed/filled) opens in the list
+**`btn-icon`** — 32px square (28px `sm`), fog icon → ink on sunken hover.
 
-**List / Column**
+**`btn-onboard` / `--dashed`** — 32px neutral toolbar buttons for board headers.
 
-- Background: `#F1F2F4`, corner radius 12pt, width ~272pt, top-aligned
-- Header: list title 15pt w600 `#172B4D` + card count + overflow (⋯)
-- Body: vertically stacked cards with 8pt gaps, scrolls vertically within the column
-- Footer: "+ Add a card" composer (tap expands an inline `#FFFFFF` field with a `#0C66E4` "Add card" button)
-- Lists scroll horizontally as a row across the board
+### Inputs
 
-**Label Chip / Row**
+**`.input`** — white, `{border-strong}` 1px, 6px radius, 13px text, min-height 36px (grows for textareas). Focus: 2px `{colors.primary}` ring. Same box as buttons.
 
-- Compact mode: 8pt-tall colored bars across the card top (color only)
-- Expanded mode: full chips with label text in dark ink on the subtle tint (e.g., text on `#BAF3DB`)
-- Tap a label in card detail to toggle; the six-color functional palette
+### Cards & containers
 
-**Card Detail Sheet**
+**`elevated-surface`** — paper + mist hairline + whisper shadow. The standard card.
+**`card-surface`** — paper + mist hairline, 16px padding. Grouping band.
+**Section stacks** — one bordered surface + `divide-y divide-mist`, sections `p-4`.
 
-- Bottom sheet `#FFFFFF` (or full-screen on compact), top grabber, radius 16pt top corners, presented over a dimmed board (`rgba(0,0,0,0.4)`)
-- Sections: cover/labels, title (24pt w700), description, checklist (with a `#1F845A` progress bar), activity/comments
-- Action row: Members, Labels, Checklist, Due date, Attachment, Move
+### Chips
 
-**Board Header**
+**`.pill`** (legacy name) — 4px radius, 11px/500, `2px 8px` padding. Label chips use tonal `-subtle` fills with a 45% solid inset ring.
 
-- Sits on the board backdrop: board name 20pt w700 `#FFFFFF`, member avatars (28pt circles), Filter chip, overflow — all using the translucent-white on-board style with the scrim ensuring contrast
+### Signature details
 
-### Navigation
+- **Tabular numerics** — every count/date/progress uses `.tabular`.
+- **Micro-animations** — 120–150ms color/transform transitions; GSAP stagger-in on dashboards, drawer slide, drag rotate/scale on kanban. Respect `prefers-reduced-motion`.
+- **Focus** — always the 2px blue `:focus-visible` ring.
 
-**Top Bar (no bottom tab)**
+## Dark mode
 
-- Trello deliberately has **no bottom tab bar**; the board is the primary surface
-- On a board: back chevron, board name (20pt w700 white on backdrop), member avatars, search/filter, overflow menu
-- App-level: a top bar with Boards / Home / Notifications / Search reached via the menu or a segmented header — but inside a board, the board owns the screen and scrolls horizontally
-- Board switching: a left-edge drawer or a "Boards" list screen
+The brand maps onto a neutral dark track — grays, never navy or blue-tinted surfaces:
 
-**Board Horizontal Scroll**
+- Page `#0f0f0f`, paper `#161616`, sunken `#1d1d1d`, hairlines `#262626`/`#333`.
+- Primary lightens to `#3b82e0`→`#4c8fe8`; tint becomes `rgba(24,104,219,0.16)`.
+- Label subtle fills flip to deep tints; functional states brighten (`#f87171`, `#4ade80`).
+- All dark values live in the single `@media (prefers-color-scheme: dark)` block in `app/globals.css`. Components never use `dark:` variants or hardcoded hex — if a new token has no dark value yet, derive one before shipping.
 
-- The defining navigation: lists are a horizontally-paged/scrolling row; the last list shows a peek + an "+ Add list" affordance
-- Smooth horizontal momentum scroll; vertical scroll happens inside each list
-
-**Card Composer**
-
-- Inline at the list footer: tapping "+ Add a card" expands a white multiline field with a `#0C66E4` "Add card" button and a close (×); Enter adds and keeps the composer open for rapid entry
-
-### Input Fields
-
-**Card Composer Field**
-
-- Background: `#FFFFFF`, radius 8pt, 1pt `#DFE1E6`
-- Placeholder "Enter a title for this card…" 15pt `#5E6C84`
-- Focus: 2pt `#0C66E4` ring
-- Multiline, grows with content
-
-**Search Bar**
-
-- Background: `rgba(255,255,255,0.16)` on board / `#F1F2F4` on white screens
-- Height 40pt, radius 8pt
-- Leading `magnifyingglass` 18pt (white on board, `#5E6C84` on white)
-
-**Text Field (card detail / settings)**
-
-- Filled, background `#EBECF0`, height 44pt, radius 8pt
-- Rest: no border; focus: 2pt `#0C66E4`
-- Error: 2pt `#C9372C`, helper `#C9372C`
-
-### Distinctive Components
-
-**Horizontal Kanban with Drag**
-
-- The signature interaction: lists arranged left-to-right, cards drag vertically within and horizontally across lists. While dragging, the card lifts (scale 1.03 + strong shadow), the source position collapses, and a destination placeholder opens — the whole model is "move the physical card".
-
-**Board-Background Header**
-
-- The board's background (solid `#0079BF`, gradient, or photo) bleeds behind the header and lists; a subtle scrim keeps white content readable. The backdrop _is_ the board's identity.
-
-**Card Label Row**
-
-- The fixed six-color functional palette shown as bars or chips on the card top — the one place Trello lets color run, because here color is data.
-
-**Card Detail Sheet**
-
-- The card expands into a structured sheet (title, description, checklist with progress, activity) over the dimmed board — the "open the card" moment.
-
-**Inline List Add / Card Composer**
-
-- Add-a-list and add-a-card are inline, rapid, and keep focus — boards are built fast, in place.
-
-## 5. Layout Principles
-
-### Spacing System
-
-- Base unit: 4pt
-- Scale: 4, 8, 12, 16, 20, 24, 32, 40, 56
-- List width: ~272pt; gap between lists: 8pt; board horizontal padding: 8pt
-- Card internal padding: 8pt 12pt; gap between cards in a list: 8pt
-- Card detail content margin: 16pt
-
-### Grid & Container
-
-- Board: a horizontally scrolling row of fixed-width (~272pt) lists, top-aligned
-- Lists scroll vertically internally; the board scrolls horizontally
-- Card detail: single-column sheet, 16pt margins
-
-### Whitespace Philosophy
-
-- **Dense board, calm card**: Lists pack cards tightly (8pt gaps) so many are visible; the card _detail_ sheet is roomy
-- **The backdrop breathes the color**: Whitespace on a board is the board background itself — lists are islands of calm pale surface
-- **Cards stay readable**: White cards with navy ink guarantee legibility no matter how vivid the backdrop
-
-### Border Radius Scale
-
-- Soft (4pt): Label bars, tiny chips
-- Standard (8pt): Cards, buttons, inputs, on-board chips
-- Comfortable (12pt): Lists/columns
-- Sheet (16pt): Card detail sheet (top corners)
-- Circle (50%): Member avatars, icon-button hit circles
-
-## 6. Depth & Elevation
-
-| Level                   | Treatment                                                  | Use                                      |
-| ----------------------- | ---------------------------------------------------------- | ---------------------------------------- |
-| Board (Level 0)         | Backdrop (color/photo) + optional scrim                    | The board background itself              |
-| List (Level 1)          | `rgba(9,30,66,0.08) 0 1px 2px`                             | Pale list columns floating on the board  |
-| Card (Level 2)          | `rgba(9,30,66,0.13) 0 1px 1px, rgba(9,30,66,0.06) 0 0 1px` | White cards at rest                      |
-| Card Dragging (Level 3) | `rgba(9,30,66,0.25) 0 12px 24px`                           | The lifted card while being dragged      |
-| Sheet (Level 4)         | `rgba(9,30,66,0.31) 0 16px 40px`                           | Card detail sheet over the dimmed board  |
-| Scrim                   | `rgba(0,0,0,0.40)`                                         | Dim behind the card detail sheet / menus |
-
-**Shadow Philosophy**: Shadows use Trello's signature navy tint (`rgba(9,30,66,…)`) rather than pure black, so they read correctly on both pale lists and colored backdrops. Elevation is meaningful: a card at rest has a whisper-thin shadow; the moment you pick it up the shadow jumps dramatically — depth communicates "this is now in your hand". Lists have just enough shadow to lift off the backdrop.
-
-### Motion
-
-- **Card lift on drag**: scale 1.0 → 1.03, shadow ramps to the Level 3 value over ~120ms, source collapses, destination placeholder animates open (~160ms)
-- **Card drop**: settles into the gap with a short spring (~220ms), shadow returns to rest
-- **List/board scroll**: native horizontal momentum; vertical inside lists
-- **Card detail present**: sheet slides up ~300ms ease, board dims behind
-- **Composer expand**: "+ Add a card" expands the inline field ~180ms ease
-- **Checklist toggle**: checkbox fills `#1F845A`, progress bar animates width ~200ms
-
-## 7. Do's and Don'ts
+## Do's and Don'ts
 
 ### Do
 
-- Let the **board background** (solid `#0079BF`, gradient, or photo) define the screen — there is no fixed canvas
-- Float pale lists (`#F1F2F4`) of white cards on the backdrop
-- Use Trello Blue `#0C66E4` for actions/links; reserve the classic `#0079BF` for the default board color
-- Keep navy ink (`#172B4D`) on white cards so they read over any backdrop
-- Use the fixed six-color label palette as functional tags — the one place color is free
-- Lift the card dramatically on drag (scale 1.03 + strong navy-tinted shadow) and open a placeholder gap
-- Scroll the board horizontally through lists; do **not** add a bottom tab bar
-- Apply a subtle scrim over photo backdrops so white content keeps contrast
-- Use the system font for card titles — legibility on any backdrop is the point
+- Reserve `#1868db` for CTAs, links, focus, and selected states — one filled button per view region.
+- Build depth with hairline borders on paper over snow.
+- Keep type small — 16px ceiling; hierarchy via weight 400/500 and gray steps.
+- Use `.tabular` on every numeric cell.
+- Group related sections in one bordered surface with hairline dividers.
+- Keep every color a token with light + dark values in `globals.css`.
 
 ### Don't
 
-- Don't impose a single canvas color — the board backdrop owns the screen
-- Don't add a bottom tab bar — Trello navigates via the top bar and the horizontal board
-- Don't tint card text with label colors — labels are bars/chips; titles stay navy ink
-- Don't use pure black shadows — use the navy `rgba(9,30,66,…)` tint so they work on color and pale surfaces
-- Don't make the drag lift subtle — picking up a card must feel like lifting a physical card
-- Don't use full-pill buttons — Trello buttons are 8pt rounded rects
-- Don't let lists be transparent — they're pale solid islands so cards stay readable
-- Don't use a custom display font for card content — system font is intentional for legibility
-- Don't animate the board scroll with custom easing — native momentum only
+- Don't introduce any color beyond blue tones, gray tones, and the two functional states.
+- Don't use gradients, pastel washes, or mesh backgrounds — they are gone.
+- Don't use pill radii on buttons, inputs, or chips.
+- Don't override control geometry (`!p-0`, `h-9`, `min-h-0`) from callers — extend the Button/`.input` system instead.
+- Don't use red/green decoratively; they mean error/success only.
+- Don't float content in disconnected bands with 40px gaps — surfaces and hairlines hold layouts together.
+- Don't render numeric cells without `tnum`.
 
-## 8. Responsive Behavior
+## Iteration Guide
 
-### Device Sizes
-
-| Device               | Width  | Key Changes                                                                           |
-| -------------------- | ------ | ------------------------------------------------------------------------------------- |
-| iPhone SE (3rd gen)  | 375pt  | ~1.1 lists visible, list width ~256pt, card detail full-screen                        |
-| iPhone 13/14/15      | 390pt  | ~1.2 lists visible, list width ~272pt                                                 |
-| iPhone 15/16 Pro     | 393pt  | Dynamic Island clears the on-board top bar                                            |
-| iPhone 15/16 Pro Max | 430pt  | ~1.4 lists visible, more peek of the next list                                        |
-| iPad                 | 768pt+ | Multiple full lists visible at once; card detail as a centered modal, not full-screen |
-
-### Dynamic Type
-
-- Card titles, body, sheet content: full scale (cards grow taller to fit)
-- Badges, label chips, list count: fixed
-- Board name: scales modestly, truncates with ellipsis
-
-### Orientation
-
-- iPhone: board supports both, but is **primarily portrait**; landscape shows more lists
-- iPad: landscape ideal — many lists across; card detail centered modal
-
-### Touch Targets
-
-- Card: full card is tappable (open detail); long-press initiates drag
-- Drag handle: the whole card; 44pt minimum effective grab
-- On-board chips/buttons: 32pt height with 44pt effective hit
-- Checklist checkboxes: 24pt glyph, 44pt hit
-- Overflow / icon buttons: 44pt hit area
-
-### Safe Area Handling
-
-- Top: the on-board header respects safe area / Dynamic Island; the board scrolls beneath
-- Bottom: no tab bar — the board and the card composer respect the home indicator
-- Sides: 8pt board padding; card detail sheet uses 16pt content margins
-
-## 9. Agent Prompt Guide
-
-### Quick Color Reference
-
-- Board backdrop (default): `#0079BF`
-- List surface: `#F1F2F4`
-- Card: `#FFFFFF`
-- Divider: `#DFE1E6`
-- Text primary: `#172B4D`
-- Text secondary: `#5E6C84`
-- Action blue (CTA/links): `#0C66E4`
-- Action blue pressed: `#0055CC`
-- Label green / yellow / orange: `#4BCE97` / `#F5CD47` / `#FEA362`
-- Label red / purple / blue: `#F87168` / `#9F8FEF` / `#579DFF`
-- Card shadow tint: `rgba(9,30,66,…)`
-
-### Example Component Prompts
-
-- "Create a SwiftUI Trello card: white background, 8pt corner radius, shadow rgba(9,30,66,0.13) 0 1px 1px. Top: a row of three 8pt-tall label bars (#4BCE97, #F5CD47, #579DFF). Title 'Design the onboarding flow' in SF Pro Text 15pt weight 600 #172B4D, up to 4 lines. Badge row: a due-date pill (#B65C02 text), a checklist badge '3/8', a comment count, and two 24pt member avatars. Pressed background #F1F2F4."
-- "Build a Trello list/column: background #F1F2F4, 12pt corner radius, width 272pt, top-aligned. Header: list title 'In Progress' 15pt weight 600 #172B4D + a card-count badge + overflow ⋯. Body: vertically stacked white cards with 8pt gaps. Footer: a '+ Add a card' row that, when tapped, expands an inline white multiline field with a #0C66E4 'Add card' button."
-- "Design the Trello board view: a horizontally scrolling row of #F1F2F4 lists on a board background of solid #0079BF (no bottom tab bar). The on-board top bar has the board name in SF Pro Display 20pt weight 700 white, 28pt member avatars, and a translucent rgba(255,255,255,0.16) Filter chip. The last list peeks with an '+ Add list' affordance."
-- "Animate a Trello card drag: on long-press the card scales 1.0 → 1.03 and its shadow ramps to rgba(9,30,66,0.25) 0 12px 24px over 120ms; the original slot collapses and a filled placeholder gap (#091E4224) opens at the drop target over ~160ms. On drop, the card settles with a 220ms spring and the shadow returns to rest."
-- "Build the Trello card detail sheet: a #FFFFFF bottom sheet with a top grabber, 16pt top-corner radius, over a rgba(0,0,0,0.4) dimmed board. Title in SF Pro Display 24pt weight 700 #172B4D, a description block, a checklist with a #1F845A progress bar, and an action row (Members, Labels, Checklist, Due date, Attachment, Move)."
-
-### Iteration Guide
-
-1. There is no fixed canvas — the **board background** (solid `#0079BF`, gradient, or photo) sets the screen
-2. Float pale `#F1F2F4` lists of white cards on the backdrop; cards keep navy `#172B4D` ink for legibility over anything
-3. Action blue is `#0C66E4` (CTA, links, active); the classic `#0079BF` is the default _board_ color, not an action color
-4. Card label colors are the only free-color zone — a fixed six-color functional palette (bars or chips), never applied to text
-5. No bottom tab bar — navigate via the top bar; the board scrolls horizontally through lists
-6. The drag lift is the signature motion: scale 1.03 + a strong navy-tinted shadow + a destination placeholder gap
-7. Shadows use the navy tint `rgba(9,30,66,…)` so they read on both color backdrops and pale lists; elevation jumps when a card is picked up
-8. Buttons are 8pt rounded rects (not pills); apply a subtle scrim over photo backdrops so white content stays readable
+1. Focus on ONE component at a time.
+2. Reference tokens by name (`--color-midnight`, `--radius-buttons`, `.btn-primary`); change values, not names, when reskinning.
+3. Default body is 14px/400; titles 15–16px/500; controls 13px/500.
+4. New controls adopt the 36px control box; new chips adopt the 4px tag radius.
+5. Keep the compact app type scale — never reintroduce large display sizes.
+6. Every new color token ships with a dark value in the single dark block of `app/globals.css`.
