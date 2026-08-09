@@ -31,7 +31,6 @@ export async function sendEmail(
     const from = process.env.EMAIL_FROM ?? 'Stackboard <onboarding@resend.dev>'
 
     if (!apiKey) {
-        // eslint-disable-next-line no-console
         console.log(
             `[email:dev-fake] to=${input.to} subject="${input.subject}"\n${input.text}`
         )
@@ -81,6 +80,21 @@ function escapeHtml(value: string): string {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;')
+}
+
+export function notificationEmailContent(params: {
+    title: string
+    boardName: string
+    cardUrl: string
+}) {
+    const safeTitle = escapeHtml(params.title)
+    const safeBoardName = escapeHtml(params.boardName)
+    const safeUrl = escapeHtml(params.cardUrl)
+    return {
+        subject: `${params.title} — ${params.boardName}`,
+        text: `${params.title}\n\nBoard: ${params.boardName}\nOpen the card: ${params.cardUrl}`,
+        html: `<p>${safeTitle}</p><p>Board: <strong>${safeBoardName}</strong></p><p><a href="${safeUrl}">Open the card</a></p>`,
+    }
 }
 
 export function inviteEmailContent(params: {

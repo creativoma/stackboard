@@ -8,4 +8,7 @@ export const jobHandlers: Record<string, (payload: unknown) => Promise<void>> =
         send_invite_email: async (payload) => {
             await sendEmail(payload as SendEmailInput)
         },
+        send_notification_email: async (payload) => {
+            await sendEmail(payload as SendEmailInput)
+        },
     }
