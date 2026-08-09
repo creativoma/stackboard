@@ -1,7 +1,6 @@
 import 'dotenv/config'
 import { randomBytes, scrypt } from 'node:crypto'
 import { promisify } from 'node:util'
-import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import * as schema from './schema'
