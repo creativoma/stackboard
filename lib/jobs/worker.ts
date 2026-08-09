@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, isNull, lte } from 'drizzle-orm'
+import { and, asc, eq, inArray, isNull, lte, sql } from 'drizzle-orm'
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js'
 import * as schema from '@/db/schema'
 import { jobHandlers } from './handlers'
@@ -32,7 +32,7 @@ export async function processDueJobs(db: Db): Promise<number> {
             .where(
                 and(
                     eq(schema.jobs.status, 'pending'),
-                    lte(schema.jobs.runAfter, new Date())
+                    lte(schema.jobs.runAfter, sql`now()`)
                 )
             )
             .orderBy(asc(schema.jobs.runAfter))
