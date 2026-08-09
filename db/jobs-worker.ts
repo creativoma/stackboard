@@ -2,9 +2,10 @@ import 'dotenv/config'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import * as schema from './schema'
-import { processDueJobs } from '../lib/jobs/worker'
+import { processDueJobs, scanDueSoonCards } from '../lib/jobs/worker'
 
 const POLL_INTERVAL_MS = 2000
+const DUE_SCAN_INTERVAL_MS = 60 * 60 * 1000 // hourly
 
 async function main() {
     const connectionString = process.env.DATABASE_URL
@@ -23,7 +24,15 @@ async function main() {
 
     console.log(`Jobs worker started, polling every ${POLL_INTERVAL_MS}ms…`)
 
+    let lastDueScan = 0
     while (running) {
+        if (Date.now() - lastDueScan >= DUE_SCAN_INTERVAL_MS) {
+            lastDueScan = Date.now()
+            const reminded = await scanDueSoonCards(db)
+            if (reminded > 0) {
+                console.log(`Sent due-soon reminders for ${reminded} card(s).`)
+            }
+        }
         const processed = await processDueJobs(db)
         if (processed > 0) {
             console.log(`Processed ${processed} job(s).`)

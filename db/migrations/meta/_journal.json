@@ -15,6 +15,20 @@
             "when": 1785673348589,
             "tag": "0001_gray_rockslide",
             "breakpoints": true
+        },
+        {
+            "idx": 2,
+            "version": "7",
+            "when": 1786229829640,
+            "tag": "0002_groovy_devos",
+            "breakpoints": true
+        },
+        {
+            "idx": 3,
+            "version": "7",
+            "when": 1786268304602,
+            "tag": "0003_dear_human_robot",
+            "breakpoints": true
         }
     ]
 }

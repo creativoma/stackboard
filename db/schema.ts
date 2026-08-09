@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm'
 import {
     pgTable,
     uuid,
@@ -66,7 +67,7 @@ export const boards = pgTable('boards', {
     closedAt: timestamp('closed_at', { withTimezone: true }),
 })
 
-export const membershipRoleValues = ['owner', 'member'] as const
+export const membershipRoleValues = ['owner', 'member', 'observer'] as const
 export type MembershipRole = (typeof membershipRoleValues)[number]
 export const membershipStatusValues = ['active', 'removed'] as const
 export type MembershipStatus = (typeof membershipStatusValues)[number]
@@ -116,6 +117,10 @@ export const invitations = pgTable(
         invitedByUserId: uuid('invited_by_user_id')
             .notNull()
             .references(() => users.id),
+        // Role granted on acceptance. Owners are never created by invite.
+        role: text('role', { enum: membershipRoleValues })
+            .notNull()
+            .default('member'),
         token: text('token').notNull(), // hashed
         status: text('status', { enum: invitationStatusValues })
             .notNull()
@@ -149,6 +154,9 @@ export const columns = pgTable(
         status: text('status', { enum: columnStatusValues })
             .notNull()
             .default('active'),
+        // Max active cards allowed to *enter* the column; null = unlimited.
+        // Enforced in application code (lib/domain/wip.ts) on create/move.
+        wipLimit: integer('wip_limit'),
         createdAt: timestamp('created_at', { withTimezone: true })
             .notNull()
             .defaultNow(),
@@ -159,6 +167,15 @@ export const columns = pgTable(
 
 export const cardStatusValues = ['active', 'archived'] as const
 export type CardStatus = (typeof cardStatusValues)[number]
+
+export const cardPriorityValues = [
+    'highest',
+    'high',
+    'medium',
+    'low',
+    'lowest',
+] as const
+export type CardPriority = (typeof cardPriorityValues)[number]
 
 export const cards = pgTable(
     'cards',
@@ -174,10 +191,17 @@ export const cards = pgTable(
         description: text('description').notNull().default(''),
         assigneeId: uuid('assignee_id').references(() => users.id),
         dueDate: timestamp('due_date', { withTimezone: true }),
+        // Optional Jira-style priority; null means "no priority set".
+        priority: text('priority', { enum: cardPriorityValues }),
         position: integer('position').notNull(),
         status: text('status', { enum: cardStatusValues })
             .notNull()
             .default('active'),
+        // Set once the due-soon reminder notification has gone out, so the
+        // hourly scan never notifies twice for the same due date.
+        dueReminderSentAt: timestamp('due_reminder_sent_at', {
+            withTimezone: true,
+        }),
         createdAt: timestamp('created_at', { withTimezone: true })
             .notNull()
             .defaultNow(),
@@ -190,6 +214,11 @@ export const cards = pgTable(
         index('cards_column_idx').on(t.columnId, t.position),
         index('cards_board_idx').on(t.boardId),
         index('cards_assignee_idx').on(t.assigneeId),
+        // Expression index backing full-text card search (lib/queries/search.ts).
+        index('cards_search_idx').using(
+            'gin',
+            sql`to_tsvector('simple', ${t.title} || ' ' || ${t.description})`
+        ),
     ]
 )
 
@@ -291,6 +320,86 @@ export const jobs = pgTable(
             .defaultNow(),
     },
     (t) => [index('jobs_status_run_after_idx').on(t.status, t.runAfter)]
+)
+
+// Users subscribed to a card's notifications beyond the assignee. Assigning
+// a card also adds the assignee here (see lib/actions/cards.ts).
+export const cardWatchers = pgTable(
+    'card_watchers',
+    {
+        cardId: uuid('card_id')
+            .notNull()
+            .references(() => cards.id, { onDelete: 'cascade' }),
+        userId: uuid('user_id')
+            .notNull()
+            .references(() => users.id, { onDelete: 'cascade' }),
+        createdAt: timestamp('created_at', { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+    },
+    (t) => [primaryKey({ columns: [t.cardId, t.userId] })]
+)
+
+export const notificationTypeValues = [
+    'card.assigned',
+    'comment.added',
+    'comment.mentioned',
+    'card.due_soon',
+] as const
+export type NotificationType = (typeof notificationTypeValues)[number]
+
+// One row per recipient per event. Rows are only ever inserted and marked
+// read (readAt) — never edited — so the list doubles as a personal audit log.
+export const notifications = pgTable(
+    'notifications',
+    {
+        id: uuid('id').primaryKey().defaultRandom(),
+        userId: uuid('user_id')
+            .notNull()
+            .references(() => users.id, { onDelete: 'cascade' }),
+        boardId: uuid('board_id')
+            .notNull()
+            .references(() => boards.id, { onDelete: 'cascade' }),
+        cardId: uuid('card_id').references(() => cards.id, {
+            onDelete: 'cascade',
+        }),
+        actorId: uuid('actor_id')
+            .notNull()
+            .references(() => users.id),
+        type: text('type', { enum: notificationTypeValues }).notNull(),
+        title: text('title').notNull(),
+        readAt: timestamp('read_at', { withTimezone: true }),
+        createdAt: timestamp('created_at', { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+    },
+    (t) => [index('notifications_user_idx').on(t.userId, t.readAt, t.createdAt)]
+)
+
+// File metadata for card attachments. Bytes live outside the DB, addressed
+// by storageKey through the object-storage adapter (lib/storage/).
+export const attachments = pgTable(
+    'attachments',
+    {
+        id: uuid('id').primaryKey().defaultRandom(),
+        boardId: uuid('board_id')
+            .notNull()
+            .references(() => boards.id, { onDelete: 'cascade' }),
+        cardId: uuid('card_id')
+            .notNull()
+            .references(() => cards.id, { onDelete: 'cascade' }),
+        uploaderId: uuid('uploader_id')
+            .notNull()
+            .references(() => users.id),
+        filename: text('filename').notNull(),
+        mimeType: text('mime_type').notNull(),
+        sizeBytes: integer('size_bytes').notNull(),
+        storageKey: text('storage_key').notNull(),
+        createdAt: timestamp('created_at', { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+    },
+    (t) => [index('attachments_card_idx').on(t.cardId, t.createdAt)]
 )
 
 // Immutable append-only audit trail. Never updated or deleted by application code.

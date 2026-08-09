@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import { randomBytes, scrypt } from 'node:crypto'
 import { promisify } from 'node:util'
+import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import * as schema from './schema'
@@ -21,6 +22,10 @@ async function main() {
     const db = drizzle(client, { schema })
 
     console.log('Seeding: clearing existing data…')
+    await db.delete(schema.jobs)
+    await db.delete(schema.notifications)
+    await db.delete(schema.attachments)
+    await db.delete(schema.cardWatchers)
     await db.delete(schema.activityEvents)
     await db.delete(schema.comments)
     await db.delete(schema.checklistItems)
@@ -36,7 +41,7 @@ async function main() {
 
     const password = await hashPassword('password123')
 
-    const [alice, bob, carol] = await db
+    const [alice, bob, carol, , grace] = await db
         .insert(schema.users)
         .values([
             {
@@ -59,6 +64,11 @@ async function main() {
                 email: 'dave@example.com',
                 passwordHash: password,
             }, // not a board member — permission-restricted state
+            {
+                name: 'Grace Kim',
+                email: 'grace@example.com',
+                passwordHash: password,
+            }, // observer — read-only member state
         ])
         .returning()
 
@@ -72,13 +82,20 @@ async function main() {
         { boardId: board.id, userId: alice.id, role: 'owner' },
         { boardId: board.id, userId: bob.id, role: 'member' },
         { boardId: board.id, userId: carol.id, role: 'member' },
+        { boardId: board.id, userId: grace.id, role: 'observer' },
     ])
 
     const [todo, inProgress, done, empty] = await db
         .insert(schema.columns)
         .values([
             { boardId: board.id, name: 'To do', position: 0 },
-            { boardId: board.id, name: 'In progress', position: 1 },
+            // wipLimit exercises the WIP badge + entry enforcement
+            {
+                boardId: board.id,
+                name: 'In progress',
+                position: 1,
+                wipLimit: 3,
+            },
             { boardId: board.id, name: 'Done', position: 2 },
             { boardId: board.id, name: 'Blocked', position: 3 }, // empty-state column
         ])
@@ -204,6 +221,21 @@ async function main() {
         },
     ])
 
+    console.log('Seeding: watcher + unread notification…')
+    // Alice watches the bug card without being its assignee.
+    await db
+        .insert(schema.cardWatchers)
+        .values([{ cardId: activeCard.id, userId: alice.id }])
+    // Bob has one unread notification (a mention from Carol).
+    await db.insert(schema.notifications).values({
+        userId: bob.id,
+        boardId: board.id,
+        cardId: activeCard.id,
+        actorId: carol.id,
+        type: 'comment.mentioned',
+        title: 'Carol Nguyen mentioned you on "Fix onboarding checklist bug"',
+    })
+
     console.log('Seeding: pending + expired invitations…')
     await db.insert(schema.invitations).values([
         {
@@ -244,6 +276,9 @@ async function main() {
     )
     console.log(
         'dave@example.com (same password) is NOT a member of "Product Launch" — use it to exercise the permission-restricted state.'
+    )
+    console.log(
+        'grace@example.com (same password) is an OBSERVER on "Product Launch" — read-only, every mutation is rejected.'
     )
 
     await client.end()
