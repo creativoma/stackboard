@@ -9,7 +9,7 @@
         "start": "next start",
         "lint": "eslint",
         "format": "prettier --write .",
-        "typecheck": "tsc --noEmit",
+        "typecheck": "next typegen && tsc --noEmit",
         "test": "vitest run",
         "test:integration": "DATABASE_URL=postgresql://stackboard:stackboard@localhost:5432/stackboard_test vitest run --config vitest.integration.config.ts",
         "test:e2e": "playwright test",

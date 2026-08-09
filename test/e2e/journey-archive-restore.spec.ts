@@ -29,7 +29,7 @@ test('owner archives a card and an empty column, reviews activity, then restores
 
     // Restore the archived card into an active column from board settings.
     // Archived columns/cards live inside the "View archive" drawer.
-    await page.getByRole('link', { name: 'Settings' }).click()
+    await page.getByRole('link', { name: 'Board settings' }).click()
     await page.getByRole('button', { name: 'View archive' }).click()
     const drawer = page.getByRole('dialog', { name: 'Archive' })
     await expect(drawer.getByText('Blocked')).toBeVisible() // archived column

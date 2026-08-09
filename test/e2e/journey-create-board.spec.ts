@@ -18,7 +18,7 @@ test('owner creates a board, invites teammates, and adds a labeled card with ass
     await expect(page.getByText('In progress')).toBeVisible()
     await expect(page.getByText('Done')).toBeVisible()
 
-    await page.getByRole('link', { name: 'Settings' }).click()
+    await page.getByRole('link', { name: 'Board settings' }).click()
     await page.getByLabel('Invite by email').fill('bob@example.com')
     await page.getByRole('button', { name: 'Send invite' }).click()
     await expect(page.getByText('This person is already a member')).toHaveCount(

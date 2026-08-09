@@ -7,7 +7,7 @@ test('owner reorders board columns via drag-and-drop in Settings', async ({
     await login(page, 'alice@example.com')
     await page.getByRole('link', { name: 'Product Launch' }).click()
     await page.waitForURL('**/boards/*')
-    await page.getByRole('link', { name: 'Settings' }).click()
+    await page.getByRole('link', { name: 'Board settings' }).click()
 
     const columnsSection = page.locator('section', {
         has: page.locator('#columns-heading'),
