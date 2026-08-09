@@ -19,9 +19,12 @@ export function isBoardOwner(membership: MembershipLike): boolean {
     return isActiveMember(membership) && membership.role === 'owner'
 }
 
-/** Any active member may create/edit/move/comment/checklist within a board. */
+/**
+ * Owners and members may create/edit/move/comment/checklist within a board.
+ * Observers are active members (they can read everything) but never mutate.
+ */
 export function canMutateBoardContent(membership: MembershipLike): boolean {
-    return isActiveMember(membership)
+    return isActiveMember(membership) && membership.role !== 'observer'
 }
 
 /** Only the owner may invite members, reorder/rename/close the board, or archive columns. */
@@ -29,9 +32,9 @@ export function canManageBoard(membership: MembershipLike): boolean {
     return isBoardOwner(membership)
 }
 
-/** Archiving/restoring cards is allowed for any active member. */
+/** Archiving/restoring cards follows the same rule as any content mutation. */
 export function canArchiveCard(membership: MembershipLike): boolean {
-    return isActiveMember(membership)
+    return canMutateBoardContent(membership)
 }
 
 /** Only the owner may permanently close a board — a terminal, irreversible action. */

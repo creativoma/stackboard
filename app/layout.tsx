@@ -1,5 +1,12 @@
 import type { Metadata, Viewport } from 'next'
+import { Inter } from 'next/font/google'
 import './globals.css'
+
+// Inter is the brand's open-source Sohne substitute (DESIGN.md, Typography).
+const inter = Inter({
+    subsets: ['latin'],
+    variable: '--font-inter',
+})
 
 const appUrl = process.env.APP_URL ?? 'http://localhost:3000'
 
@@ -35,7 +42,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-    themeColor: '#0079BF',
+    themeColor: '#1868db',
 }
 
 export default function RootLayout({
@@ -44,7 +51,11 @@ export default function RootLayout({
     children: React.ReactNode
 }>) {
     return (
-        <html lang="en" className="h-full antialiased" suppressHydrationWarning>
+        <html
+            lang="en"
+            className={`h-full antialiased ${inter.variable}`}
+            suppressHydrationWarning
+        >
             <body className="min-h-full flex flex-col">{children}</body>
         </html>
     )

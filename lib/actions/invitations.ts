@@ -6,7 +6,6 @@ import { and, eq } from 'drizzle-orm'
 import { db, schema } from '@/db'
 import {
     requireOwner,
-    requireMembership,
     logActivity,
     actionErrorMessage,
     ActionError,
@@ -37,6 +36,11 @@ export async function inviteMemberAction(
         const email = normalizeEmail(String(formData.get('email') ?? ''))
         if (!isValidEmail(email))
             return { error: 'Enter a valid email address' }
+
+        // Owners are never created by invite; anything else is rejected.
+        const role = String(formData.get('role') ?? 'member')
+        if (role !== 'member' && role !== 'observer')
+            return { error: 'Choose a valid role' }
 
         const [board] = await db
             .select()
@@ -86,6 +90,7 @@ export async function inviteMemberAction(
             boardId,
             email,
             invitedByUserId: user.id,
+            role,
             token: hashToken(token),
             expiresAt: invitationExpiresAt(),
         })
@@ -199,15 +204,23 @@ export async function acceptInvitationAction(
                 .limit(1)
 
             if (existing) {
+                // Re-joining adopts the invitation's role, except an owner
+                // row is never downgraded by accepting a stray invite.
                 await tx
                     .update(schema.boardMemberships)
-                    .set({ status: 'active', removedAt: null })
+                    .set({
+                        status: 'active',
+                        removedAt: null,
+                        ...(existing.role === 'owner'
+                            ? {}
+                            : { role: invitation.role }),
+                    })
                     .where(eq(schema.boardMemberships.id, existing.id))
             } else {
                 await tx.insert(schema.boardMemberships).values({
                     boardId: invitation.boardId,
                     userId: user.id,
-                    role: 'member',
+                    role: invitation.role,
                 })
             }
 

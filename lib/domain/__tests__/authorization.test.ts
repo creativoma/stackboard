@@ -34,6 +34,28 @@ describe('authorization predicates', () => {
         expect(isBoardOwner(member)).toBe(false)
     })
 
+    it('allows an observer to read but never mutate', () => {
+        const observer = {
+            role: 'observer' as const,
+            status: 'active' as const,
+        }
+        expect(isActiveMember(observer)).toBe(true)
+        expect(canMutateBoardContent(observer)).toBe(false)
+        expect(canArchiveCard(observer)).toBe(false)
+        expect(canManageBoard(observer)).toBe(false)
+        expect(canCloseBoard(observer)).toBe(false)
+        expect(isBoardOwner(observer)).toBe(false)
+    })
+
+    it('rejects a removed observer entirely', () => {
+        const removed = {
+            role: 'observer' as const,
+            status: 'removed' as const,
+        }
+        expect(isActiveMember(removed)).toBe(false)
+        expect(canMutateBoardContent(removed)).toBe(false)
+    })
+
     it('allows an active owner to do everything', () => {
         const owner = { role: 'owner' as const, status: 'active' as const }
         expect(canManageBoard(owner)).toBe(true)

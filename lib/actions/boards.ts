@@ -7,6 +7,8 @@ import { eq } from 'drizzle-orm'
 import { db, schema } from '@/db'
 import { requireUser } from '@/lib/auth/session'
 import { requireOwner, logActivity, actionErrorMessage } from './helpers'
+import { createBoardFromNormalized } from '@/lib/import/create-board'
+import { getBoardTemplate } from '@/lib/templates/boards'
 
 const createBoardSchema = z.object({
     name: z.string().trim().min(1, 'Board name is required').max(100),
@@ -63,6 +65,31 @@ export async function createBoardAction(
             type: 'board.created',
             newValue: board.name,
         })
+    })
+
+    revalidatePath('/boards')
+    redirect(`/boards/${boardId}`)
+}
+
+export type CreateFromTemplateState = { error?: string } | undefined
+
+/** Creates a board from a built-in template (lib/templates/boards.ts). */
+export async function createBoardFromTemplateAction(
+    _prev: CreateFromTemplateState,
+    formData: FormData
+): Promise<CreateFromTemplateState> {
+    const user = await requireUser()
+
+    const template = getBoardTemplate(String(formData.get('template') ?? ''))
+    if (!template) return { error: 'Choose a template' }
+
+    const requestedName = String(formData.get('name') ?? '').trim()
+    if (requestedName.length > 100)
+        return { error: 'Board name is too long (max 100 characters)' }
+
+    const boardId = await createBoardFromNormalized(user.id, {
+        ...template.board,
+        boardName: requestedName || template.board.boardName,
     })
 
     revalidatePath('/boards')

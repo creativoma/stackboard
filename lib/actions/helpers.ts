@@ -1,7 +1,11 @@
 import 'server-only'
 import { requireUser, type SessionUser } from '@/lib/auth/session'
 import { getMembership } from '@/lib/auth/membership'
-import { isActiveMember, isBoardOwner } from '@/lib/domain/authorization'
+import {
+    canMutateBoardContent,
+    isActiveMember,
+    isBoardOwner,
+} from '@/lib/domain/authorization'
 import { db, schema } from '@/db'
 
 export class ActionError extends Error {}
@@ -17,6 +21,19 @@ export async function requireMembership(boardId: string): Promise<{
         throw new ActionError('You are not an active member of this board')
     }
     return { user, membership }
+}
+
+/**
+ * Gate for content mutations (cards, columns, checklists, comments, labels):
+ * an active member who is not an observer. Observers keep read access via
+ * requireMembership but are rejected here.
+ */
+export async function requireContentEditor(boardId: string) {
+    const result = await requireMembership(boardId)
+    if (!canMutateBoardContent(result.membership)) {
+        throw new ActionError('Observers cannot make changes to this board')
+    }
+    return result
 }
 
 export async function requireOwner(boardId: string) {
