@@ -12,8 +12,10 @@ const eslintConfig = defineConfig([
         'out/**',
         'build/**',
         'next-env.d.ts',
-        // website/ is a separate Vite project with its own build output.
-        'website/dist/**',
+        // website/ is a separate Vite project with its own lint toolchain
+        // (oxlint, see website/package.json) — Next-specific rules like
+        // no-img-element don't apply to it (no next/image there).
+        'website/**',
     ]),
 ])
 
