@@ -47,7 +47,11 @@ function getClassName(
     size: ButtonSize,
     className?: string
 ) {
-    return [variantClass[variant], size === 'sm' ? 'btn--sm' : null, className]
+    return [
+        variantClass[variant],
+        size === 'sm' ? 'btn--default' : null,
+        className,
+    ]
         .filter(Boolean)
         .join(' ')
 }

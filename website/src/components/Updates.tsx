@@ -1,21 +1,7 @@
 import { ArrowRight } from 'lucide-react'
+import { SHIPPED, NEXT_UP } from 'virtual:updates-data'
 import { REPO_URL } from '../repo'
 import { Reveal } from './Reveal'
-
-// Hand-picked highlights, not a mirror of the full files — see the
-// "See full changelog/roadmap" links for the source of truth on GitHub.
-const SHIPPED = [
-    'Realtime board sync over Server-Sent Events',
-    'In-app notification center + email digests',
-    'WIP limits and Jira-style card priority',
-    'Full-text card search and board templates',
-]
-
-const NEXT_UP = [
-    'S3-compatible attachment backend for multi-instance deploys',
-    'Per-user notification preferences (mute email, mute a board)',
-    'Mention autocomplete in the comment box',
-]
 
 export function Updates() {
     return (
