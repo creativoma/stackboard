@@ -287,6 +287,10 @@ body {
         padding: 6px 8px;
         font-weight: 500;
         font-size: 13px;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
         width: fit-content;
         min-height: auto;
         text-decoration: none;

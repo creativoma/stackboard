@@ -40,13 +40,23 @@ export async function GET(
     const stream = await getStorage().getStream(attachment.storageKey)
     if (!stream) return new Response('Not found', { status: 404 })
 
+    // Images and PDFs are previewable inline (attachments-section.tsx embeds
+    // them in an <img>/<iframe>); an `attachment` disposition makes browsers
+    // download an iframe's content instead of rendering it. Everything else
+    // still forces a download.
+    const disposition =
+        attachment.mimeType.startsWith('image/') ||
+        attachment.mimeType === 'application/pdf'
+            ? 'inline'
+            : 'attachment'
+
     // filename is already sanitized (no quotes/control chars); filename* carries
     // the UTF-8 form per RFC 5987.
     return new Response(stream, {
         headers: {
             'Content-Type': attachment.mimeType,
             'Content-Length': String(attachment.sizeBytes),
-            'Content-Disposition': `attachment; filename="${attachment.filename}"; filename*=UTF-8''${encodeURIComponent(attachment.filename)}`,
+            'Content-Disposition': `${disposition}; filename="${attachment.filename}"; filename*=UTF-8''${encodeURIComponent(attachment.filename)}`,
             'Cache-Control': 'private, no-store',
             'X-Content-Type-Options': 'nosniff',
         },

@@ -1,5 +1,5 @@
 import 'server-only'
-import { inArray } from 'drizzle-orm'
+import { desc, eq, inArray } from 'drizzle-orm'
 import { db, schema } from '@/db'
 
 const UUID_RE =
@@ -53,4 +53,37 @@ export async function humanizeActivityValues<T extends ActivityValues>(
               }
             : row
     )
+}
+
+const BOARD_ACTIVITY_LIMIT = 200
+
+/**
+ * Board-wide activity feed: every event on the board, not just one card's.
+ * `activity_board_idx` (board_id, created_at) backs this directly.
+ */
+export async function listBoardActivity(boardId: string) {
+    const rows = await db
+        .select({
+            event: schema.activityEvents,
+            actor: schema.users,
+            cardTitle: schema.cards.title,
+        })
+        .from(schema.activityEvents)
+        .innerJoin(
+            schema.users,
+            eq(schema.users.id, schema.activityEvents.actorId)
+        )
+        .leftJoin(
+            schema.cards,
+            eq(schema.cards.id, schema.activityEvents.cardId)
+        )
+        .where(eq(schema.activityEvents.boardId, boardId))
+        .orderBy(desc(schema.activityEvents.createdAt))
+        .limit(BOARD_ACTIVITY_LIMIT)
+
+    const humanizedEvents = await humanizeActivityValues(
+        rows.map((r) => r.event)
+    )
+
+    return rows.map((r, i) => ({ ...r, event: humanizedEvents[i] }))
 }
