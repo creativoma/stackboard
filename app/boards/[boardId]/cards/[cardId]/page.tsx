@@ -20,6 +20,7 @@ import {
     DescriptionField,
     AssigneeField,
     PriorityField,
+    StartDateField,
     DueDateField,
     LabelsField,
     ArchiveRestoreControls,
@@ -29,7 +30,13 @@ import { CommentsSection } from './comments-section'
 import { ActivityTimeline } from './activity-timeline'
 import { WatchButton } from './watch-button'
 import { AttachmentsSection } from './attachments-section'
-import { getCardAttachments, getCardWatchers } from '@/lib/queries/card'
+import { SubtasksSection } from './subtasks-section'
+import { DependenciesSection } from './dependencies-section'
+import {
+    getActiveCardOptions,
+    getCardAttachments,
+    getCardWatchers,
+} from '@/lib/queries/card'
 import { isBoardOwner } from '@/lib/domain/authorization'
 
 export async function generateMetadata({
@@ -68,17 +75,34 @@ export default async function CardDetailPage({
     const detail = await getCardDetail(boardId, cardId)
     if (!detail) notFound()
 
-    const [members, labels, activeColumns, watcherRows, attachments] =
-        await Promise.all([
-            getBoardMembers(boardId),
-            getBoardLabels(boardId),
-            getActiveColumns(boardId),
-            getCardWatchers(cardId),
-            getCardAttachments(cardId),
-        ])
+    const [
+        members,
+        labels,
+        activeColumns,
+        watcherRows,
+        attachments,
+        cardOptions,
+    ] = await Promise.all([
+        getBoardMembers(boardId),
+        getBoardLabels(boardId),
+        getActiveColumns(boardId),
+        getCardWatchers(cardId),
+        getCardAttachments(cardId),
+        getActiveCardOptions(boardId),
+    ])
 
-    const { card, column, checklistItems, labelIds, comments, activity } =
-        detail
+    const {
+        card,
+        column,
+        checklistItems,
+        labelIds,
+        comments,
+        activity,
+        parentCard,
+        subtasks,
+        blockedBy,
+        blocks,
+    } = detail
     const watching = watcherRows.some((w) => w.userId === user.id)
 
     // Observers see everything but every form control below is disabled via
@@ -133,6 +157,27 @@ export default async function CardDetailPage({
                                 items={checklistItems}
                             />
                         </fieldset>
+                    </section>
+
+                    <section className="p-4">
+                        <SubtasksSection
+                            boardId={boardId}
+                            cardId={cardId}
+                            parentCard={parentCard}
+                            subtasks={subtasks}
+                            canEdit={canEdit}
+                        />
+                    </section>
+
+                    <section className="p-4">
+                        <DependenciesSection
+                            boardId={boardId}
+                            cardId={cardId}
+                            blockedBy={blockedBy}
+                            blocks={blocks}
+                            options={cardOptions}
+                            canEdit={canEdit}
+                        />
                     </section>
 
                     <section className="p-4">
@@ -201,6 +246,11 @@ export default async function CardDetailPage({
                                 boardId={boardId}
                                 cardId={cardId}
                                 priority={card.priority}
+                            />
+                            <StartDateField
+                                boardId={boardId}
+                                cardId={cardId}
+                                startDate={dueDateToIso(card.startDate)}
                             />
                             <DueDateField
                                 boardId={boardId}

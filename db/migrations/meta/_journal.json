@@ -36,6 +36,13 @@
             "when": 1786281912645,
             "tag": "0004_warm_mandarin",
             "breakpoints": true
+        },
+        {
+            "idx": 5,
+            "version": "7",
+            "when": 1786367220736,
+            "tag": "0005_nifty_blue_shield",
+            "breakpoints": true
         }
     ]
 }

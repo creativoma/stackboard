@@ -3,6 +3,8 @@ export type ActivityType =
     | 'board.member_invited'
     | 'board.member_joined'
     | 'board.closed'
+    | 'board.public_link_enabled'
+    | 'board.public_link_disabled'
     | 'column.created'
     | 'column.archived'
     | 'column.restored'
@@ -20,6 +22,8 @@ export type ActivityType =
     | 'checklist.item_added'
     | 'checklist.item_toggled'
     | 'comment.added'
+    | 'card.dependency_added'
+    | 'card.dependency_removed'
 
 export type NewActivityEvent = {
     boardId: string
@@ -47,6 +51,10 @@ export function describeActivity(event: {
             return `${event.newValue} joined the board`
         case 'board.closed':
             return 'closed the board'
+        case 'board.public_link_enabled':
+            return 'turned on the public board link'
+        case 'board.public_link_disabled':
+            return 'turned off the public board link'
         case 'column.created':
             return `added column "${event.newValue}"`
         case 'column.archived':
@@ -90,6 +98,10 @@ export function describeActivity(event: {
             return `marked "${event.field}" ${event.newValue === 'true' ? 'done' : 'not done'}`
         case 'comment.added':
             return 'commented'
+        case 'card.dependency_added':
+            return `marked this card as blocked by "${event.newValue}"`
+        case 'card.dependency_removed':
+            return `removed the block by "${event.oldValue}"`
         default:
             return event.type
     }

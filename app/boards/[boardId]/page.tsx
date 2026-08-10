@@ -1,8 +1,12 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import {
+    BarChart3,
+    CalendarDays,
     Download,
     FileSpreadsheet,
+    GanttChartSquare,
+    History,
     LayoutGrid,
     Settings as SettingsIcon,
     UserPlus,
@@ -26,6 +30,7 @@ import {
 import { matchesFilters } from '@/lib/domain/filters'
 import { dueDateToIso } from '@/lib/domain/due'
 import { FilterBar } from './filter-bar'
+import { SavedViews } from './saved-views'
 import { BoardBoard } from './board-board'
 import { BoardList } from './board-list'
 import { ViewToggle } from './view-toggle'
@@ -176,7 +181,7 @@ export default async function BoardPage({
                         ) : null}
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap justify-end">
                     <AvatarStack people={people} onBoard boardId={boardId} />
                     <Button
                         href={`/boards/${boardId}/settings#invite-email`}
@@ -204,6 +209,38 @@ export default async function BoardPage({
                         <FileSpreadsheet size={15} strokeWidth={2.25} />
                     </Button>
                     <Button
+                        href={`/boards/${boardId}/calendar`}
+                        variant="onBoard"
+                        aria-label="Board calendar"
+                        title="Board calendar"
+                    >
+                        <CalendarDays size={15} strokeWidth={2.25} />
+                    </Button>
+                    <Button
+                        href={`/boards/${boardId}/analytics`}
+                        variant="onBoard"
+                        aria-label="Board analytics"
+                        title="Board analytics"
+                    >
+                        <BarChart3 size={15} strokeWidth={2.25} />
+                    </Button>
+                    <Button
+                        href={`/boards/${boardId}/gantt`}
+                        variant="onBoard"
+                        aria-label="Board timeline"
+                        title="Board timeline"
+                    >
+                        <GanttChartSquare size={15} strokeWidth={2.25} />
+                    </Button>
+                    <Button
+                        href={`/boards/${boardId}/activity`}
+                        variant="onBoard"
+                        aria-label="Board activity"
+                        title="Board activity"
+                    >
+                        <History size={15} strokeWidth={2.25} />
+                    </Button>
+                    <Button
                         href={`/boards/${boardId}/settings`}
                         variant="onBoard"
                         aria-label="Board settings"
@@ -214,7 +251,7 @@ export default async function BoardPage({
                 </div>
             </div>
 
-            <div className="relative bg-[var(--color-paper)] border border-[var(--color-mist)] rounded-[var(--radius-cards)] p-2 flex items-center gap-2">
+            <div className="relative bg-[var(--color-paper)] border border-[var(--color-mist)] rounded-[var(--radius-cards)] p-2 flex items-center gap-2 flex-wrap">
                 <div className="flex-1 min-w-0">
                     <FilterBar
                         boardId={boardId}
@@ -223,6 +260,7 @@ export default async function BoardPage({
                         filters={{ ...sp }}
                     />
                 </div>
+                <SavedViews boardId={boardId} />
                 <ViewToggle boardId={boardId} view={view} searchParams={sp} />
             </div>
 

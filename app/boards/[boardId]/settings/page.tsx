@@ -30,6 +30,7 @@ import {
 } from './settings-forms'
 import { LabelsManager } from './labels-forms'
 import { ArchiveDrawer } from './archive-drawer'
+import { PublicLinkForm } from './public-link-form'
 
 export const metadata: Metadata = { title: 'Board settings' }
 
@@ -112,6 +113,25 @@ export default async function BoardSettingsPage({
                         Appearance
                     </h2>
                     <BoardColorForm boardId={boardId} color={board.color} />
+                </section>
+            ) : null}
+
+            {owner ? (
+                <section
+                    aria-labelledby="public-link-heading"
+                    className="card-surface"
+                >
+                    <h2 id="public-link-heading" className="eyebrow mb-3">
+                        Public link
+                    </h2>
+                    <PublicLinkForm
+                        boardId={boardId}
+                        url={
+                            board.publicToken
+                                ? `${process.env.APP_URL ?? 'http://localhost:3000'}/p/${board.publicToken}`
+                                : null
+                        }
+                    />
                 </section>
             ) : null}
 

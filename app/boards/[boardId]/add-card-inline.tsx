@@ -2,6 +2,7 @@
 
 import { useActionState, useRef, useState } from 'react'
 import { createCardAction } from '@/lib/actions/cards'
+import { CARD_TEMPLATES } from '@/lib/templates/cards'
 import { Button } from '../../_components/button'
 
 export function AddCardInline({
@@ -50,6 +51,22 @@ export function AddCardInline({
                     if (e.key === 'Escape') setOpen(false)
                 }}
             />
+            <label htmlFor="templateKey" className="sr-only">
+                Template
+            </label>
+            <select
+                id="templateKey"
+                name="templateKey"
+                defaultValue=""
+                className="input text-xs"
+            >
+                <option value="">No template</option>
+                {CARD_TEMPLATES.map((t) => (
+                    <option key={t.key} value={t.key} title={t.description}>
+                        {t.name}
+                    </option>
+                ))}
+            </select>
             {state?.error ? (
                 <p role="alert" className="text-xs text-[var(--color-coral)]">
                     {state.error}

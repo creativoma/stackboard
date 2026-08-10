@@ -33,6 +33,7 @@ import {
     recipientsForEvent,
 } from '@/lib/domain/notifications'
 import { notifyUsers } from '@/lib/notifications/create'
+import { getCardTemplate } from '@/lib/templates/cards'
 
 export type CardActionState =
     { error?: string; ok?: boolean; cardId?: string } | undefined
@@ -86,6 +87,12 @@ export async function createCardAction(
                 `"${column.name}" is at its WIP limit of ${column.wipLimit}`
             )
 
+        const templateKeyRaw = formData.get('templateKey')
+        const template =
+            typeof templateKeyRaw === 'string' && templateKeyRaw
+                ? getCardTemplate(templateKeyRaw)
+                : undefined
+
         const [card] = await db
             .insert(schema.cards)
             .values({
@@ -93,8 +100,19 @@ export async function createCardAction(
                 columnId,
                 title: parsed.data,
                 position: nextPosition(activeCount),
+                priority: template?.priority ?? null,
             })
             .returning()
+
+        if (template && template.checklist.length > 0) {
+            await db.insert(schema.checklistItems).values(
+                template.checklist.map((text, i) => ({
+                    cardId: card.id,
+                    text,
+                    position: i,
+                }))
+            )
+        }
 
         await logActivity({
             boardId,
@@ -113,6 +131,7 @@ const updateCardSchema = z.object({
     title: z.string().trim().min(1).max(200).optional(),
     description: z.string().max(10000).optional(),
     assigneeId: z.union([z.string().uuid(), z.literal('')]).optional(),
+    startDate: z.union([z.string(), z.literal('')]).optional(),
     dueDate: z.union([z.string(), z.literal('')]).optional(),
     priority: z.union([z.enum(cardPriorityValues), z.literal('')]).optional(),
 })
@@ -135,6 +154,9 @@ export async function updateCardAction(
                 : undefined,
             assigneeId: formData.has('assigneeId')
                 ? String(formData.get('assigneeId'))
+                : undefined,
+            startDate: formData.has('startDate')
+                ? String(formData.get('startDate'))
                 : undefined,
             dueDate: formData.has('dueDate')
                 ? String(formData.get('dueDate'))
@@ -236,6 +258,23 @@ export async function updateCardAction(
                     field: 'priority',
                     oldValue: priorityMeta(card.priority)?.label ?? null,
                     newValue: priorityMeta(newPriority)?.label ?? null,
+                })
+            }
+        }
+        if (parsed.data.startDate !== undefined) {
+            const newStart = parseDueDate(parsed.data.startDate)
+            if (newStart === undefined)
+                throw new ActionError(
+                    `Start date must be a real date between ${MIN_DUE_YEAR} and ${MAX_DUE_YEAR}`
+                )
+            const oldStartIso = dueDateToIso(card.startDate)
+            const newStartIso = newStart ? newStart.toISOString() : null
+            if (newStartIso !== oldStartIso) {
+                patch.startDate = newStart
+                events.push({
+                    field: 'start date',
+                    oldValue: oldStartIso ? oldStartIso.slice(0, 10) : null,
+                    newValue: newStartIso ? newStartIso.slice(0, 10) : null,
                 })
             }
         }

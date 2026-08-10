@@ -10,6 +10,7 @@ import {
     uniqueIndex,
     index,
     primaryKey,
+    type AnyPgColumn,
 } from 'drizzle-orm/pg-core'
 
 /**
@@ -59,24 +60,34 @@ export const boardColorValues = [
 ] as const
 export type BoardColor = (typeof boardColorValues)[number]
 
-export const boards = pgTable('boards', {
-    id: uuid('id').primaryKey().defaultRandom(),
-    name: text('name').notNull(),
-    ownerId: uuid('owner_id')
-        .notNull()
-        .references(() => users.id),
-    status: text('status', { enum: boardStatusValues })
-        .notNull()
-        .default('active'),
-    color: text('color', { enum: boardColorValues }),
-    createdAt: timestamp('created_at', { withTimezone: true })
-        .notNull()
-        .defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true })
-        .notNull()
-        .defaultNow(),
-    closedAt: timestamp('closed_at', { withTimezone: true }),
-})
+export const boards = pgTable(
+    'boards',
+    {
+        id: uuid('id').primaryKey().defaultRandom(),
+        name: text('name').notNull(),
+        ownerId: uuid('owner_id')
+            .notNull()
+            .references(() => users.id),
+        status: text('status', { enum: boardStatusValues })
+            .notNull()
+            .default('active'),
+        color: text('color', { enum: boardColorValues }),
+        // Read-only share link, e.g. /p/<token>. Null = link sharing off.
+        // Unlike session/invite tokens, this is stored in plaintext by
+        // design — it only ever grants read access to already-non-secret
+        // board content, and the owner needs to be able to look it up again
+        // later without regenerating it (see README Security decisions).
+        publicToken: text('public_token'),
+        createdAt: timestamp('created_at', { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+        updatedAt: timestamp('updated_at', { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+        closedAt: timestamp('closed_at', { withTimezone: true }),
+    },
+    (t) => [uniqueIndex('boards_public_token_idx').on(t.publicToken)]
+)
 
 export const membershipRoleValues = ['owner', 'member', 'observer'] as const
 export type MembershipRole = (typeof membershipRoleValues)[number]
@@ -201,9 +212,20 @@ export const cards = pgTable(
         title: text('title').notNull(),
         description: text('description').notNull().default(''),
         assigneeId: uuid('assignee_id').references(() => users.id),
+        // Optional start date, paired with dueDate to draw a Gantt bar
+        // (lib/domain/gantt.ts). A card with only a dueDate renders as a
+        // single-day bar/milestone rather than a range.
+        startDate: timestamp('start_date', { withTimezone: true }),
         dueDate: timestamp('due_date', { withTimezone: true }),
         // Optional Jira-style priority; null means "no priority set".
         priority: text('priority', { enum: cardPriorityValues }),
+        // Subtasks: a card whose parent is another card on the same board.
+        // Set null (not cascade-deleted) if the parent is ever hard-deleted,
+        // since cards are normally archived rather than removed.
+        parentCardId: uuid('parent_card_id').references(
+            (): AnyPgColumn => cards.id,
+            { onDelete: 'set null' }
+        ),
         position: integer('position').notNull(),
         status: text('status', { enum: cardStatusValues })
             .notNull()
@@ -225,11 +247,42 @@ export const cards = pgTable(
         index('cards_column_idx').on(t.columnId, t.position),
         index('cards_board_idx').on(t.boardId),
         index('cards_assignee_idx').on(t.assigneeId),
+        index('cards_parent_idx').on(t.parentCardId),
         // Expression index backing full-text card search (lib/queries/search.ts).
         index('cards_search_idx').using(
             'gin',
             sql`to_tsvector('simple', ${t.title} || ' ' || ${t.description})`
         ),
+    ]
+)
+
+// "Blocked by" / "blocks" relationships between two cards on the same
+// board. Directional: blockerCardId must complete before blockedCardId can.
+// Cycle prevention is application-level (lib/domain/dependencies.ts) since
+// Postgres can't express "no path back to here" declaratively.
+export const cardDependencies = pgTable(
+    'card_dependencies',
+    {
+        id: uuid('id').primaryKey().defaultRandom(),
+        boardId: uuid('board_id')
+            .notNull()
+            .references(() => boards.id, { onDelete: 'cascade' }),
+        blockerCardId: uuid('blocker_card_id')
+            .notNull()
+            .references(() => cards.id, { onDelete: 'cascade' }),
+        blockedCardId: uuid('blocked_card_id')
+            .notNull()
+            .references(() => cards.id, { onDelete: 'cascade' }),
+        createdAt: timestamp('created_at', { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+    },
+    (t) => [
+        uniqueIndex('card_dependencies_pair_idx').on(
+            t.blockerCardId,
+            t.blockedCardId
+        ),
+        index('card_dependencies_blocked_idx').on(t.blockedCardId),
     ]
 )
 

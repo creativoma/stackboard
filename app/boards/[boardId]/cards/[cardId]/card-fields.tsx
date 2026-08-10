@@ -232,6 +232,46 @@ export function PriorityField({
     )
 }
 
+export function StartDateField({
+    boardId,
+    cardId,
+    startDate,
+}: {
+    boardId: string
+    cardId: string
+    startDate: string | null
+}) {
+    const boundAction = updateCardAction.bind(null, boardId, cardId)
+    const [state, formAction] = useActionState(boundAction, undefined)
+    const initial = startDate ? startDate.slice(0, 10) : ''
+
+    return (
+        <form action={formAction} className="flex flex-col gap-1">
+            <label
+                htmlFor="startDate"
+                className="text-xs font-medium text-[var(--color-fog)] uppercase tracking-wide"
+            >
+                Start date
+            </label>
+            <input
+                id="startDate"
+                name="startDate"
+                type="date"
+                defaultValue={initial}
+                min={`${MIN_DUE_YEAR}-01-01`}
+                max={`${MAX_DUE_YEAR}-12-31`}
+                className="input"
+                onChange={(e) => e.currentTarget.form?.requestSubmit()}
+            />
+            {state?.error ? (
+                <p role="alert" className="text-xs text-[var(--color-coral)]">
+                    {state.error}
+                </p>
+            ) : null}
+        </form>
+    )
+}
+
 export function DueDateField({
     boardId,
     cardId,
