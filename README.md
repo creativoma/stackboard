@@ -8,7 +8,7 @@
   <img src="https://img.shields.io/badge/Postgres-Drizzle%20ORM-4169E1" alt="Postgres via Drizzle ORM">
 </p>
 
-A focused, Trello-style board for one team managing one shared project. Boards with ordered columns, drag-and-drop cards, checklists, comments, an activity trail, filters, and reversible archiving — plus real-time sync (SSE), notifications with @mentions and due-date reminders, card watchers, a read-only observer role, WIP limits, Jira-style card priority, cross-board search, a "My cards" view, board templates, and file attachments. Built with Next.js App Router, Server Components, Server Actions, and Postgres via Drizzle ORM.
+A focused, Trello-style board for one team managing one shared project. Boards with ordered columns, drag-and-drop cards, checklists, linked subtasks, card dependencies, comments, a per-card and board-wide activity trail, filters with saved views, a calendar, an analytics dashboard, a Gantt/timeline view, and reversible archiving — plus real-time sync (SSE), notifications with @mentions (autocomplete included) and due-date reminders, card watchers, a read-only observer role, WIP limits, Jira-style card priority, search across boards/cards/comments, a "My cards" view, board and card templates, public read-only board links, and file attachments with inline image/PDF previews. Built with Next.js App Router, Server Components, Server Actions, and Postgres via Drizzle ORM.
 
 <p align="center">
   <img src="./screenshot.png" alt="Stackboard board view with columns, labeled cards, priorities, due dates, and checklist progress" width="900">
@@ -91,7 +91,7 @@ bun run test:integration  # integration tests against a real, isolated Postgres 
 bun run test:e2e          # Playwright browser tests covering all user journeys
 ```
 
-- **Unit** (`lib/**/__tests__`, `lib/domain/__tests__`): authorization predicates (including the observer role), position/reorder math, filter logic, invitation expiry rules, markdown-lite XSS safety, password hashing, WIP-limit checks, due-date bucketing, mention parsing, notification fan-out rules, search-query normalization, attachment validation/filename sanitizing, SSE event shaping, and board-template definitions.
+- **Unit** (`lib/**/__tests__`, `lib/domain/__tests__`): authorization predicates (including the observer role), position/reorder math, filter logic, invitation expiry rules, markdown-lite XSS safety, password hashing, WIP-limit checks, due-date bucketing, mention parsing, notification fan-out rules, search-query normalization, attachment validation/filename sanitizing, SSE event shaping, board-template definitions, analytics tallying, calendar month-grid math, subtask rollup, dependency cycle detection, and Gantt bar/range layout.
 - **Integration** (`test/integration/db.test.ts`): runs against `stackboard_test`, a separate database from your dev DB. It drops and recreates the schema before each run and wipes tables between tests, so it is safe to run repeatedly but **must never point at a database with real data** — the suite refuses to start unless `DATABASE_URL` contains `stackboard_test`. Create it once with:
     ```bash
     docker exec -it <postgres-container> psql -U stackboard -d stackboard -c "CREATE DATABASE stackboard_test;"
@@ -168,6 +168,7 @@ Take a backup before running `db:migrate` against a production database, and bef
 - **The SSE channel** (`/boards/:boardId/events`) authenticates the session cookie and re-checks board membership before streaming, and only ever emits event timestamps/ids — no card content travels over it.
 - **Board import (Trello/Stackboard JSON exports, or a Stackboard CSV export)** is authenticated-only, validates and length-limits every field server-side (via `zod` for JSON, matching length checks for CSV) before insert, and creates a brand-new board scoped to the importing user — it never merges into or overwrites an existing board.
 - Every user-facing form validates and length-limits input server-side with `zod`, independent of any client-side `maxLength`/`required` attributes.
+- **Public board link tokens** (`boards.publicToken`) are stored in plaintext, unlike session and invite tokens (both hashed). This is a deliberate exception: the token only ever grants _read_ access to content that's already visible to every board member, it's owner-revocable/rotatable at any time, and the owner needs to look the link up again later (Settings → Public link) without regenerating it — a hash would make that impossible, the same tradeoff Trello/Notion-style share links make. `generatePublicLinkAction`/`revokePublicLinkAction` (`lib/actions/public-links.ts`) are owner-only via `requireOwner`, and the public route (`app/p/[token]/page.tsx`) never exposes assignees, comments, attachments, or activity — see Public read-only board links below.
 
 ## Real-time sync
 
@@ -175,7 +176,38 @@ Boards sync live over Server-Sent Events: `app/boards/[boardId]/events/route.ts`
 
 ## Attachments
 
-Cards accept file attachments (10MB cap, validated server-side in `lib/domain/attachments.ts`). Bytes go through a server-only `ObjectStorage` adapter (`lib/storage/adapter.ts`); the shipped implementation writes to local disk under `UPLOAD_DIR` with server-generated keys (`boardId/attachmentId` — user filenames never touch the filesystem path). Downloads stream through an authenticated route that re-checks board membership on every request. An S3-compatible backend with short-lived signed URLs can implement the same interface later (see ROADMAP).
+Cards accept file attachments (10MB cap, validated server-side in `lib/domain/attachments.ts`). Bytes go through a server-only `ObjectStorage` adapter (`lib/storage/adapter.ts`); the shipped implementation writes to local disk under `UPLOAD_DIR` with server-generated keys (`boardId/attachmentId` — user filenames never touch the filesystem path). Downloads stream through an authenticated route that re-checks board membership on every request. Image attachments (`mime_type` starting with `image/`) render an inline thumbnail, and both images and PDFs can be expanded into a full preview (`<img>`/`<iframe>`) without leaving the card — the route serves those two types with `Content-Disposition: inline` and everything else with `attachment`. An S3-compatible backend with short-lived signed URLs can implement the same interface later (see ROADMAP).
+
+## Search
+
+`/boards/search` searches three things at once, scoped to boards the caller actively belongs to: card titles/descriptions (Postgres full-text via `cards_search_idx`, ILIKE fallback), board names, and comment bodies (`lib/queries/search.ts`). Results render as three sections (Boards / Cards / Comments), only shown when non-empty. Board/comment search is a plain `ILIKE` scan — see ROADMAP if that needs an index later.
+
+## Activity and saved views
+
+- **Per-card activity** shows on each card's detail page; **board-wide activity** (`/boards/:boardId/activity`) lists every event across the board, most recent first, backed by the existing `activity_board_idx` index — no extra query cost beyond dropping the `card_id` filter.
+- **Saved filtered views**: the board's filter bar writes its state to the URL query string as before; `app/boards/[boardId]/saved-views.tsx` lets a member name and re-apply a combination, stored in `localStorage` per board — no schema change, and not shared between browsers or teammates.
+
+## Calendar and analytics
+
+- **Calendar** (`/boards/:boardId/calendar`): a Monday-first monthly grid of active cards by due date, navigable via `?month=YYYY-MM`. Grid geometry and date-bucketing are pure functions in `lib/domain/calendar.ts` (unit-tested) so the month-boundary math (padding to full weeks, leap years, month rollover) never touches a component.
+- **Analytics** (`/boards/:boardId/analytics`): active/overdue/archived counts, checklist completion, and cards-by-column / cards-by-priority / load-per-member breakdowns as CSS bar lists — all computed live from `getActiveColumnsWithCards` with no new tables or chart library. `lib/domain/analytics.ts` (unit-tested) holds the tallying; there's no historical snapshot table, so this is a live snapshot, not a true burndown-over-time chart (see ROADMAP).
+
+## Subtasks and dependencies
+
+- **Linked subtasks**: `cards.parentCardId` is a nullable self-reference (`db/schema.ts`). "Add subtask" (`lib/actions/subtasks.ts#addSubtaskAction`) creates a new card in the parent's own column, subject to the same WIP-limit check as any other card. The card detail page shows a "Subtask of …" breadcrumb when a card has a parent, and a subtasks list with a done/total progress bar — done means archived, the same status Stackboard already uses everywhere else (`lib/domain/subtasks.ts`, unit-tested).
+- **Card dependencies**: a new `card_dependencies` table stores directed "blocks" edges. The card detail page's Dependencies section lists "Blocked by" and "Blocks" and can add a blocker from a picker of the board's other active cards. Adding an edge that would create a cycle — direct or transitive — is rejected server-side before the insert (`lib/domain/dependencies.ts#wouldCreateCycle`, a BFS over the board's existing edges, unit-tested).
+
+## Timeline (Gantt)
+
+`/boards/:boardId/gantt` plots active cards with a `startDate` and/or `dueDate` (a card with only one renders as a single-day bar) as horizontal bars grouped by column. All the positioning is pure percentage math (`lib/domain/gantt.ts`, unit-tested): `deriveDateRange` spans every dated card plus today with padding, `barLayout` clamps a bar into that range, and `todayOffsetPct` places a translucent marker line. A lock icon flags a card still blocked by another _active_ card, reusing the dependency edges above — an archived (done) blocker no longer counts. Cards with neither date are excluded and counted in a footnote rather than silently dropped. There's no drag-to-reschedule and no dependency connector lines yet (see ROADMAP).
+
+## Card templates
+
+Creating a card can seed it from a built-in template (`lib/templates/cards.ts`): Bug report, Feature request, or Task, each inserting a starter checklist (Bug report also defaults priority to High). This reuses the normal `createCardAction` insert path plus one bulk checklist insert — unlike board templates (`lib/templates/boards.ts`), it doesn't need the import pipeline's transactional path since there's only one row of fan-out.
+
+## Public read-only board links
+
+A board owner can turn on a share link from Settings → Public link (`app/boards/[boardId]/settings/public-link-form.tsx`, owner-only via `requireOwner`). The link (`/p/:token`, outside the authenticated `/boards` layout, same pattern as `/invite/:token`) needs no account and renders active columns and cards read-only — title, priority, due date, checklist progress. Assignee names, comments, attachments, and the activity trail are deliberately left out to keep the public surface minimal (`lib/queries/public-board.ts`). Regenerating rotates the token (the old link stops working immediately); turning it off clears `boards.publicToken` entirely.
 
 ## Known limitations
 

@@ -7,6 +7,95 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Board-level activity history** (`/boards/:boardId/activity`): every
+  event on a board, not just one card's, reusing the existing
+  `activity_board_idx` index (`lib/queries/activity.ts#listBoardActivity`).
+  Linked from a new header icon on the board page, rendered as a bordered,
+  hairline-divided list with a per-event-type icon (moved, archived,
+  commented, …) — the same container pattern as "My cards".
+- **Attachment previews**: image attachments (`mime_type` starting with
+  `image/`) show an inline thumbnail, and both images and PDFs (`FileText`
+  icon for the latter) can be expanded into a full inline preview
+  (`<img>`/`<iframe>`) from the card's attachments list without downloading.
+  The attachment route now serves images/PDFs with `Content-Disposition:
+inline` instead of `attachment` (everything else still forces a download).
+- **Saved filtered views**: save the board's current filter combination
+  under a name and reapply it later as a chip next to the filter bar
+  (`app/boards/[boardId]/saved-views.tsx`). Per-browser via `localStorage`,
+  no schema change.
+- **Search now covers boards and comments**, not just card titles/descriptions
+  (`lib/queries/search.ts#searchBoards`/`searchComments`). `/boards/search`
+  groups results into Boards / Cards / Comments sections.
+- **Board calendar** (`/boards/:boardId/calendar`): a Monday-first monthly
+  grid of active cards plotted by due date, with month navigation
+  (`?month=YYYY-MM`) and a priority-colored dot per card
+  (`lib/domain/calendar.ts`, unit-tested). Linked from a new header icon.
+- **Board analytics** (`/boards/:boardId/analytics`): active/overdue/archived
+  counts, checklist completion, and bar breakdowns of cards by column, by
+  priority, and load per member — all computed live from current rows, no
+  new tables (`lib/domain/analytics.ts`, unit-tested). Linked from a new
+  header icon.
+- **Linked subtasks**: a card can carry a `parentCardId` pointing at another
+  card on the same board (`db/schema.ts#cards`). The card detail page shows
+  a "Subtask of …" breadcrumb, a subtasks list with a done/total progress
+  bar (`lib/domain/subtasks.ts`, unit-tested), and an inline "add subtask"
+  form that creates the child in the parent's own column
+  (`lib/actions/subtasks.ts`).
+- **Card dependencies**: a new `card_dependencies` table records directed
+  "blocks"/"blocked by" edges between two cards on a board. The card detail
+  page lists both directions and can add/remove a blocker from a picker of
+  the board's other active cards; adding one that would create a cycle is
+  rejected server-side (`lib/domain/dependencies.ts#wouldCreateCycle`,
+  unit-tested) (`lib/actions/dependencies.ts`).
+- **Board timeline / Gantt view** (`/boards/:boardId/gantt`): active cards
+  with a start and/or due date (`cards.startDate` is new) render as
+  horizontal bars per column, positioned by pure layout math
+  (`lib/domain/gantt.ts`, unit-tested). A translucent line marks today, and
+  a lock icon flags a card still blocked by another active card, reusing
+  the dependency data above. Cards with neither date are excluded and
+  counted in a footnote.
+- **Card templates**: creating a card can seed it from a built-in template
+  (Bug report, Feature request, Task) that inserts starter checklist items
+  (and, for Bug report, a default priority) alongside the normal insert —
+  no new transactional path (`lib/templates/cards.ts`,
+  `lib/actions/cards.ts#createCardAction`).
+- **Public read-only board links**: a board owner can turn on a share link
+  from Settings (`app/boards/[boardId]/settings/public-link-form.tsx`); the
+  link (`/p/:token`) needs no login and renders columns/cards read-only —
+  no assignees, comments, activity, or attachments
+  (`lib/queries/public-board.ts`). The token is a new `boards.publicToken`
+  column, stored in plaintext by design (see README Security decisions).
+
+### Fixed
+
+- **`.btn-ghost` was missing `display: inline-flex`/`gap`** (`app/globals.css`),
+  the layout every other button variant has. An icon + label ghost button
+  (e.g. "Save view") would stack the icon above the text instead of sitting
+  inline. Every other button variant already had it; ghost just hadn't been
+  exercised with an icon before.
+- **`SavedViews` read `localStorage` via `useState` + `useEffect`**, which
+  `eslint-plugin-react-hooks`'s `set-state-in-effect` rule flags (calling
+  `setState` synchronously in an effect body). Rewritten on
+  `useSyncExternalStore` instead (`app/boards/[boardId]/saved-views.tsx`) —
+  localStorage is genuinely an external store, so this is also the more
+  correct API for it, and writes from this tab now update the UI without a
+  render round-trip.
+- **Root ESLint config only ignored `website/dist/**`**, so the marketing
+  site's source (a separate Vite project with its own `oxlint` toolchain,
+  see `website/package.json`) was linted with Next-specific rules that
+  don't apply to it, e.g. `@next/next/no-img-element` flagging a plain
+  `<img>` that has no `next/image` to switch to. `eslint.config.mjs` now
+  ignores `website/**` entirely.
+- **`vitest.config.ts` warned under Vite's upcoming native config loader**
+  ("ESM syntax in a file loaded as CommonJS") because the root
+  `package.json` has no `"type": "module"` and the file used a plain `.ts`
+  extension. Renamed to `vitest.config.mts` to make it unambiguously ESM —
+  same fix already applied to `eslint.config.mjs`. That flip also removes
+  `__dirname` (a CommonJS global, not available in an ESM file), replaced
+  with `path.dirname(fileURLToPath(import.meta.url))`.
+
 ## [0.2.0] - 2026-08-09
 
 ### Added
