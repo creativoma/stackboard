@@ -29,6 +29,11 @@
     --color-electric-blue: #1868db; /* brand blue (alias) */
     --color-electric-blue-tint: #e8f0fc; /* pale blue wash */
     --color-primary-subdued: #d0e0f7; /* soft tag fill */
+    /* Muted avatar skin (members not on this board). Its own pair because the
+       generic tint/link-blue combination is a text-on-wash pair that only
+       clears AA in light mode — these two are tuned per theme. */
+    --color-avatar-muted: #d0e0f7;
+    --color-avatar-muted-ink: #0f4aa3;
     --color-brand-dark: #111111;
     --color-ruby: #0f4aa3; /* former pink accents fold into the blue family */
     --color-brand-magenta: #4c8fe8;
@@ -55,6 +60,10 @@
     --color-magenta: var(--color-label-orange);
     --color-leaf: #16a34a; /* success — functional state only */
     --color-coral: #dc2626; /* errors, destructive actions — state only */
+    /* Red as a *surface* (count badges with white text). Stays put in dark:
+       the coral text color lightens there, and white on a lightened red
+       drops to 2.8:1. */
+    --color-coral-solid: #dc2626;
     --color-due-soon: #525252; /* approaching due dates stay neutral */
     --color-success: #16a34a;
     --color-ice: var(--color-electric-blue-tint);
@@ -135,11 +144,26 @@
         --color-ink-secondary: #c7c7c7;
         --color-electric-blue: #4c8fe8;
         --color-electric-blue-tint: rgba(24, 104, 219, 0.16);
-        --color-midnight: #3b82e0;
-        --color-midnight-hover: #4c8fe8;
-        --color-midnight-pressed: #1868db;
+        /* --color-midnight is a *surface* (primary button, member avatar),
+           always under white text — so it must stay dark enough for 4.5:1.
+           Lightening it to #3b82e0 dropped that pair to 3.85:1, so dark mode
+           keeps the brand blue and the states move the same way as in light.
+           Link/icon blue lives in --color-electric-blue, which does lighten. */
+        --color-midnight: #1868db;
+        --color-midnight-hover: #2472d8;
+        --color-midnight-pressed: #1259c4;
+        --color-avatar-muted: #16335c;
+        --color-avatar-muted-ink: #93bbf2;
+        --color-coral-solid: #dc2626;
         --color-concrete: #333333;
         --color-primary-subdued: #16335c;
+        /* Ink aliases follow --color-ink: they sit on tinted surfaces
+           (board tile headers) whose fills go deep in dark mode. */
+        --color-carbon: #ededed;
+        --color-brand-dark: #ededed;
+        --color-ash: #8a8a8a;
+        /* Blues that are dark by design lift to the readable blue */
+        --color-ruby: #4c8fe8;
 
         /* Subtle label fills flip to deep tints of the same hue so chips
            stay readable; solids lighten to keep contrast on the dark canvas */
@@ -149,6 +173,7 @@
         --color-label-red-subtle: #3f0817;
         --color-label-yellow-subtle: #3f2f05;
         --color-label-orange-subtle: #431f07;
+        --color-label-blue: #4c8fe8;
         --color-label-purple: #a78bfa;
         --color-label-green: #4ade80;
         --color-label-red: #fb7185;
@@ -160,6 +185,7 @@
         --color-blush: #3a1414;
         --color-due-soon: #b9b9b9;
         --color-success: #4ade80;
+        --color-leaf: #4ade80;
 
         --shadow-subtle: rgba(0, 0, 0, 0.45) 0px 1px 2px 0px;
         --shadow-elevated:

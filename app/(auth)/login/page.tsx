@@ -74,7 +74,7 @@ export default function LoginPage() {
                     New here?{' '}
                     <Link
                         href="/signup"
-                        className="font-medium text-[var(--color-electric-blue)] hover:text-[var(--color-midnight-pressed)] transition-colors"
+                        className="font-medium text-[var(--color-electric-blue)] hover:underline transition-colors"
                     >
                         Create an account
                     </Link>

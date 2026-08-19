@@ -53,7 +53,7 @@ export function NavLinks() {
                         {label === 'Notifications' && unreadCount > 0 ? (
                             <span
                                 key={unreadCount}
-                                className="badge-pop tabular ml-auto text-[10px] font-semibold text-white bg-(--color-coral) rounded-[var(--radius-tags)] min-w-[18px] h-[18px] px-1 flex items-center justify-center"
+                                className="badge-pop tabular ml-auto text-[10px] font-semibold text-white bg-(--color-coral-solid) rounded-[var(--radius-tags)] min-w-[18px] h-[18px] px-1 flex items-center justify-center"
                                 aria-label={`${unreadCount} unread`}
                             >
                                 {unreadCount > 99 ? '99+' : unreadCount}

@@ -24,7 +24,7 @@ const baseClass =
 function skinClass(onBoard: boolean) {
     return onBoard
         ? 'bg-[var(--color-midnight)] text-white ring-2 ring-[var(--color-paper)]'
-        : 'bg-[var(--color-electric-blue-tint)] text-[var(--color-electric-blue)] ring-2 ring-[var(--color-paper)]'
+        : 'bg-[var(--color-avatar-muted)] text-[var(--color-avatar-muted-ink)] ring-2 ring-[var(--color-paper)]'
 }
 
 // Native `title` renders each line separately, so the tooltip doubles as the

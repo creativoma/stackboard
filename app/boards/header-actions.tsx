@@ -32,7 +32,7 @@ export function HeaderActions() {
                     <span
                         key={unread}
                         aria-hidden="true"
-                        className="badge-pop tabular absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-[var(--radius-tags)] bg-(--color-coral) text-white text-[10px] font-semibold flex items-center justify-center"
+                        className="badge-pop tabular absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-[var(--radius-tags)] bg-(--color-coral-solid) text-white text-[10px] font-semibold flex items-center justify-center"
                     >
                         {unread > 9 ? '9+' : unread}
                     </span>
