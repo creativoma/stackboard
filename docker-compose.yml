@@ -6,8 +6,12 @@ services:
             POSTGRES_USER: stackboard
             POSTGRES_PASSWORD: stackboard
             POSTGRES_DB: stackboard
+        # Loopback only: this database ships with well-known credentials, and
+        # binding it to every interface offers it to whatever network the
+        # machine happens to be on. Everything that needs it (the app,
+        # drizzle-kit, psql) connects from this machine.
         ports:
-            - '5432:5432'
+            - '127.0.0.1:5432:5432'
         volumes:
             - stackboard_pgdata:/var/lib/postgresql/data
         healthcheck:
@@ -28,9 +32,11 @@ services:
         environment:
             MINIO_ROOT_USER: minioadmin
             MINIO_ROOT_PASSWORD: minioadmin
+        # Loopback only, same reasoning as `db` above — minioadmin/minioadmin
+        # is not a credential to expose to a network.
         ports:
-            - '9000:9000'
-            - '9001:9001'
+            - '127.0.0.1:9000:9000'
+            - '127.0.0.1:9001:9001'
         volumes:
             - stackboard_minio:/data
         healthcheck:

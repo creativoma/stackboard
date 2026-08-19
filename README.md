@@ -24,7 +24,7 @@ A focused, Trello-style board for one team managing one shared project. Boards w
 
 ```bash
 bun install
-cp .env.example .env          # fill in SESSION_SECRET at minimum
+cp .env.example .env          # the defaults match the compose database below
 docker compose up -d          # starts Postgres on localhost:5432
 bun run db:migrate            # applies db/migrations
 bun run db:seed               # loads representative seed data (see below)
@@ -184,7 +184,7 @@ The same applies to any other credential baked into a volume on first init.
 Vercel, Fly, Render, a plain VM:
 
 1. Provision Postgres and set `DATABASE_URL`.
-2. Set `SESSION_SECRET`, `APP_URL` (your public URL), and `RESEND_API_KEY`/`EMAIL_FROM` if you want real invite emails.
+2. Set `APP_URL` (your public URL), and `RESEND_API_KEY`/`EMAIL_FROM` if you want real invite emails. (`SESSION_SECRET` is reserved for future use and read by nothing today — see Environment variables.)
 3. Run `bun run db:migrate` as a release step before starting new instances.
 4. `bun run build && bun run start`.
 5. Run the jobs worker (`bun run db:jobs:work`) as a second long-lived process — see Background jobs.

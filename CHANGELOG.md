@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Health endpoint** (`GET /api/health`): reports whether the app can serve,
+  not just whether the process is up. Two real probes — a timed `select 1`
+  against Postgres, and how long the oldest already-due job has been waiting,
+  which catches a dead `worker` while `web` still answers every request. The
+  overall `status` is `ok`, `degraded` (slow database, or a queue running
+  late), or `down`, and the response is `200` for the first two and `503` for
+  `down`, so a monitor or load balancer sees a failure without parsing the
+  body. Thresholds and the worst-status-wins aggregation are pure logic in
+  `lib/domain/health.ts`. The endpoint is unauthenticated by design — the
+  container healthcheck calls it — so the body carries statuses and timings
+  only, never error text, which could leak the database host or user; real
+  errors go to the server log. The job-lag probe reuses the existing
+  `jobs_status_run_after_idx` index, so it needs no schema change.
+
+### Changed
+
+- **The `web` container no longer publishes its port to every interface.**
+  `docker-compose.prod.yml` binds to `127.0.0.1` by default via the new
+  `WEB_BIND`/`WEB_PORT` variables, so a deploy is never served straight to the
+  internet without TLS — a reverse proxy in front is what should face the
+  public. `up --build` on a laptop still reaches the app at
+  `http://localhost:3000`, and `WEB_BIND=0.0.0.0` remains available as a
+  deliberate opt-in.
+- **The `web` healthcheck hits `/api/health` instead of `/`.** A container
+  could previously report `healthy` with the database unreachable, because the
+  home page still returned something.
+- **The development `docker-compose.yml` publishes Postgres and MinIO on
+  `127.0.0.1` only.** Both ship with well-known credentials, and binding them
+  to every interface offered them to whatever network the machine was on.
+
 ## [0.3.1] - 2026-08-19
 
 ### Fixed
