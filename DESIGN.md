@@ -8,9 +8,9 @@ Information density is the point. Type is compact (14px body, 16px ceiling), con
 
 **Key characteristics:**
 
-- One accent: `{colors.primary}` `#1868db` for CTAs, links, focus, selection. Never decoration.
+- One accent: `--color-midnight` `#1868db` for CTAs, links, focus, selection. Never decoration.
 - Neutral everything else: white surfaces, gray hairlines, near-black ink.
-- Hairline-border depth: `1px {colors.mist}` borders define surfaces; shadows are a whisper.
+- Hairline-border depth: `1px --color-mist` borders define surfaces; shadows are a whisper.
 - Subtle radii: 4–12px. **No pill shapes.**
 - One control box: buttons and inputs are both 36px tall, 6px radius, 13px label — they always line up.
 - Compact type: 14px/400 body, 500-weight titles, 16px hard ceiling, tabular numerics.
@@ -36,6 +36,8 @@ Every color enters as a token in `app/globals.css` with a light and a dark value
 - **Ink** (`--color-ink` — `#171717`): primary text. **Ink Secondary** (`#404040`) · **Smoke** (`#666666`) · **Fog/Ash** (`#8a8a8a`).
 - **Paper** (`--color-paper` — `#ffffff`): raised surface. **Snow** (`#fafafa`): page background. **Sunken** (`#f2f2f2`): recessed wells (kanban columns, hovers). **Cream** (`#f5f5f5`): neutral band (legacy name).
 - **Mist** (`--color-mist` — `#e5e5e5`): hairline borders. **Border Strong** (`#d4d4d4`): input borders.
+
+A few legacy aliases also live in `app/globals.css` and simply track the tokens above across reskins: `--color-concrete` (= border strong), `--color-brand-dark`/`--color-carbon` (= ink), `--color-ruby` (blue family), `--color-brand-magenta`/`--color-board-blue` (= primary soft), `--color-ice`/`--color-lavender`/`--color-iris`/`--color-magenta` (label-palette leftovers). Don't use them in new code — reference the primary names.
 
 ### Functional states (the only non-blue/gray colors)
 
@@ -90,17 +92,17 @@ Stackboard renders **small type everywhere** (explicit product decision — do n
 - **Base unit**: 8px, with 2/4/12 sub-steps. Dense by default: section gaps 16–24px (`gap-4`/`gap-6`), card internal padding 12–16px.
 - **Surfaces hold content together**: related sections live inside one bordered surface separated by hairlines (`divide-y`), not as separate floating cards.
 - **Two-column detail views**: main content left, sticky properties sidebar (~280px) right (see card detail).
-- Full use of width: pages cap at `max-w-6xl`, not narrow centered columns with dead space.
+- Full use of width: wide views (boards, dashboards) cap at `max-w-6xl`; text-heavy pages (card detail, settings, changelog) use a `max-w-[720px]` reading column instead.
 
 ## Elevation & Depth
 
-| Level | Treatment                                     | Use                       |
-| ----- | --------------------------------------------- | ------------------------- |
-| 0     | Flat `{colors.snow}` page                     | Background                |
-| 1     | `{colors.paper}` + 1px `{colors.mist}` border | Cards, panels, sidebars   |
-| 2     | Level 1 + `--shadow-subtle` (black 5%)        | Interactive cards at rest |
-| 3     | `--shadow-dragging` (black 12%, 24px blur)    | Drag overlays, hover lift |
-| 4     | `--shadow-sheet` (black 16%, 40px blur)       | Drawers / sheets          |
+| Level | Treatment                                   | Use                       |
+| ----- | ------------------------------------------- | ------------------------- |
+| 0     | Flat `--color-snow` page                    | Background                |
+| 1     | `--color-paper` + 1px `--color-mist` border | Cards, panels, sidebars   |
+| 2     | Level 1 + `--shadow-subtle` (black 5%)      | Interactive cards at rest |
+| 3     | `--shadow-dragging` (black 12%, 24px blur)  | Drag overlays, hover lift |
+| 4     | `--shadow-sheet` (black 16%, 40px blur)     | Drawers / sheets          |
 
 Borders are the primary depth cue. Shadows are neutral black rgba — never colored, never navy.
 
@@ -128,11 +130,11 @@ Buttons and inputs share one geometry so they always align in toolbars and forms
 - **Never stretch**: buttons are `width: fit-content`, so flex/grid parents cannot stretch them. The rare full-width case (auth submit) passes `w-full` explicitly.
 - Component classes live in `@layer components`, so Tailwind utilities override them cleanly — `!important` hacks are never needed.
 
-**`btn-primary`** — filled `{colors.primary}`, white text. Hover `{primary-hover}`, active `{primary-pressed}`. **One per view region.**
+**`btn-primary`** — filled `--color-midnight`, white text. Hover `--color-midnight-hover`, active `--color-midnight-pressed`. **One per view region.**
 
-**`btn-secondary` / `btn-outline`** — white surface, `{border-strong}` hairline, ink text; hover `{sunken}`. The workhorse neutral button.
+**`btn-secondary` / `btn-outline`** — white surface, `--color-border-strong` hairline, ink text; hover `--color-sunken`. The workhorse neutral button.
 
-**`btn-destructive`** — white surface, coral text + border; hover `{blush}` wash. Destructive actions only.
+**`btn-destructive`** — white surface, coral text + border; hover `--color-blush` wash. Destructive actions only.
 
 **`btn-ghost`** — borderless, smoke text → ink on hover. Inline/tertiary actions.
 
@@ -142,7 +144,7 @@ Buttons and inputs share one geometry so they always align in toolbars and forms
 
 ### Inputs
 
-**`.input`** — white, `{border-strong}` 1px, 6px radius, 13px text, min-height 36px (grows for textareas). Focus: 2px `{colors.primary}` ring. Same box as buttons.
+**`.input`** — white, `--color-border-strong` 1px, 6px radius, 13px text, min-height 36px (grows for textareas). Focus: 2px `--color-midnight` ring. Same box as buttons.
 
 ### Cards & containers
 
@@ -167,7 +169,7 @@ The brand maps onto a neutral dark track — grays, never navy or blue-tinted su
 - Page `#0f0f0f`, paper `#161616`, sunken `#1d1d1d`, hairlines `#262626`/`#333`.
 - Primary lightens to `#3b82e0`→`#4c8fe8`; tint becomes `rgba(24,104,219,0.16)`.
 - Label subtle fills flip to deep tints; functional states brighten (`#f87171`, `#4ade80`).
-- All dark values live in the single `@media (prefers-color-scheme: dark)` block in `app/globals.css`. Components never use `dark:` variants or hardcoded hex — if a new token has no dark value yet, derive one before shipping.
+- All dark values live in `app/globals.css`, in the token-override `@media (prefers-color-scheme: dark)` block (a second small media block there handles only the `.logo-light`/`.logo-dark` image swap). Components never use `dark:` variants or hardcoded hex — if a new token has no dark value yet, derive one before shipping.
 
 ## Do's and Don'ts
 
@@ -183,7 +185,7 @@ The brand maps onto a neutral dark track — grays, never navy or blue-tinted su
 ### Don't
 
 - Don't introduce any color beyond blue tones, gray tones, and the two functional states — except the six-hue label palette above, which is the one sanctioned decorative exception.
-- Don't use gradients, pastel washes, or mesh backgrounds — they are gone.
+- Don't use gradients, pastel washes, or mesh backgrounds in product UI — they are gone. The one exception is brand assets (the favicon/OG mark in `app/_components/brand-mark.tsx`), which keep the blue brand gradient.
 - Don't use pill radii on buttons, inputs, or chips.
 - Don't override control geometry (`!p-0`, `h-9`, `min-h-0`) from callers — extend the Button/`.input` system instead.
 - Don't use red/green decoratively outside the label palette; elsewhere they mean error/success only.
@@ -197,4 +199,4 @@ The brand maps onto a neutral dark track — grays, never navy or blue-tinted su
 3. Default body is 14px/400; titles 15–16px/500; controls 13px/500.
 4. New controls adopt the 36px control box; new chips adopt the 4px tag radius.
 5. Keep the compact app type scale — never reintroduce large display sizes.
-6. Every new color token ships with a dark value in the single dark block of `app/globals.css`.
+6. Every new color token ships with a dark value in the dark token block of `app/globals.css`.

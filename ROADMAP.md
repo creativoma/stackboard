@@ -9,9 +9,9 @@ dependencies, board export, a "My cards" focus view, an in-app notification
 center, board-wide activity history, saved filtered views, a per-board
 calendar, a per-board analytics dashboard, a per-board Gantt/timeline view,
 and public read-only board links (see CHANGELOG). Self-hosted deployment
-(Dockerfile, Docker Compose, Coolify) and S3-compatible attachment storage
-(MinIO) shipped in 0.3.0. This is the list of known gaps and where the
-project could go next, roughly ordered by expected value.
+(Dockerfile, Docker Compose) and S3-compatible attachment storage (MinIO)
+shipped in 0.3.0. This is the list of known gaps and where the project could
+go next, roughly ordered by expected value.
 
 ## Near term
 
@@ -19,12 +19,15 @@ project could go next, roughly ordered by expected value.
   `typescript` 6.x is installed alongside TypeScript 7 (`@typescript/native`)
   and ESLint is pinned to 9.x. Drop both pins once `typescript-eslint` runs on
   the TypeScript 7 API and `eslint-plugin-react` supports ESLint 10.
-- **Build the deploy image in CI, not on the VPS.** Coolify currently runs
-  `docker compose build` on the same box serving the live app, Postgres, and
-  MinIO — fine alone, but competes for CPU/RAM with whatever else shares that
-  host. Move the build to GitHub Actions → push to GHCR → Coolify pulls the
-  prebuilt image via its deploy webhook, same shape as this project's
-  siblings on hosting.
+- **Build the deploy image in CI, not on the deploy host.** With
+  `docker-compose.prod.yml` as shipped, the host runs `docker compose build`
+  on the same machine serving the live app, Postgres, and MinIO — fine alone,
+  but the build competes for CPU/RAM with the running services. The better
+  shape: build in GitHub Actions → push to a registry (GHCR) → have the host
+  pull the prebuilt image on deploy.
+- **Retake the README screenshot.** The old capture showed a v0.1.0 build and
+  was removed in 0.3.2; a current one (board view, light mode) should replace
+  it.
 - **Realtime granularity.** The SSE channel fires off the activity trail;
   same-column card reorders don't write activity and so don't push live.
   Either log reorders or move the channel to row-level change tracking.

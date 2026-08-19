@@ -7,7 +7,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Stackboard
 
-Trello-style board app: Next.js App Router (Server Components + Server Actions), Postgres via Drizzle ORM, Bun as the runner. See `README.md` for setup, `DESIGN.md` for the design system, `CONTRIBUTING.md` for the PR checklist.
+Trello-style board app: Next.js App Router (Server Components + Server Actions), Postgres via Drizzle ORM, Bun as the runner. See `README.md` for setup, `docs/` for deployment/configuration/architecture/security/testing, `DESIGN.md` for the design system, `CONTRIBUTING.md` for the PR checklist.
 
 ## Where code goes
 
@@ -19,10 +19,12 @@ Trello-style board app: Next.js App Router (Server Components + Server Actions),
 | `lib/queries/`                                        | Read-side DB queries (`server-only`)                                  |
 | `lib/domain/`                                         | Pure logic, no I/O — every module here has unit tests in `__tests__`  |
 | `lib/jobs/`                                           | Postgres-backed job queue, handlers, and the worker loop              |
-| `lib/storage/`                                        | `ObjectStorage` adapter for attachments (local disk today)            |
-| `lib/notifications/`, `lib/import/`, `lib/templates/` | Notification fan-out, board import, board templates                   |
+| `lib/storage/`                                        | `ObjectStorage` adapter for attachments (local disk or S3/MinIO)      |
+| `lib/auth/`, `lib/validation/`, `lib/email/`          | Sessions/passwords, zod schemas, email content + Resend adapter       |
+| `lib/notifications/`, `lib/import/`, `lib/templates/` | Notification fan-out, board import, board/card templates              |
 | `db/`                                                 | `schema.ts`, generated `migrations/`, `seed.ts`, worker entrypoint    |
 | `test/`                                               | Integration (`integration/db.test.ts`) and Playwright (`e2e/`) suites |
+| `website/`                                            | Separate Vite marketing site with its own toolchain (oxlint)          |
 
 ## Rules that matter here
 
