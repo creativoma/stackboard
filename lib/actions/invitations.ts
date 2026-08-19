@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { randomBytes, createHash } from 'node:crypto'
 import { and, eq } from 'drizzle-orm'
 import { db, schema } from '@/db'
+import { appUrl } from '@/lib/app-url'
 import {
     requireOwner,
     logActivity,
@@ -95,7 +96,6 @@ export async function inviteMemberAction(
             expiresAt: invitationExpiresAt(),
         })
 
-        const appUrl = process.env.APP_URL ?? 'http://localhost:3000'
         const acceptUrl = `${appUrl}/invite/${token}`
         const content = inviteEmailContent({
             boardName: board.name,

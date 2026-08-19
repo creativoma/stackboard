@@ -11,11 +11,11 @@ if (!connectionString) {
 }
 
 const globalForDb = globalThis as unknown as {
-    deckClient?: ReturnType<typeof postgres>
+    dbClient?: ReturnType<typeof postgres>
 }
 
-const client = globalForDb.deckClient ?? postgres(connectionString, { max: 10 })
-if (process.env.NODE_ENV !== 'production') globalForDb.deckClient = client
+const client = globalForDb.dbClient ?? postgres(connectionString, { max: 10 })
+if (process.env.NODE_ENV !== 'production') globalForDb.dbClient = client
 
 export const db = drizzle(client, { schema })
 export * as schema from './schema'

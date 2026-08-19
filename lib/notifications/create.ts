@@ -3,6 +3,7 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js'
 import * as schema from '@/db/schema'
 import type { NotificationType } from '@/db/schema'
 import { notificationEmailContent } from '@/lib/email/send'
+import { appUrl } from '@/lib/app-url'
 
 // No `server-only` import — this module is shared by Server Actions and the
 // standalone jobs worker (the due-soon scan), like lib/jobs/handlers.ts. It
@@ -37,7 +38,6 @@ export async function notifyUsers(db: Db, input: NotifyInput): Promise<void> {
 
     if (recipients.length === 0) return
 
-    const appUrl = process.env.APP_URL ?? 'http://localhost:3000'
     const cardUrl = input.cardId
         ? `${appUrl}/boards/${input.boardId}/cards/${input.cardId}`
         : `${appUrl}/boards/${input.boardId}`

@@ -1,14 +1,14 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { appUrl } from '@/lib/app-url'
 
-// Inter is the brand's open-source Sohne substitute (DESIGN.md, Typography).
+// Inter is the brand's open-source SF Pro Display substitute (DESIGN.md,
+// Typography).
 const inter = Inter({
     subsets: ['latin'],
     variable: '--font-inter',
 })
-
-const appUrl = process.env.APP_URL ?? 'http://localhost:3000'
 
 export const metadata: Metadata = {
     metadataBase: new URL(appUrl),

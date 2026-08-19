@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { getCurrentUser } from '@/lib/auth/session'
 import { countUnreadNotifications } from '@/lib/queries/notifications'
 import packageJson from '@/package.json'
+import { REPO_URL } from '@/lib/repo'
 import { NavLinks } from './nav-links'
 import { UserMenu } from './user-menu'
 import { HeaderActions } from './header-actions'
@@ -80,7 +81,7 @@ export default async function BoardsLayout({
                             </span>
                             <FooterDivider />
                             <a
-                                href="https://github.com/creativoma/stackboard/blob/main/LICENSE"
+                                href={`${REPO_URL}/blob/main/LICENSE`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="hover:text-ink transition-colors"
@@ -95,7 +96,7 @@ export default async function BoardsLayout({
                                 className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-2"
                             >
                                 <a
-                                    href="https://github.com/creativoma/stackboard"
+                                    href={REPO_URL}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="group inline-flex items-center gap-1.5 hover:text-ink transition-colors"

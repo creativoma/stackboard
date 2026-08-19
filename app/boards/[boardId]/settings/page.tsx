@@ -5,6 +5,7 @@ import { Button } from '@/app/_components/button'
 import { Avatar } from '@/app/_components/avatar-stack'
 import { requireUser } from '@/lib/auth/session'
 import { getMembership } from '@/lib/auth/membership'
+import { appUrl } from '@/lib/app-url'
 import {
     canMutateBoardContent,
     isActiveMember,
@@ -128,7 +129,7 @@ export default async function BoardSettingsPage({
                         boardId={boardId}
                         url={
                             board.publicToken
-                                ? `${process.env.APP_URL ?? 'http://localhost:3000'}/p/${board.publicToken}`
+                                ? `${appUrl}/p/${board.publicToken}`
                                 : null
                         }
                     />

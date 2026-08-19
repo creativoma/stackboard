@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { escapeHtml } from '@/lib/markdown'
 
 export type SendEmailInput = {
     to: string
@@ -71,15 +72,6 @@ export async function sendEmail(
     } finally {
         clearTimeout(timeoutHandle!)
     }
-}
-
-function escapeHtml(value: string): string {
-    return value
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;')
 }
 
 export function notificationEmailContent(params: {

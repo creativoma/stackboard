@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { REPO_URL } from '@/lib/repo'
 
 export const metadata: Metadata = { title: 'Privacy Policy' }
 
@@ -98,7 +99,7 @@ export default function PrivacyPage() {
                         Questions about this policy can be raised as an issue on
                         the{' '}
                         <a
-                            href="https://github.com/creativoma/stackboard"
+                            href={REPO_URL}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-electric-blue hover:underline"
