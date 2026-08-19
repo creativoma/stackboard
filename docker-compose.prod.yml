@@ -16,9 +16,11 @@
 # MINIO_ROOT_USER/MINIO_ROOT_PASSWORD below since this MinIO instance has no
 # separate app-scoped credentials configured.
 #
-# Migrations run via Coolify's Pre-Deployment Command against the `web`
-# container image, not as a compose service:
-#   cd /drizzle-cli && node node_modules/.bin/drizzle-kit migrate
+# Migrations run automatically on boot as part of `web`'s own CMD (see
+# Dockerfile) — deliberately not a Coolify Pre-Deployment Command, which
+# proved unreliable at targeting the freshly-built image on a Docker Compose
+# deploy and once left the database unmigrated while the container still
+# served (and failed) requests.
 #
 # For a Coolify deploy, drop the `ports:` block on `web` — Coolify routes to
 # the container through its own proxy, so publishing 3000 on the host is
@@ -108,11 +110,15 @@ services:
             APP_URL: ${APP_URL:-http://localhost:3000}
             RESEND_API_KEY: ${RESEND_API_KEY:-}
             EMAIL_FROM: ${EMAIL_FROM:-Stackboard <onboarding@resend.dev>}
-        # Overrides the image's default CMD (the Next.js server) to run the
+        # Overrides the image's default CMD (migrate-then-serve) to run the
         # jobs worker instead, from the full source tree copied to /worker in
         # the runner stage (see Dockerfile) — due-date reminders and
         # notification emails never fire without this service running.
+        # `command: []` clears the image's CMD so it isn't appended as extra
+        # (harmless but pointless) args after this entrypoint — and, more
+        # importantly, so worker never runs `web`'s migration step itself.
         entrypoint: ['node', 'node_modules/.bin/tsx', 'db/jobs-worker.ts']
+        command: []
         working_dir: /worker
 
 volumes:

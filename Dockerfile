@@ -3,8 +3,11 @@
 # Three stages: install deps with bun (this repo's package manager), build with
 # bun, then run the standalone Next.js output on plain node — the runtime image
 # never needs bun or the source tree, with one deliberate exception in the
-# runner stage below: an isolated drizzle-kit CLI, needed so a deploy can
-# actually run its migrations (e.g. via Coolify's Pre-Deployment Command).
+# runner stage below: an isolated drizzle-kit CLI, needed so the container can
+# migrate itself on boot (see CMD at the bottom — deliberately not a Coolify
+# Pre-Deployment Command, which is unreliable at actually targeting the new
+# image on a Docker Compose deploy; a container that migrates itself has
+# nowhere else to point at and no such race).
 #
 # The jobs worker (db/jobs-worker.ts) is not started by this image's default
 # CMD — run it as a second service from this same image with the entrypoint
@@ -51,11 +54,9 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# The isolated drizzle-kit toolkit built in the builder stage above. From
-# inside /drizzle-cli, `node node_modules/.bin/drizzle-kit migrate` runs as
-# Coolify's Pre-Deployment Command against this same container — there's
-# nowhere else for that hook to point at (this stage has no bun binary).
-COPY --from=builder /drizzle-cli /drizzle-cli
+# The isolated drizzle-kit toolkit built in the builder stage above — run
+# from CMD on every boot, before the server starts (see bottom of this file).
+COPY --from=builder --chown=nextjs:nodejs /drizzle-cli /drizzle-cli
 
 # db/jobs-worker.ts (started as a second service via `bun run db:jobs:work`,
 # see docker-compose.prod.yml) needs the tsx runner and the app's own source
@@ -66,4 +67,10 @@ COPY --from=builder --chown=nextjs:nodejs /app /worker
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000 HOSTNAME=0.0.0.0
-CMD ["node", "server.js"]
+# Migrate before serving: a container that starts accepting traffic (and
+# passing its healthcheck) against an unmigrated database means every page
+# querying the DB 500s until something runs the migration — which is exactly
+# what a separate, easy-to-forget Pre-Deployment Command risks. `worker`
+# overrides this whole CMD with its own entrypoint in docker-compose.prod.yml,
+# so it never runs this migrate step (nor should it — one migrator is enough).
+CMD ["sh", "-c", "cd /drizzle-cli && node node_modules/.bin/drizzle-kit migrate && cd /app && exec node server.js"]
