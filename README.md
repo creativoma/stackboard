@@ -53,6 +53,8 @@ See `.env.example` for the full list with descriptions. Summary:
 | `RESEND_API_KEY`       | If unset, invite emails are logged to the console instead of sent (deterministic local dev path)                              |
 | `EMAIL_FROM`           | From-address for invite emails                                                                                                |
 | `UPLOAD_DIR`           | Directory for attachment bytes via the local-disk storage adapter (default `./var/uploads`), used when `S3_ENDPOINT` is unset |
+| `WEB_BIND`             | Host interface `docker-compose.prod.yml` publishes `web` on (default `127.0.0.1`); `0.0.0.0` exposes the app unproxied        |
+| `WEB_PORT`             | Host port for the same mapping (default `3000`); change it when another service already holds the port                        |
 | `S3_ENDPOINT`          | S3-compatible endpoint (MinIO in production); when set, attachments go there instead of local disk                            |
 | `S3_BUCKET`            | Bucket name for attachment storage                                                                                            |
 | `S3_ACCESS_KEY_ID`     | Access key for the S3-compatible endpoint                                                                                     |
@@ -131,7 +133,31 @@ Run `bun run typecheck` for a strict TypeScript pass (the project has no `any`-s
 docker compose -f docker-compose.prod.yml up --build
 ```
 
-For a Coolify deploy, use a **Git Repository** resource with the **Docker Compose** build pack pointed at `docker-compose.prod.yml` (not the "Docker Compose" card, which stores the YAML in Coolify's database and leaves the `build:` contexts with nothing to build from). Set every real value in Coolify's own env panel; drop the `ports:` block on `web`, since Coolify routes through its own proxy. Migrations need no deploy hook — the `web` container runs them itself on boot (see below).
+For a Coolify deploy, use a **Git Repository** resource with the **Docker Compose** build pack pointed at `docker-compose.prod.yml` (not the "Docker Compose" card, which stores the YAML in Coolify's database and leaves the `build:` contexts with nothing to build from). Set every real value in Coolify's own env panel. The `ports:` block on `web` needs no editing — it binds to `127.0.0.1` by default, which Coolify ignores entirely (it reaches the container over the project's Docker network) and which keeps the app off the public internet without TLS. Migrations need no deploy hook — the `web` container runs them itself on boot (see below).
+
+### Health endpoint
+
+`GET /api/health` reports whether the app can actually serve, not just whether the process is up. It probes Postgres with a timed `select 1` and measures how long the oldest already-due job has been waiting — a `web` container can be perfectly responsive while the `worker` is dead and no invite email is going out.
+
+```json
+{
+    "status": "ok",
+    "checks": [
+        { "name": "database", "status": "ok", "durationMs": 3 },
+        {
+            "name": "jobs",
+            "status": "ok",
+            "durationMs": 2,
+            "detail": "0 due, oldest n/a"
+        }
+    ],
+    "timestamp": "2026-08-19T21:00:00.000Z"
+}
+```
+
+`status` is `ok`, `degraded` (slow database, or the queue running late), or `down`. The response is `200` for the first two and `503` for `down`, so an uptime monitor or load balancer sees a failure without parsing the body. Thresholds live in `lib/domain/health.ts`.
+
+The endpoint is unauthenticated by design — the container healthcheck in `docker-compose.prod.yml` calls it — so the body carries statuses and timings only, never error text, which could leak the database host or user. Real errors go to the server log. Point an external uptime monitor at it and alert on non-`200`; to catch `degraded` too, match the body against `"status":"ok"`.
 
 ### Migrations on deploy
 
