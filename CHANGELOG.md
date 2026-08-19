@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-08-19
+
+### Fixed
+
+- **Dark mode lost the brand blue in the logo**: the dark-mode wordmark was
+  `logo-black.svg`, which is white throughout — including the rounded symbol,
+  so the blue mark turned into a plain white square. Added
+  `public/logos/logo-color-dark.svg` (blue symbol, white wordmark) and pointed
+  the sidebar and privacy page at it.
+- **Board tile titles were unreadable in dark mode**: `--color-carbon` had no
+  dark value, so titles stayed near-black (`#171717`) on top of the deep tint
+  the tile header flips to. Same omission for `--color-brand-dark`,
+  `--color-ash`, `--color-ruby`, `--color-leaf`, and `--color-label-blue` —
+  the one label solid that wasn't lightened alongside its five siblings. Every
+  token now carries a dark value, as `DESIGN.md` already required.
+- **White-on-blue and white-on-red dropped below WCAG AA in dark mode**: the
+  primary button rendered white on `#3b82e0` (3.85:1) and the unread-count
+  badges white on the lightened coral (2.77:1). Both tokens are _surfaces_
+  under white text, not text colors, so they no longer lighten in dark:
+  `--color-midnight` stays `#1868db` (5.2:1) with its hover/pressed states
+  moving the same way they do in light, and badges use a new
+  `--color-coral-solid` (`#dc2626`, 4.8:1). Blue and red used _as text or
+  icons_ still lighten via `--color-electric-blue` / `--color-coral`.
+- **Muted avatars (members not on the current board) read as smudges in dark
+  mode**: link-blue initials on a translucent blue tint, with a `paper` ring
+  that vanishes against the dark canvas. They now use a dedicated
+  `--color-avatar-muted` / `--color-avatar-muted-ink` pair tuned per theme
+  (6.4:1 in dark).
+- **Login/signup links hovered into an unreadable blue**: they used
+  `--color-midnight-pressed` as a text color, which is a button-surface token;
+  with the contrast fix above it became a dark navy on the dark background.
+  They keep the link blue and underline on hover instead.
+
+### Changed
+
+- **App footer reworked** (`app/boards/layout.tsx`): the three-part
+  `justify-between` row became one dense line — identity and version grouped
+  left behind hairline dividers, authorship links pushed right — and it now
+  says **MIT License** (linked to `LICENSE`) instead of "All rights reserved",
+  which contradicted the license the project actually ships under. The GitHub
+  mark moved to a shared `app/_components/github-icon.tsx`.
+- `DESIGN.md` documents the surface-blue vs. text-blue rule that these
+  contrast bugs came from, plus the new tokens.
+
 ## [0.3.0] - 2026-08-19
 
 ### Added
@@ -179,7 +223,8 @@ inline` instead of `attachment` (everything else still forces a download).
   against an isolated Postgres database, and Playwright end-to-end tests
   covering all three user journeys plus a mobile viewport check.
 
-[Unreleased]: https://github.com/creativoma/stackboard/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/creativoma/stackboard/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/creativoma/stackboard/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/creativoma/stackboard/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/creativoma/stackboard/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/creativoma/stackboard/releases/tag/v0.1.0

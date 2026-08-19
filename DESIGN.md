@@ -27,6 +27,9 @@ Every color enters as a token in `app/globals.css` with a light and a dark value
 - **Primary Hover** (`--color-midnight-hover` — `#1259c4`) · **Primary Pressed** (`--color-midnight-pressed` — `#0f4aa3`).
 - **Primary Soft** (`--color-primary-soft` — `#4c8fe8`): chart/accent tint inside product UI.
 - **Primary Tint** (`--color-electric-blue-tint` — `#e8f0fc`): pale blue wash for selected/insight surfaces.
+- **Muted avatar** (`--color-avatar-muted` / `--color-avatar-muted-ink` — `#d0e0f7` on `#0f4aa3`): the skin for members who aren't on the current board. A dedicated pair because the generic tint + link-blue combination only clears AA in light mode.
+
+**Surface blues vs. text blues.** `--color-midnight` is only ever a _surface_ under white text (primary button, member avatar), so it stays `#1868db` in dark mode — lightening it drops white-on-blue below 4.5:1. Blue that is _text or an icon_ uses `--color-electric-blue`, which lightens to `#4c8fe8` in dark. Same rule for red: `--color-coral` is the text/state red and lightens; `--color-coral-solid` is the badge surface under white text and does not.
 
 ### Neutrals
 
@@ -36,7 +39,7 @@ Every color enters as a token in `app/globals.css` with a light and a dark value
 
 ### Functional states (the only non-blue/gray colors)
 
-- **Error / destructive** (`--color-coral` — `#dc2626`) with wash `--color-blush` (`#fdecec`).
+- **Error / destructive** (`--color-coral` — `#dc2626`) with wash `--color-blush` (`#fdecec`), plus `--color-coral-solid` (`#dc2626`, both themes) for count badges with white text.
 - **Success** (`--color-success` / `--color-leaf` — `#16a34a`).
 - **Due soon** (`--color-due-soon` — `#525252`): stays neutral; overdue uses coral.
 - **Priority chevrons** (`lib/priority.ts`, Jira-style): Highest `#dc2626` · High `#ea580c` · Medium `#d97706` · Low `#1868db` · Lowest `#4c8fe8`. Urgency is state, so hot levels burn red/orange and calm levels cool back into the brand blues. Rendered only by `PriorityIcon` (`app/_components/priority-icon.tsx`).
