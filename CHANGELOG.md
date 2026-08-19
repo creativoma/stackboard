@@ -7,8 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-19
+
 ### Added
 
+- **Self-hosted deployment support (Coolify)**: a production `Dockerfile`
+  (bun build stages, `node:22-alpine` runtime, non-root user, standalone
+  Next.js output) and `docker-compose.prod.yml` running `web`, `worker`,
+  Postgres, and MinIO as containers on one host. Migrations run
+  automatically as part of the `web` container's own boot command
+  (`cd /drizzle-cli && drizzle-kit migrate && exec node server.js`) rather
+  than a separate deploy-hook step, so a container can never start serving
+  requests against an unmigrated database.
+- **S3-compatible object storage** (`lib/storage/s3.ts`): attachments go to
+  an S3-compatible endpoint (MinIO in production) when `S3_ENDPOINT` is
+  configured, implementing the same `ObjectStorage` interface as the local-disk
+  adapter with no caller changes (`lib/storage/index.ts` picks between them).
+  Falls back to local disk when unset, so local dev needs no S3 setup.
 - **Board-level activity history** (`/boards/:boardId/activity`): every
   event on a board, not just one card's, reusing the existing
   `activity_board_idx` index (`lib/queries/activity.ts#listBoardActivity`).
@@ -70,6 +85,11 @@ inline` instead of `attachment` (everything else still forces a download).
 
 ### Fixed
 
+- **Sidebar/privacy-page logo was invisible in dark mode**: `logo-color.svg`'s
+  wordmark is solid black, disappearing against the dark-mode paper
+  background. Both usages now render a light/dark image pair toggled purely
+  in `app/globals.css` (`.logo-light`/`.logo-dark`, matching the project's
+  media-query-only dark mode) rather than a `dark:` variant in the component.
 - **`.btn-ghost` was missing `display: inline-flex`/`gap`** (`app/globals.css`),
   the layout every other button variant has. An icon + label ghost button
   (e.g. "Save view") would stack the icon above the text instead of sitting
@@ -159,6 +179,7 @@ inline` instead of `attachment` (everything else still forces a download).
   against an isolated Postgres database, and Playwright end-to-end tests
   covering all three user journeys plus a mobile viewport check.
 
-[Unreleased]: https://github.com/creativoma/stackboard/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/creativoma/stackboard/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/creativoma/stackboard/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/creativoma/stackboard/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/creativoma/stackboard/releases/tag/v0.1.0

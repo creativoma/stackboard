@@ -30,6 +30,15 @@ services:
     db:
         image: postgres:16-alpine
         restart: unless-stopped
+        # ⚠️ Changing POSTGRES_PASSWORD here does NOT change the running
+        # database's actual password once the volume below already has data —
+        # the postgres image only applies this var on first init of an empty
+        # data directory. Rotating it later means also running, once, against
+        # the live db container: `ALTER USER stackboard WITH PASSWORD
+        # '<new value>';`. Skipping that step leaves `web`/`worker` unable to
+        # authenticate (they read the new value; Postgres still has the old
+        # one), and the container never gets far enough to serve anything —
+        # learned the hard way on the first production rotation.
         environment:
             POSTGRES_USER: stackboard
             POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}

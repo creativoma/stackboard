@@ -8,9 +8,10 @@ labels, board colors, a list view, checklists, linked subtasks, card
 dependencies, board export, a "My cards" focus view, an in-app notification
 center, board-wide activity history, saved filtered views, a per-board
 calendar, a per-board analytics dashboard, a per-board Gantt/timeline view,
-and public read-only board links (see CHANGELOG). This is the list of
-known gaps and where the project could go next, roughly ordered by
-expected value.
+and public read-only board links (see CHANGELOG). Self-hosted deployment
+(Dockerfile, Docker Compose, Coolify) and S3-compatible attachment storage
+(MinIO) shipped in 0.3.0. This is the list of known gaps and where the
+project could go next, roughly ordered by expected value.
 
 ## Near term
 
@@ -18,10 +19,12 @@ expected value.
   `typescript` 6.x is installed alongside TypeScript 7 (`@typescript/native`)
   and ESLint is pinned to 9.x. Drop both pins once `typescript-eslint` runs on
   the TypeScript 7 API and `eslint-plugin-react` supports ESLint 10.
-- **S3-compatible attachment backend.** Attachments ship with a local-disk
-  `ObjectStorage` implementation (`lib/storage/local.ts`). Add an
-  S3/R2-compatible implementation of the same interface with short-lived
-  signed URLs for multi-instance deployments.
+- **Build the deploy image in CI, not on the VPS.** Coolify currently runs
+  `docker compose build` on the same box serving the live app, Postgres, and
+  MinIO — fine alone, but competes for CPU/RAM with whatever else shares that
+  host. Move the build to GitHub Actions → push to GHCR → Coolify pulls the
+  prebuilt image via its deploy webhook, same shape as this project's
+  siblings on hosting.
 - **Realtime granularity.** The SSE channel fires off the activity trail;
   same-column card reorders don't write activity and so don't push live.
   Either log reorders or move the channel to row-level change tracking.
