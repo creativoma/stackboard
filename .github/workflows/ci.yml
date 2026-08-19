@@ -9,6 +9,10 @@ jobs:
     unit:
         name: Lint, typecheck, unit tests, build
         runs-on: ubuntu-latest
+        # Without an explicit limit these jobs inherit GitHub's 6-hour default,
+        # so a stalled network call (apt mirrors, a browser download) burns a
+        # runner for hours and leaves the check pending instead of failing.
+        timeout-minutes: 15
         steps:
             - uses: actions/checkout@v4
             - uses: oven-sh/setup-bun@v2
@@ -26,6 +30,7 @@ jobs:
     integration:
         name: Integration tests (Postgres)
         runs-on: ubuntu-latest
+        timeout-minutes: 15
         services:
             postgres:
                 image: postgres:16
@@ -53,6 +58,7 @@ jobs:
     e2e:
         name: End-to-end tests (Playwright)
         runs-on: ubuntu-latest
+        timeout-minutes: 25
         services:
             postgres:
                 image: postgres:16
@@ -73,7 +79,11 @@ jobs:
               with:
                   bun-version: latest
             - run: bun install --frozen-lockfile
+            # `--with-deps` shells out to apt-get, which has stalled on the
+            # runner's mirrors before with no timeout of its own. Capped here so
+            # the failure is a red X in 10 minutes, not a pending check.
             - run: bunx playwright install --with-deps chromium
+              timeout-minutes: 10
             - run: bun run db:migrate
               env:
                   DATABASE_URL: postgresql://stackboard:stackboard@localhost:5432/stackboard
