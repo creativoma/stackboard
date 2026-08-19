@@ -5,7 +5,7 @@
        neutral gray scale from white to near-black. Token *names* are kept
        stable across reskins so component code doesn't change — only the
        values move. */
-    --font-open-runde:
+    --font-stack:
         var(--font-inter), 'SF Pro Display', -apple-system, BlinkMacSystemFont,
         'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
@@ -119,7 +119,7 @@
     --color-board-blue: var(--color-board-blue);
     --color-background: var(--background);
     --color-foreground: var(--foreground);
-    --font-sans: var(--font-open-runde);
+    --font-sans: var(--font-stack);
     --radius-tags: var(--radius-tags);
     --radius-cards: var(--radius-cards);
     --radius-buttons: var(--radius-buttons);
@@ -164,6 +164,11 @@
         --color-ash: #8a8a8a;
         /* Blues that are dark by design lift to the readable blue */
         --color-ruby: #4c8fe8;
+        /* Already the dark-track readable blue in light mode — restated here
+           so every token carries an explicit dark value (DESIGN.md rule). */
+        --color-primary-soft: #4c8fe8;
+        --color-brand-magenta: #4c8fe8;
+        --color-board-blue: #4c8fe8;
 
         /* Subtle label fills flip to deep tints of the same hue so chips
            stay readable; solids lighten to keep contrast on the dark canvas */

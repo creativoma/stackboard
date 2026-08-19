@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import type { Metadata } from 'next'
 import { Button } from '@/app/_components/button'
+import { renderMarkdownLite } from '@/lib/markdown'
 
 export const metadata: Metadata = { title: "What's new" }
 
@@ -27,16 +28,27 @@ function parseChangelog(source: string): ChangelogRelease[] {
             currentRelease.sections.push(currentSection)
         } else if (itemMatch && currentSection) {
             currentSection.items.push(itemMatch[1].trim())
+        } else if (currentSection && line.trim() !== '') {
+            // Hard-wrapped bullets continue on indented lines — fold them
+            // back into the item, or every wrapped entry loses its tail.
+            const items = currentSection.items
+            if (items.length > 0) {
+                items[items.length - 1] += ` ${line.trim()}`
+            }
         }
     }
 
-    return releases
+    // An empty release heading (e.g. a fresh "[Unreleased]") has no card.
+    return releases.filter((release) =>
+        release.sections.some((section) => section.items.length > 0)
+    )
 }
 
-function formatInline(text: string): string {
-    return text
-        .replace(/`([^`]+)`/g, '<code>$1</code>')
-        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+/** "[0.3.1] - 2026-08-19" → "0.3.1 — 2026-08-19", "[Unreleased]" → "Unreleased" */
+function releaseLabel(title: string): string {
+    return title
+        .replace(/^\[([^\]]+)\]\s*(?:-\s*)?/, '$1 — ')
+        .replace(/ — $/, '')
 }
 
 export default async function ChangelogPage() {
@@ -66,9 +78,9 @@ export default async function ChangelogPage() {
                     >
                         <h2
                             id={`release-${release.title}`}
-                            className="text-base font-semibold mb-3"
+                            className="text-base font-medium mb-3"
                         >
-                            {release.title}
+                            {releaseLabel(release.title)}
                         </h2>
                         <div className="flex flex-col gap-4">
                             {release.sections.map((section) => (
@@ -80,8 +92,13 @@ export default async function ChangelogPage() {
                                         {section.items.map((item, i) => (
                                             <li
                                                 key={i}
+                                                // Safe: renderMarkdownLite
+                                                // HTML-escapes the whole line
+                                                // before adding formatting.
                                                 dangerouslySetInnerHTML={{
-                                                    __html: formatInline(item),
+                                                    __html: renderMarkdownLite(
+                                                        item
+                                                    ),
                                                 }}
                                             />
                                         ))}
