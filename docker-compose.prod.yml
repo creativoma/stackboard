@@ -1,5 +1,5 @@
 # Production-shaped compose: builds the web + worker services from
-# ./Dockerfile plus Postgres, all on one network.
+# ./Dockerfile plus Postgres and MinIO, all on one network.
 #
 # Two uses:
 #   1. Local end-to-end verification before touching Coolify at all:
@@ -7,12 +7,18 @@
 #   2. A starting point for a Coolify "Docker Compose" resource. The env
 #      defaults below mirror .env.example for (1) — for an actual deploy,
 #      override every var that needs a real value (SESSION_SECRET, APP_URL,
-#      RESEND_API_KEY) in Coolify's own per-service env panel rather than
-#      editing this file with real secrets.
+#      RESEND_API_KEY, MINIO_ROOT_PASSWORD, S3_ACCESS_KEY_ID/
+#      S3_SECRET_ACCESS_KEY) in Coolify's own per-service env panel rather
+#      than editing this file with real secrets.
+#
+# Object storage is MinIO (self-hosted on the same box), not local disk —
+# see lib/storage/index.ts. S3_ACCESS_KEY_ID/S3_SECRET_ACCESS_KEY must match
+# MINIO_ROOT_USER/MINIO_ROOT_PASSWORD below since this MinIO instance has no
+# separate app-scoped credentials configured.
 #
 # Migrations run via Coolify's Pre-Deployment Command against the `web`
 # container image, not as a compose service:
-#   cd /drizzle-cli && bun run drizzle-kit migrate
+#   cd /drizzle-cli && node node_modules/.bin/drizzle-kit migrate
 #
 # For a Coolify deploy, drop the `ports:` block on `web` — Coolify routes to
 # the container through its own proxy, so publishing 3000 on the host is
@@ -34,6 +40,22 @@ services:
             timeout: 5s
             retries: 10
 
+    minio:
+        image: minio/minio:latest
+        restart: unless-stopped
+        command: server /data --console-address ":9001"
+        environment:
+            MINIO_ROOT_USER: ${MINIO_ROOT_USER:-stackboard}
+            MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change_me}
+        volumes:
+            - stackboard_minio:/data
+        healthcheck:
+            test:
+                ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
+            interval: 5s
+            timeout: 5s
+            retries: 5
+
     web:
         build:
             context: .
@@ -42,18 +64,19 @@ services:
         depends_on:
             db:
                 condition: service_healthy
+            minio:
+                condition: service_healthy
         environment:
             DATABASE_URL: postgresql://stackboard:${POSTGRES_PASSWORD:-change_me}@db:5432/stackboard
             SESSION_SECRET: ${SESSION_SECRET:-change_me_to_a_random_32_byte_secret}
             APP_URL: ${APP_URL:-http://localhost:3000}
             RESEND_API_KEY: ${RESEND_API_KEY:-}
             EMAIL_FROM: ${EMAIL_FROM:-Stackboard <onboarding@resend.dev>}
-            UPLOAD_DIR: /app/var/uploads
-        volumes:
-            # Attachments are stored on local disk (lib/storage/local.ts).
-            # Without this volume every redeploy destroys every uploaded
-            # attachment.
-            - stackboard_uploads:/app/var/uploads
+            S3_ENDPOINT: http://minio:9000
+            S3_BUCKET: ${S3_BUCKET:-stackboard}
+            S3_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-stackboard}
+            S3_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-change_me}
+            S3_REGION: us-east-1
         ports:
             - '3000:3000'
         # No curl/wget on the alpine base — a plain Node request is what's
@@ -94,4 +117,4 @@ services:
 
 volumes:
     stackboard_pgdata:
-    stackboard_uploads:
+    stackboard_minio:

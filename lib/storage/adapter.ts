@@ -4,9 +4,10 @@
  * client-writable paths). Keys are server-generated (`boardId/attachmentId`)
  * and never contain user input.
  *
- * The default implementation is local disk (lib/storage/local.ts). An
- * S3-compatible backend with short-lived signed URLs can implement this
- * same interface later without touching callers.
+ * lib/storage/index.ts picks between the S3-compatible implementation
+ * (lib/storage/s3.ts, MinIO in production) and local disk
+ * (lib/storage/local.ts, the dev/no-S3-configured fallback) without callers
+ * knowing which one they got.
  */
 export interface ObjectStorage {
     put(key: string, data: Uint8Array): Promise<void>

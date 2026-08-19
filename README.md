@@ -45,14 +45,19 @@ Sign in with any of the seeded accounts (password `password123`):
 
 See `.env.example` for the full list with descriptions. Summary:
 
-| Variable         | Purpose                                                                                          |
-| ---------------- | ------------------------------------------------------------------------------------------------ |
-| `DATABASE_URL`   | Postgres connection string                                                                       |
-| `SESSION_SECRET` | Placeholder for a future signed-cookie secret (see Security decisions)                           |
-| `APP_URL`        | Base URL used to build absolute invite links in emails                                           |
-| `RESEND_API_KEY` | If unset, invite emails are logged to the console instead of sent (deterministic local dev path) |
-| `EMAIL_FROM`     | From-address for invite emails                                                                   |
-| `UPLOAD_DIR`     | Directory for attachment bytes via the local-disk storage adapter (default `./var/uploads`)      |
+| Variable               | Purpose                                                                                                                       |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`         | Postgres connection string                                                                                                    |
+| `SESSION_SECRET`       | Placeholder for a future signed-cookie secret (see Security decisions)                                                        |
+| `APP_URL`              | Base URL used to build absolute invite links in emails                                                                        |
+| `RESEND_API_KEY`       | If unset, invite emails are logged to the console instead of sent (deterministic local dev path)                              |
+| `EMAIL_FROM`           | From-address for invite emails                                                                                                |
+| `UPLOAD_DIR`           | Directory for attachment bytes via the local-disk storage adapter (default `./var/uploads`), used when `S3_ENDPOINT` is unset |
+| `S3_ENDPOINT`          | S3-compatible endpoint (MinIO in production); when set, attachments go there instead of local disk                            |
+| `S3_BUCKET`            | Bucket name for attachment storage                                                                                            |
+| `S3_ACCESS_KEY_ID`     | Access key for the S3-compatible endpoint                                                                                     |
+| `S3_SECRET_ACCESS_KEY` | Secret key for the S3-compatible endpoint                                                                                     |
+| `S3_REGION`            | Region passed to the S3 client (default `us-east-1`; MinIO ignores the value but the SDK requires one)                        |
 
 ## Migrations
 
@@ -176,7 +181,7 @@ Boards sync live over Server-Sent Events: `app/boards/[boardId]/events/route.ts`
 
 ## Attachments
 
-Cards accept file attachments (10MB cap, validated server-side in `lib/domain/attachments.ts`). Bytes go through a server-only `ObjectStorage` adapter (`lib/storage/adapter.ts`); the shipped implementation writes to local disk under `UPLOAD_DIR` with server-generated keys (`boardId/attachmentId` — user filenames never touch the filesystem path). Downloads stream through an authenticated route that re-checks board membership on every request. Image attachments (`mime_type` starting with `image/`) render an inline thumbnail, and both images and PDFs can be expanded into a full preview (`<img>`/`<iframe>`) without leaving the card — the route serves those two types with `Content-Disposition: inline` and everything else with `attachment`. An S3-compatible backend with short-lived signed URLs can implement the same interface later (see ROADMAP).
+Cards accept file attachments (10MB cap, validated server-side in `lib/domain/attachments.ts`). Bytes go through a server-only `ObjectStorage` adapter (`lib/storage/adapter.ts`) with server-generated keys (`boardId/attachmentId` — user filenames never touch the storage key). `lib/storage/index.ts` picks the S3-compatible implementation (`lib/storage/s3.ts`, MinIO in production — see `S3_ENDPOINT` above) when configured, falling back to local disk under `UPLOAD_DIR` (`lib/storage/local.ts`) otherwise. Downloads stream through an authenticated route that re-checks board membership on every request. Image attachments (`mime_type` starting with `image/`) render an inline thumbnail, and both images and PDFs can be expanded into a full preview (`<img>`/`<iframe>`) without leaving the card — the route serves those two types with `Content-Disposition: inline` and everything else with `attachment`.
 
 ## Search
 
