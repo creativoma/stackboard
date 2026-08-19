@@ -1,0 +1,97 @@
+# Production-shaped compose: builds the web + worker services from
+# ./Dockerfile plus Postgres, all on one network.
+#
+# Two uses:
+#   1. Local end-to-end verification before touching Coolify at all:
+#        docker compose -f docker-compose.prod.yml up --build
+#   2. A starting point for a Coolify "Docker Compose" resource. The env
+#      defaults below mirror .env.example for (1) — for an actual deploy,
+#      override every var that needs a real value (SESSION_SECRET, APP_URL,
+#      RESEND_API_KEY) in Coolify's own per-service env panel rather than
+#      editing this file with real secrets.
+#
+# Migrations run via Coolify's Pre-Deployment Command against the `web`
+# container image, not as a compose service:
+#   cd /drizzle-cli && bun run drizzle-kit migrate
+#
+# For a Coolify deploy, drop the `ports:` block on `web` — Coolify routes to
+# the container through its own proxy, so publishing 3000 on the host is
+# redundant and exposes the app around it.
+
+services:
+    db:
+        image: postgres:16-alpine
+        restart: unless-stopped
+        environment:
+            POSTGRES_USER: stackboard
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
+            POSTGRES_DB: stackboard
+        volumes:
+            - stackboard_pgdata:/var/lib/postgresql/data
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U stackboard']
+            interval: 5s
+            timeout: 5s
+            retries: 10
+
+    web:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        restart: unless-stopped
+        depends_on:
+            db:
+                condition: service_healthy
+        environment:
+            DATABASE_URL: postgresql://stackboard:${POSTGRES_PASSWORD:-change_me}@db:5432/stackboard
+            SESSION_SECRET: ${SESSION_SECRET:-change_me_to_a_random_32_byte_secret}
+            APP_URL: ${APP_URL:-http://localhost:3000}
+            RESEND_API_KEY: ${RESEND_API_KEY:-}
+            EMAIL_FROM: ${EMAIL_FROM:-Stackboard <onboarding@resend.dev>}
+            UPLOAD_DIR: /app/var/uploads
+        volumes:
+            # Attachments are stored on local disk (lib/storage/local.ts).
+            # Without this volume every redeploy destroys every uploaded
+            # attachment.
+            - stackboard_uploads:/app/var/uploads
+        ports:
+            - '3000:3000'
+        # No curl/wget on the alpine base — a plain Node request is what's
+        # actually available. Lets Coolify/Traefik know when the container is
+        # really ready to serve, not just that the process started.
+        healthcheck:
+            test:
+                [
+                    'CMD',
+                    'node',
+                    '-e',
+                    "require('http').get('http://localhost:3000/', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))",
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 30s
+
+    worker:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        restart: unless-stopped
+        depends_on:
+            db:
+                condition: service_healthy
+        environment:
+            DATABASE_URL: postgresql://stackboard:${POSTGRES_PASSWORD:-change_me}@db:5432/stackboard
+            APP_URL: ${APP_URL:-http://localhost:3000}
+            RESEND_API_KEY: ${RESEND_API_KEY:-}
+            EMAIL_FROM: ${EMAIL_FROM:-Stackboard <onboarding@resend.dev>}
+        # Overrides the image's default CMD (the Next.js server) to run the
+        # jobs worker instead, from the full source tree copied to /worker in
+        # the runner stage (see Dockerfile) — due-date reminders and
+        # notification emails never fire without this service running.
+        entrypoint: ['node', 'node_modules/.bin/tsx', 'db/jobs-worker.ts']
+        working_dir: /worker
+
+volumes:
+    stackboard_pgdata:
+    stackboard_uploads:
