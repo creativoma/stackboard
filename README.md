@@ -123,13 +123,46 @@ Run `bun run typecheck` for a strict TypeScript pass (the project has no `any`-s
 
 ## Deployment
 
-Any Node.js host that supports Next.js App Router works (Vercel, Fly, Render, a plain VM). Checklist:
+### Containerized (Docker Compose / Coolify)
+
+`Dockerfile` + `docker-compose.prod.yml` run the whole stack — `web`, `worker`, Postgres, and MinIO — on a single host. Verify locally before touching a server:
+
+```bash
+docker compose -f docker-compose.prod.yml up --build
+```
+
+For a Coolify deploy, use a **Git Repository** resource with the **Docker Compose** build pack pointed at `docker-compose.prod.yml` (not the "Docker Compose" card, which stores the YAML in Coolify's database and leaves the `build:` contexts with nothing to build from). Set every real value in Coolify's own env panel; drop the `ports:` block on `web`, since Coolify routes through its own proxy. Migrations need no deploy hook — the `web` container runs them itself on boot (see below).
+
+### Migrations on deploy
+
+The `web` image's start command is `drizzle-kit migrate && exec node server.js`, so every container migrates before it serves. This is deliberate: a container that starts serving (and passing its healthcheck) against an unmigrated database returns 500s from every page that touches the DB. Coolify's Pre-Deployment Command was tried first and is _not_ reliable here — it's ambiguous whether it runs against the newly-built image or the outgoing one.
+
+### ⚠️ Rotating `POSTGRES_PASSWORD` on an existing database
+
+**Changing `POSTGRES_PASSWORD` in your host's env panel is not enough**, and it fails in a way that's genuinely hard to diagnose. The Postgres image only reads that variable when it initializes an _empty_ data directory; once the volume holds data, the real password lives inside the database and the variable is ignored. Change only the variable and `web`/`worker` will authenticate with the new value against a database that still expects the old one — they can't connect, never pass their healthcheck, and the orchestrator may delete the containers before you can read their logs.
+
+Rotate in this order:
+
+1. Change the password _in the database first_, against the running container:
+    ```bash
+    docker exec -it <db-container> psql -U stackboard -d stackboard \
+      -c "ALTER USER stackboard WITH PASSWORD 'the-new-value';"
+    ```
+2. Then set `POSTGRES_PASSWORD` to that same value in the env panel.
+3. Redeploy.
+
+The same applies to any other credential baked into a volume on first init.
+
+### Any Node.js host (no containers)
+
+Vercel, Fly, Render, a plain VM:
 
 1. Provision Postgres and set `DATABASE_URL`.
 2. Set `SESSION_SECRET`, `APP_URL` (your public URL), and `RESEND_API_KEY`/`EMAIL_FROM` if you want real invite emails.
 3. Run `bun run db:migrate` as a release step before starting new instances.
 4. `bun run build && bun run start`.
-5. If you deploy to multiple instances/regions, set `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` to a stable value shared across them (see Next.js's Server Actions guide) so Server Action payloads stay decryptable across instances.
+5. Run the jobs worker (`bun run db:jobs:work`) as a second long-lived process — see Background jobs.
+6. If you deploy to multiple instances/regions, set `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` to a stable value shared across them (see Next.js's Server Actions guide) so Server Action payloads stay decryptable across instances.
 
 ## Integration setup: email (Resend)
 
