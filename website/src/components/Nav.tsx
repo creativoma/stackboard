@@ -34,8 +34,13 @@ export function Nav() {
                         alt="Stackboard"
                         className="h-5 w-auto dark:hidden"
                     />
+                    {/* logo-color-dark.svg keeps the blue mark and whitens
+                        only the wordmark — logo-white.svg is named for a
+                        white *background* (its ink is all black) and
+                        disappears on the dark paper. Same fix as the app
+                        (app/boards/layout.tsx). */}
                     <img
-                        src="/logos/logo-white.svg"
+                        src="/logos/logo-color-dark.svg"
                         alt="Stackboard"
                         className="h-5 w-auto hidden dark:block"
                     />

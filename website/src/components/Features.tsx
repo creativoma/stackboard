@@ -2,8 +2,11 @@ import {
     Radio,
     AtSign,
     Gauge,
+    CalendarDays,
+    ListChecks,
     Search,
     LayoutTemplate,
+    ArrowLeftRight,
     Paperclip,
 } from 'lucide-react'
 import { Reveal } from './Reveal'
@@ -17,15 +20,27 @@ const FEATURES = [
     },
     {
         icon: AtSign,
-        title: 'Mentions & watchers',
+        title: 'Mentions & notifications',
         description:
-            '@mention teammates in comments and get notified on cards you watch.',
+            '@mention teammates, watch cards, and get in-app and email notifications, including due-date reminders.',
     },
     {
         icon: Gauge,
         title: 'WIP limits & priority',
         description:
             'Cap work-in-progress per column and flag urgency with Jira-style priority chevrons.',
+    },
+    {
+        icon: CalendarDays,
+        title: 'Calendar, Gantt & analytics',
+        description:
+            'View the same board as a monthly calendar, a timeline of dated cards, or a live analytics snapshot.',
+    },
+    {
+        icon: ListChecks,
+        title: 'Checklists, subtasks & dependencies',
+        description:
+            'Break work down with checklists and linked subtasks, and model blockers with cycle-safe dependencies.',
     },
     {
         icon: Search,
@@ -35,15 +50,21 @@ const FEATURES = [
     },
     {
         icon: LayoutTemplate,
-        title: 'Board templates',
+        title: 'Board & card templates',
         description:
-            'Start new boards from a template instead of an empty column.',
+            'Start boards and cards from built-in templates instead of an empty column.',
+    },
+    {
+        icon: ArrowLeftRight,
+        title: 'Import & export',
+        description:
+            'Bring boards in from Trello or Stackboard JSON/CSV exports, and export any board back out.',
     },
     {
         icon: Paperclip,
-        title: 'Attachments',
+        title: 'Attachments & public links',
         description:
-            'Attach files to cards, backed by a pluggable object storage adapter.',
+            'Attach files with inline image/PDF previews — local disk or any S3-compatible store — and share boards read-only.',
     },
 ]
 

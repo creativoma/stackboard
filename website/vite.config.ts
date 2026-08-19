@@ -57,6 +57,9 @@ function getShippedItems(count: number): string[] {
 
     const items: string[] = []
     for (const block of versionBlocks) {
+        // Only released versions count as shipped — an "[Unreleased]" block
+        // describes work on main that no cut release carries yet.
+        if (block.startsWith('## [Unreleased]')) continue
         const added = subsection(block, '### Added')
         for (const bullet of extractBullets(added)) {
             items.push(bulletTitle(bullet))
