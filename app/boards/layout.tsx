@@ -32,12 +32,21 @@ export default async function BoardsLayout({
                     >
                         {/* next/image doesn't optimize SVG (it needs
                             dangerouslyAllowSVG), so a plain img is correct
-                            for the logo. */}
+                            for the logo. Two images, toggled in globals.css
+                            (.logo-light/.logo-dark) — logo-color.svg's text
+                            is solid black and disappears on the dark-mode
+                            paper background. */}
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src="/logos/logo-color.svg"
                             alt="Stackboard"
-                            className="h-5 w-auto"
+                            className="logo-light h-5 w-auto"
+                        />
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                            src="/logos/logo-black.svg"
+                            alt="Stackboard"
+                            className="logo-dark h-5 w-auto"
                         />
                     </Link>
                     <NavLinks />

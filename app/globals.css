@@ -486,4 +486,23 @@ body {
         text-transform: uppercase;
         color: var(--color-smoke);
     }
+
+    /* Brand wordmark swap: logo-color.svg's text is solid black, invisible
+       against the dark-mode paper background. logo-black.svg (despite the
+       name — it's named for the background it suits, not its own ink)
+       renders in white for that case. Kept out of components (no `dark:`
+       variants there per DESIGN.md) by pairing two <img> tags with this
+       toggle, same as every other dark value living only in this file. */
+    .logo-dark {
+        display: none;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    .logo-light {
+        display: none;
+    }
+    .logo-dark {
+        display: block;
+    }
 }
