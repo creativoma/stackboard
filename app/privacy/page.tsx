@@ -12,9 +12,10 @@ export default function PrivacyPage() {
                         {/* next/image doesn't optimize SVG (it needs
                             dangerouslyAllowSVG), so a plain img is correct
                             for the logo. Two images, toggled in globals.css
-                            (.logo-light/.logo-dark) — logo-color.svg's text
-                            is solid black and disappears on the dark-mode
-                            paper background. */}
+                            (.logo-light/.logo-dark) — logo-color.svg's
+                            wordmark is solid black and disappears on the
+                            dark-mode paper background, so the dark variant
+                            keeps the blue mark and whitens only the text. */}
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src="/logos/logo-color.svg"
@@ -23,7 +24,7 @@ export default function PrivacyPage() {
                         />
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                            src="/logos/logo-black.svg"
+                            src="/logos/logo-color-dark.svg"
                             alt="Stackboard"
                             className="logo-dark h-5 w-auto"
                         />
