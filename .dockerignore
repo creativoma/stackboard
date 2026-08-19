@@ -8,3 +8,7 @@ playwright-report
 .env
 .env.*
 !.env.example
+website
+docs
+.omc
+.claude

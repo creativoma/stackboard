@@ -4,8 +4,8 @@
 # bun, then run the standalone Next.js output on plain node — the runtime image
 # never needs bun or the source tree, with one deliberate exception in the
 # runner stage below: an isolated drizzle-kit CLI, needed so the container can
-# migrate itself on boot (see CMD at the bottom — deliberately not a Coolify
-# Pre-Deployment Command, which is unreliable at actually targeting the new
+# migrate itself on boot (see CMD at the bottom — deliberately not a PaaS
+# pre-deploy hook, which can be unreliable at actually targeting the new
 # image on a Docker Compose deploy; a container that migrates itself has
 # nowhere else to point at and no such race).
 #
@@ -25,9 +25,9 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # Values only needed to satisfy module-level env checks during the build
 # (db/index.ts throws at import time if DATABASE_URL is unset); the real
-# values are injected at `docker run`/Coolify time and nothing here is baked
-# into the image.
-ENV DATABASE_URL=postgresql://postgres:postgres@localhost:5432/stackboard \
+# values are injected at container start and nothing here is baked into the
+# image.
+ENV DATABASE_URL=postgresql://stackboard:stackboard@localhost:5432/stackboard \
     SESSION_SECRET=build-time-placeholder-not-used-at-runtime \
     APP_URL=http://localhost:3000
 RUN bun run build
@@ -53,6 +53,10 @@ RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# /boards/changelog reads this at request time (force-dynamic), so Next's
+# standalone output tracing never picks it up — without this copy the route
+# throws ENOENT in the container.
+COPY --from=builder /app/CHANGELOG.md ./CHANGELOG.md
 
 # The isolated drizzle-kit toolkit built in the builder stage above — run
 # from CMD on every boot, before the server starts (see bottom of this file).

@@ -91,7 +91,9 @@ jobs:
               env:
                   DATABASE_URL: postgresql://stackboard:stackboard@localhost:5432/stackboard
                   SESSION_SECRET: ci-only-secret
-                  APP_URL: http://localhost:3000
+                  # Playwright's webServer boots the app on 3100
+                  # (playwright.config.ts), not the dev default 3000.
+                  APP_URL: http://localhost:3100
             - uses: actions/upload-artifact@v4
               if: failure()
               with:

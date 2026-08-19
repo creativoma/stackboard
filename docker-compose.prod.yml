@@ -2,33 +2,32 @@
 # ./Dockerfile plus Postgres and MinIO, all on one network.
 #
 # Two uses:
-#   1. Local end-to-end verification before touching Coolify at all:
+#   1. Local end-to-end verification before touching any server:
 #        docker compose -f docker-compose.prod.yml up --build
-#   2. A starting point for a Coolify "Docker Compose" resource. The env
-#      defaults below mirror .env.example for (1) — for an actual deploy,
-#      override every var that needs a real value (SESSION_SECRET, APP_URL,
-#      RESEND_API_KEY, MINIO_ROOT_PASSWORD, S3_ACCESS_KEY_ID/
-#      S3_SECRET_ACCESS_KEY) in Coolify's own per-service env panel rather
-#      than editing this file with real secrets.
+#   2. A starting point for any Docker-Compose-based host or PaaS (Coolify,
+#      Dokploy, a plain VM, …). The env defaults below match .env.example for
+#      (1) — for an actual deploy, override every var that needs a real value
+#      (POSTGRES_PASSWORD, SESSION_SECRET, APP_URL, RESEND_API_KEY,
+#      MINIO_ROOT_PASSWORD) in your platform's env panel or an env file kept
+#      out of git, rather than editing this file with real secrets.
 #
-# Object storage is MinIO (self-hosted on the same box), not local disk —
+# Object storage is MinIO (self-hosted alongside the app), not local disk —
 # see lib/storage/index.ts. S3_ACCESS_KEY_ID/S3_SECRET_ACCESS_KEY must match
 # MINIO_ROOT_USER/MINIO_ROOT_PASSWORD below since this MinIO instance has no
 # separate app-scoped credentials configured.
 #
 # Migrations run automatically on boot as part of `web`'s own CMD (see
-# Dockerfile) — deliberately not a Coolify Pre-Deployment Command, which
-# proved unreliable at targeting the freshly-built image on a Docker Compose
-# deploy and once left the database unmigrated while the container still
-# served (and failed) requests.
+# Dockerfile) — deliberately not a platform pre-deploy hook, which can be
+# unreliable at targeting the freshly-built image on a Docker Compose deploy
+# and once left the database unmigrated while the container still served
+# (and failed) requests.
 #
 # `web` publishes to loopback only (127.0.0.1). That keeps `up --build` on a
 # laptop reachable at http://localhost:3000 while making sure a deploy never
 # serves the app straight to the internet without TLS — a reverse proxy
-# (Coolify's Traefik, or your own nginx/Caddy) is what should face the public
-# and terminate it. Coolify reaches the container over the project's Docker
-# network and ignores this mapping entirely. Set WEB_BIND=0.0.0.0 only if you
-# know you want the app exposed unproxied.
+# (Traefik, nginx, Caddy) is what should face the public and terminate it.
+# A PaaS that proxies over the Docker network ignores this mapping entirely.
+# Set WEB_BIND=0.0.0.0 only if you know you want the app exposed unproxied.
 
 services:
     db:
@@ -130,9 +129,9 @@ services:
         # the runner stage (see Dockerfile) — due-date reminders and
         # notification emails never fire without this service running. The
         # image's CMD still gets appended as trailing args to this entrypoint
-        # (Compose only drops it when `command:` is set, and Coolify's own
-        # compose validator rejects `command: []`/`command: null` here) — this
-        # is harmless: db/jobs-worker.ts's main() never reads process.argv.
+        # (Compose only drops it when `command:` is set, and some PaaS compose
+        # validators reject `command: []`/`command: null` here) — this is
+        # harmless: db/jobs-worker.ts's main() never reads process.argv.
         entrypoint: ['node', 'node_modules/.bin/tsx', 'db/jobs-worker.ts']
         working_dir: /worker
 

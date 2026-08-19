@@ -1,3 +1,16 @@
 # Ignore artifacts:
 build
 coverage
+.next
+test-results
+playwright-report
+tsconfig.tsbuildinfo
+bun.lock
+
+# Generated SQL/journal files — drizzle-kit owns their formatting
+db/migrations
+
+# The website is its own project with its own toolchain; its build output
+# and local uploads dir never get formatted either way
+website/dist
+var

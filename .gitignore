@@ -50,6 +50,9 @@ next-env.d.ts
 # Claude Code local settings and symlinked skills (machine-specific, not shared)
 /.claude/
 
+# oh-my-claudecode local state (sessions, project memory — machine-specific)
+/.omc/
+
 # vendored agent skills (installed/reproducible from skills-lock.json)
 /.agents/
 
