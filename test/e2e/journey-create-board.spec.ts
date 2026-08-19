@@ -46,9 +46,14 @@ test('owner creates a board, invites teammates, and adds a labeled card with ass
     await page.getByLabel('Assignee').selectOption({ label: 'Alice Owens' })
     await page.getByLabel('Due date').fill('2099-12-31')
 
-    await page
+    const checklistForm = page
+        .locator('form')
+        .filter({ has: page.getByPlaceholder('Add checklist item') })
+    await checklistForm
         .getByPlaceholder('Add checklist item')
         .fill('Get design sign-off')
-    await page.getByRole('button', { name: 'Add', exact: true }).click()
+    await checklistForm
+        .getByRole('button', { name: 'Add', exact: true })
+        .click()
     await expect(page.getByText('Get design sign-off')).toBeVisible()
 })
