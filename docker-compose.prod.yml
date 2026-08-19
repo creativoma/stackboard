@@ -113,12 +113,12 @@ services:
         # Overrides the image's default CMD (migrate-then-serve) to run the
         # jobs worker instead, from the full source tree copied to /worker in
         # the runner stage (see Dockerfile) — due-date reminders and
-        # notification emails never fire without this service running.
-        # `command: []` clears the image's CMD so it isn't appended as extra
-        # (harmless but pointless) args after this entrypoint — and, more
-        # importantly, so worker never runs `web`'s migration step itself.
+        # notification emails never fire without this service running. The
+        # image's CMD still gets appended as trailing args to this entrypoint
+        # (Compose only drops it when `command:` is set, and Coolify's own
+        # compose validator rejects `command: []`/`command: null` here) — this
+        # is harmless: db/jobs-worker.ts's main() never reads process.argv.
         entrypoint: ['node', 'node_modules/.bin/tsx', 'db/jobs-worker.ts']
-        command: []
         working_dir: /worker
 
 volumes:
