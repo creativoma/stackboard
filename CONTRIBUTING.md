@@ -12,13 +12,14 @@ Follow the [Local setup](./README.md#local-setup) section in the README to get a
 bun run lint               # ESLint
 bun run typecheck          # strict TypeScript pass, no `any` escape hatches
 bun run test               # unit tests
+bun run knip               # unused files, dependencies, and exports
 bun run build              # production build (CI runs this too)
 bun run test:integration   # requires a `stackboard_test` database (see docs/testing.md)
 bun run test:e2e           # Playwright, builds and boots the app
 bun run format             # prettier --write . (not run in CI — run it locally)
 ```
 
-CI (`.github/workflows/ci.yml`) runs lint, typecheck, unit tests, and build in one job, plus integration tests and Playwright e2e against Postgres service containers in two more — so a PR that passes the commands above locally should pass there. See [docs/testing.md](./docs/testing.md) for suite details.
+`bun run knip` is not a CI gate — run it when you add or remove modules, dependencies, or exports. CI (`.github/workflows/ci.yml`) runs lint, typecheck, unit tests, and build in one job, plus integration tests and Playwright e2e against Postgres service containers in two more — so a PR that passes the commands above locally should pass there. See [docs/testing.md](./docs/testing.md) for suite details.
 
 ## Coding conventions
 

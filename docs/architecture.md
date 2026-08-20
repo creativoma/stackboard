@@ -202,6 +202,10 @@ first.
   `eslint-config-next`, doesn't support ESLint 10 yet. Both pins can be
   dropped once the upstream tools catch up
   ([typescript-eslint#10940](https://github.com/typescript-eslint/typescript-eslint/issues/10940)).
+  The trap: tool installers that add TypeScript as a peer (`bun create
+@knip/config` did) bump the `typescript` entry to 7.x, and `bun run lint`
+  then dies with "typescript-eslint does not support TS 7.0". The fix is to
+  put `typescript` back to `^6.0.3` — not to touch `@typescript/native`.
 - **Drizzle-kit has no down-migration runner** — to roll back, restore from a
   backup (see [deployment.md](./deployment.md)) or hand-write and apply a
   compensating SQL migration. For a single-tenant app of this size that's the

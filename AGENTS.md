@@ -44,3 +44,5 @@ bun run lint && bun run typecheck && bun run test
 ```
 
 Integration (`bun run test:integration`, needs a `stackboard_test` DB) and e2e (`bun run test:e2e`) when the change touches persistence or a user journey. CI runs all of them.
+
+Also run `bun run knip` when the change adds or removes modules, dependencies, or exports — it flags dead code. It is not a CI gate. Before acting on its output, read the two caveats in [docs/testing.md](./docs/testing.md#dead-code-checks) (`sharp` and the `website` workspace).

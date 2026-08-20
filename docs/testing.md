@@ -12,6 +12,26 @@ Run `bun run typecheck` for a strict TypeScript pass (the project has no
 `any`-shaped escape hatches in application code) and `bun run lint` for
 ESLint.
 
+## Dead-code checks
+
+`bun run knip` reports unused files, dependencies, and exports. It exits
+non-zero when it finds anything, which is how it would gate CI — today it is
+a local check, so run it after adding or deleting modules, dependencies, or
+exports.
+
+Two things in `knip.json` are worth knowing before trusting its output:
+
+- **Both workspaces are declared** (`.` and `website`). Without that, Knip
+  analyses only the root project, never sees Vite's `index.html` as an entry
+  point, and reports every `website/src/**` file as unused.
+- **`sharp` is in `ignoreDependencies`.** No module imports it; Next loads it
+  at runtime for image optimization on a self-hosted deploy. Removing it
+  because Knip called it unused would silently degrade image handling in
+  production.
+
+The e2e and integration suites are declared as entry points too, so their
+helpers don't read as dead code.
+
 ## Unit tests
 
 `lib/**/__tests__` (config: `vitest.config.mts`). Pure logic only — no

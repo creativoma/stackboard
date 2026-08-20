@@ -1,0 +1,11 @@
+{
+    "$schema": "https://unpkg.com/knip@6/schema.json",
+    "tags": ["-lintignore"],
+    "workspaces": {
+        ".": {
+            "entry": ["test/e2e/**/*.ts", "test/integration/**/*.ts"],
+            "ignoreDependencies": ["sharp"]
+        },
+        "website": {}
+    }
+}

@@ -87,6 +87,7 @@ bun run test:integration  # needs a stackboard_test database
 bun run test:e2e          # Playwright, builds and boots the app
 bun run typecheck         # strict TypeScript pass
 bun run lint              # ESLint
+bun run knip              # unused files, dependencies, and exports
 ```
 
 Setup details, what each suite covers, and the CI pipeline:
