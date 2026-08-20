@@ -6,7 +6,7 @@
  */
 
 export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024 // 10MB
-export const MAX_FILENAME_LENGTH = 150
+const MAX_FILENAME_LENGTH = 150
 
 export type AttachmentValidation = { ok: true } | { ok: false; error: string }
 

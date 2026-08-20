@@ -84,10 +84,6 @@ const trelloExportSchema = z
     })
     .passthrough()
 
-export function isTrelloExport(raw: unknown): boolean {
-    return trelloExportSchema.safeParse(raw).success
-}
-
 export function parseTrelloExport(raw: unknown): NormalizedImport {
     const parsed = trelloExportSchema.safeParse(raw)
     if (!parsed.success) {

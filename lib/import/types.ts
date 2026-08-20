@@ -1,14 +1,14 @@
-export type NormalizedImportColumn = {
+type NormalizedImportColumn = {
     name: string
     status: 'active' | 'archived'
 }
 
-export type NormalizedImportLabel = {
+type NormalizedImportLabel = {
     name: string
     color: string
 }
 
-export type NormalizedImportCard = {
+type NormalizedImportCard = {
     columnIndex: number
     position: number
     title: string

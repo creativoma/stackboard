@@ -25,7 +25,7 @@ export function isOverLimit(
     return activeCount > wipLimit
 }
 
-export const MAX_WIP_LIMIT = 1000
+const MAX_WIP_LIMIT = 1000
 
 /**
  * Parse a form value into a stored limit: a positive integer capped at

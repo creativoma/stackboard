@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Dead-code checking with [Knip](https://knip.dev)** (`bun run knip`):
+  reports unused files, dependencies, and exports. `knip.json` declares two
+  workspaces — without them Knip never sees Vite's `index.html` and reports
+  all 15 `website/src/**` files as unused. `sharp` sits in
+  `ignoreDependencies`: nothing imports it, but Next uses it at runtime for
+  image optimization when self-hosting. Knip exits non-zero when it finds
+  something, so it can gate CI later.
+
+### Changed
+
+- **`logActivity` takes the `NewActivityEvent` type** instead of re-declaring
+  the same shape inline (`lib/actions/helpers.ts`), which also narrows `type`
+  from `string` to `ActivityType` — the union in `lib/domain/activity.ts` now
+  actually constrains what callers can log.
+
+### Removed
+
+- **Exports nothing imported**: `isTrelloExport` (`lib/import/trello.ts`) is
+  gone — the import path uses `parseTrelloExport`, which validates anyway.
+  `MAX_FILENAME_LENGTH`, `MAX_SEARCH_QUERY_LENGTH`, `MAX_WIP_LIMIT`,
+  `EmailDeliveryError`, and the three `NormalizedImport*` types stay, but are
+  no longer exported: each is only used inside its own module.
+
 ## [0.3.2] - 2026-08-20
 
 ### Added

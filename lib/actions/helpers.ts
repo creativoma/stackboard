@@ -6,6 +6,7 @@ import {
     isActiveMember,
     isBoardOwner,
 } from '@/lib/domain/authorization'
+import type { NewActivityEvent } from '@/lib/domain/activity'
 import { db, schema } from '@/db'
 
 export class ActionError extends Error {}
@@ -44,15 +45,7 @@ export async function requireOwner(boardId: string) {
     return result
 }
 
-export async function logActivity(event: {
-    boardId: string
-    cardId?: string | null
-    actorId: string
-    type: string
-    field?: string | null
-    oldValue?: string | null
-    newValue?: string | null
-}) {
+export async function logActivity(event: NewActivityEvent) {
     await db.insert(schema.activityEvents).values(event)
 }
 

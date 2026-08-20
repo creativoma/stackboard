@@ -8,7 +8,7 @@ export type SendEmailInput = {
     text: string
 }
 
-export class EmailDeliveryError extends Error {
+class EmailDeliveryError extends Error {
     constructor(
         message: string,
         public readonly cause?: unknown
